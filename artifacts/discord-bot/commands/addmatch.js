@@ -1,5 +1,6 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
+const { staffLog } = require('../utils/staffLog');
 
 const points = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
 
@@ -36,6 +37,12 @@ module.exports = (client) => {
       });
 
       message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)`);
+
+      await staffLog(client, {
+        action: 'addmatch',
+        details: `**Équipe :** ${name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}`,
+        author: message.author.tag
+      });
     }
   });
 };
