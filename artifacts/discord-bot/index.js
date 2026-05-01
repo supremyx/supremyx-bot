@@ -17,5 +17,6 @@ client.once('ready', () => {
 require('./commands/register')(client);
 require('./commands/addmatch')(client);
 require('./commands/ranking')(client);
+require('./commands/resetmatch')(client);
 
 client.login(process.env.TOKEN);
