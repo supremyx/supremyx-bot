@@ -1,12 +1,18 @@
-// Commande !register - Enregistre un joueur
-// TODO: Remplace ce fichier par ton propre code
+const Team = require('../database/models/Team');
 
 module.exports = (client) => {
-  client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
-    if (!message.content.startsWith('!register')) return;
+  client.on('messageCreate', async message => {
+    if (message.content.startsWith('!register')) {
+      const name = message.content.split(' ')[1];
 
-    // Placeholder - remplace par ton code
-    message.reply('Commande register en attente de configuration.');
+      if (!name) return message.reply('Nom requis');
+
+      let exists = await Team.findOne({ name });
+      if (exists) return message.reply('Déjà inscrit');
+
+      await Team.create({ name });
+
+      message.reply(`✅ ${name} enregistré`);
+    }
   });
 };
