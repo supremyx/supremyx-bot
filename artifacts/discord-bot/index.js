@@ -19,6 +19,7 @@ require('./commands/unregister')(client);
 require('./commands/addmatch')(client);
 require('./commands/ranking')(client);
 require('./commands/stats')(client);
+require('./commands/history')(client);
 require('./commands/resetmatch')(client);
 
 client.login(process.env.TOKEN);
