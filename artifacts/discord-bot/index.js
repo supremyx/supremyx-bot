@@ -14,6 +14,7 @@ client.once('ready', () => {
   console.log(`🔥 MoSeTo connecté en tant que ${client.user.tag}`);
 });
 
+require('./commands/help')(client);
 require('./commands/register')(client);
 require('./commands/unregister')(client);
 require('./commands/addmatch')(client);
