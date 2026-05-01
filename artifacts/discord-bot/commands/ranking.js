@@ -1,12 +1,18 @@
-// Commande !ranking - Affiche le classement
-// TODO: Remplace ce fichier par ton propre code
+const Team = require('../database/models/Team');
 
 module.exports = (client) => {
-  client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
-    if (!message.content.startsWith('!ranking')) return;
+  client.on('messageCreate', async message => {
+    if (message.content === '!ranking') {
 
-    // Placeholder - remplace par ton code
-    message.reply('Commande ranking en attente de configuration.');
+      let teams = await Team.find().sort({ points: -1 });
+
+      if (!teams.length) return message.channel.send('Aucune équipe enregistrée.');
+
+      let text = teams.map((t,i)=>
+        `#${i+1} ${t.name} - ${t.points} pts`
+      ).join('\n');
+
+      message.channel.send(text);
+    }
   });
 };
