@@ -19,6 +19,10 @@ const TeamSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  kills: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
