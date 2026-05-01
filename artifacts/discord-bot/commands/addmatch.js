@@ -1,4 +1,5 @@
 const Team = require('../database/models/Team');
+const Match = require('../database/models/Match');
 
 const points = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
 
@@ -14,8 +15,11 @@ module.exports = (client) => {
       const placement = parseInt(args[2]);
       const kills = parseInt(args[3]);
 
+      if (!name || isNaN(placement) || isNaN(kills))
+        return message.reply('Usage : `!addmatch <nom> <placement> <kills>`');
+
       let team = await Team.findOne({ name });
-      if (!team) return message.reply('Inconnue');
+      if (!team) return message.reply('Équipe inconnue');
 
       let pts = (points[placement] || 0) + kills;
 
@@ -23,7 +27,15 @@ module.exports = (client) => {
       team.kills += kills;
       await team.save();
 
-      message.reply(`🎯 ${name} +${pts} pts`);
+      await Match.create({
+        team: name,
+        placement,
+        kills,
+        points: pts,
+        addedBy: message.author.tag
+      });
+
+      message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)`);
     }
   });
 };
