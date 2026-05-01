@@ -23,6 +23,7 @@ require('./commands/stats')(client);
 require('./commands/history')(client);
 require('./commands/top')(client);
 require('./commands/matchs')(client);
+require('./commands/mvp')(client);
 require('./commands/resetmatch')(client);
 
 client.login(process.env.TOKEN);

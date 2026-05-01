@@ -35,6 +35,7 @@ module.exports = (client) => {
             '`!stats <nom>` — Stats détaillées d\'une équipe',
             '`!history <nom>` — Historique paginé des matchs',
             '`!matchs` — Résumé global et records',
+            '`!mvp` — Équipe avec le meilleur ratio kills/match',
           ].join('\n')
         }
       )
