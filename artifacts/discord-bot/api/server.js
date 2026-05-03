@@ -45,13 +45,24 @@ router.get('/ranking/:team', async (req, res) => {
     if (!team) return res.status(404).json({ error: `Équipe introuvable : ${req.params.team}` });
 
     const rank = await Team.countDocuments({ points: { $gt: team.points } }) + 1;
-    const recentMatches = await Match.find({ team: team.name })
-      .sort({ createdAt: -1 }).limit(5).lean();
+    const allMatches = await Match.find({ team: team.name })
+      .sort({ createdAt: 1 }).lean();
+
+    // Build cumulative points timeline for chart
+    let cumul = 0;
+    const timeline = allMatches.map(m => {
+      cumul += m.points;
+      return { date: m.createdAt, pts: cumul, match_pts: m.points, kills: m.kills, placement: m.placement };
+    });
+
+    const recentMatches = [...allMatches].reverse().slice(0, 10);
 
     return res.json({
       success: true, rank, team: team.name,
       points: team.points, kills: team.kills,
       wins: team.wins, losses: team.losses,
+      matchCount: allMatches.length,
+      timeline,
       recentMatches: recentMatches.map(m => ({
         matchId: m._id, points: m.points, kills: m.kills,
         placement: m.placement, addedBy: m.addedBy, date: m.createdAt
