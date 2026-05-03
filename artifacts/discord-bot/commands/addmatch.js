@@ -2,7 +2,6 @@ const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
 const { staffLog } = require('../utils/staffLog');
-const { updateLeaderRole } = require('../utils/leaderRole');
 
 const points = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
 
