@@ -10,6 +10,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connecté'))
   .catch(err => console.error('❌ Erreur MongoDB:', err));
 
+client.setMaxListeners(25);
+
 client.once('ready', () => {
   console.log(`🔥 MoSeTo connecté en tant que ${client.user.tag}`);
 });
