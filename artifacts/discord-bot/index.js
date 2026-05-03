@@ -184,4 +184,7 @@ require('./commands/reglementcmd')(client);
 // --- Signalements ---
 require('./commands/report')(client);
 
+// --- Roster équipes ---
+require('./commands/roster')(client);
+
 client.login(process.env.TOKEN);

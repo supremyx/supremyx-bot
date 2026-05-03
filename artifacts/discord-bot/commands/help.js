@@ -343,6 +343,19 @@ module.exports = (client) => {
             '`!report <message>` — Signaler un problème anonymement au staff',
           ].join('\n')
         },
+        {
+          name: '👥 Roster équipes',
+          value: [
+            '`!roster <équipe>` — Afficher le roster d\'une équipe',
+            '`!roster list` — Voir tous les rosters enregistrés',
+            '`!roster add <équipe> @user <rôle> [note]` — Ajouter un membre *(staff)*',
+            '`!roster del <équipe> @user` — Retirer un membre *(staff)*',
+            '`!roster role <équipe> @user <rôle>` — Changer le rôle in-game *(staff)*',
+            '`!roster note <équipe> @user <note>` — Ajouter/modifier une note *(staff)*',
+            '`!roster clear <équipe>` — Vider le roster *(staff)*',
+            '*Rôles : IGL, Fragger, Support, Sniper, Entry, Flex, Coach, Remplaçant*',
+          ].join('\n')
+        },
       )
       .setFooter({ text: 'MoSeTo • Tapez une commande pour commencer' })
       .setTimestamp();
