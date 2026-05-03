@@ -40,6 +40,12 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📊 Sondages',
+          value: [
+            '`!poll <question> | <option1> | <option2> | ...` — Crée un sondage avec réactions *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '📅 Calendrier',
           value: [
             '`!schedule` — Affiche les matchs à venir',
