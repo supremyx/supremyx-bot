@@ -14,6 +14,7 @@ const PAGES = [
           '`!help` — Cette aide (toutes les commandes)',
           '`!helpstaff` — Aide rapide staff uniquement *(staff)*',
           '`!gitpush` — Pousser les derniers commits vers GitHub *(staff)*',
+          '`!changelog [n]` — Voir les N derniers commits du bot *(staff)*',
         ].join('\n')
       },
       {

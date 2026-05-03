@@ -8,6 +8,7 @@ const PAGES = [
         name: '🤖 Bot',
         value: [
           '`!gitpush` — Pousser les derniers commits vers GitHub',
+          '`!changelog [n]` — Voir les N derniers commits du bot',
           '`!status` — Tableau de bord (stats, uptime, ping)',
           '`!log` — Historique des actions staff',
         ].join('\n')
