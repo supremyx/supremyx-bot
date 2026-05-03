@@ -40,6 +40,14 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🎲 Aléatoire',
+          value: [
+            '`!coinflip` — Pile ou face',
+            '`!randteam` — Tirage au sort des équipes enregistrées',
+            '`!randteam TeamA,TeamB,TeamC` — Tirage au sort d\'équipes personnalisées',
+          ].join('\n')
+        },
+        {
           name: '📋 Règles',
           value: [
             '`!rules` — Affiche les règles du tournoi',
