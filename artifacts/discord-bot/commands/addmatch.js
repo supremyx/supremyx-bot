@@ -2,6 +2,7 @@ const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
 const Config = require('../database/models/Config');
+const Blacklist = require('../database/models/Blacklist');
 const { staffLog } = require('../utils/staffLog');
 const { syncRanks } = require('../utils/syncRanks');
 
@@ -19,6 +20,11 @@ module.exports = (client) => {
 
       if (!name || isNaN(placement) || isNaN(kills))
         return message.reply('Usage : `!addmatch <nom> <placement> <kills>`');
+
+      const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${name}$`, 'i') } });
+      if (blacklisted) {
+        return message.reply(`🚫 **${name}** est dans la blacklist.\nRaison : *${blacklisted.reason}*`);
+      }
 
       let team = await Team.findOne({ name });
       if (!team) return message.reply('Équipe inconnue');

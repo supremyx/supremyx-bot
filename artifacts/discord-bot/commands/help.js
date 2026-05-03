@@ -154,6 +154,15 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🚫 Blacklist',
+          value: [
+            '`!blacklist add <cible> | <raison>` — Bannir une équipe/joueur *(staff)*',
+            '`!blacklist remove <cible>` — Retirer de la blacklist *(staff)*',
+            '`!blacklist list` — Voir toute la blacklist',
+            '`!blacklist check <cible>` — Vérifier si une cible est bannie',
+          ].join('\n')
+        },
+        {
           name: '🎖️ Rôles automatiques',
           value: [
             '`!setrankreward <rang> @role [label]` — Associer un rôle Discord à un rang *(staff)*',

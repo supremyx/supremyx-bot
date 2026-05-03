@@ -1,18 +1,25 @@
 const Team = require('../database/models/Team');
+const Blacklist = require('../database/models/Blacklist');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content.startsWith('!register')) {
-      const name = message.content.split(' ')[1];
+    if (!message.content.startsWith('!register')) return;
 
-      if (!name) return message.reply('Nom requis');
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('Staff uniquement');
 
-      let exists = await Team.findOne({ name });
-      if (exists) return message.reply('Déjà inscrit');
+    const name = message.content.split(' ').slice(1).join(' ').trim();
+    if (!name) return message.reply('Usage : `!register <nom équipe>`');
 
-      await Team.create({ name });
-
-      message.reply(`✅ ${name} enregistré`);
+    const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${name}$`, 'i') } });
+    if (blacklisted) {
+      return message.reply(`🚫 **${name}** est dans la blacklist et ne peut pas être inscrit.\nRaison : *${blacklisted.reason}*`);
     }
+
+    const exists = await Team.findOne({ name });
+    if (exists) return message.reply(`⚠️ L'équipe **${name}** est déjà inscrite.`);
+
+    await Team.create({ name });
+    message.reply(`✅ Équipe **${name}** enregistrée avec succès.`);
   });
 };

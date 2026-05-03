@@ -100,6 +100,9 @@ require('./commands/rankroles')(client);
 // --- Config ---
 require('./commands/configbot')(client);
 
+// --- Blacklist ---
+require('./commands/blacklist')(client);
+
 // --- Signalements ---
 require('./commands/report')(client);
 
