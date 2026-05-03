@@ -50,6 +50,7 @@ client.once('ready', () => {
 
 // --- Utilitaires ---
 require('./commands/help')(client);
+require('./commands/helpstaff')(client);
 require('./commands/ping')(client);
 require('./commands/status')(client);
 

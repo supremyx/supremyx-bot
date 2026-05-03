@@ -11,6 +11,8 @@ const PAGES = [
           '`!status` — Tableau de bord (stats, uptime, ping)',
           '`!config` — Configuration du bot',
           '`!setpointssystem <p:pts> ... [kill:<pts>]` — Modifier le barème *(staff)*',
+          '`!help` — Cette aide (toutes les commandes)',
+          '`!helpstaff` — Aide rapide staff uniquement *(staff)*',
         ].join('\n')
       },
       {
