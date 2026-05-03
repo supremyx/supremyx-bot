@@ -50,6 +50,12 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🚨 Signalements',
+          value: [
+            '`!report <message>` — Signaler un problème anonymement au staff',
+          ].join('\n')
+        },
+        {
           name: '🤖 Bot',
           value: [
             '`!status` — Tableau de bord complet du bot (stats, uptime, ping)',

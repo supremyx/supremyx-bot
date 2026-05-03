@@ -50,5 +50,6 @@ require('./commands/rules')(client);
 require('./commands/random')(client);
 require('./commands/status')(client);
 require('./commands/season')(client);
+require('./commands/report')(client);
 
 client.login(process.env.TOKEN);
