@@ -33,6 +33,8 @@ module.exports = (client) => {
           value: [
             '`!addmatch <nom> <placement> <kills>` — Ajoute un résultat *(staff)*',
             '`!resetmatch` — Remet tous les scores à zéro *(staff)*',
+            '`!export` — Exporte le classement en CSV *(staff)*',
+            '`!export matchs` — Exporte l\'historique des matchs en CSV *(staff)*',
           ].join('\n')
         },
         {
