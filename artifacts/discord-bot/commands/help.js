@@ -40,6 +40,15 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '⚠️ Avertissements',
+          value: [
+            '`!warn @utilisateur <raison>` — Avertir un joueur *(staff)*',
+            '`!warn <nom_équipe> <raison>` — Avertir une équipe *(staff)*',
+            '`!warns @utilisateur` — Voir les avertissements d\'un joueur/équipe',
+            '`!delwarn <id>` — Supprimer un avertissement *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '📊 Sondages',
           value: [
             '`!poll <question> | <option1> | <option2> | ...` — Crée un sondage avec réactions *(staff)*',

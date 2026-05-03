@@ -45,5 +45,6 @@ require('./commands/backup')(client);
 require('./commands/restore')(client);
 require('./commands/schedule')(client);
 require('./commands/poll')(client);
+require('./commands/warn')(client);
 
 client.login(process.env.TOKEN);
