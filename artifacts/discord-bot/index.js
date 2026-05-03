@@ -103,6 +103,9 @@ require('./commands/configbot')(client);
 // --- Blacklist ---
 require('./commands/blacklist')(client);
 
+// --- Historique logs ---
+require('./commands/loghistory')(client);
+
 // --- Signalements ---
 require('./commands/report')(client);
 

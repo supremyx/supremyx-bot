@@ -154,6 +154,18 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📋 Historique staff',
+          value: [
+            '`!log` — Dernières actions staff (paginé)',
+            '`!log <page>` — Page spécifique de l\'historique',
+            '`!log <catégorie>` — Filtrer : match, modération, tournoi, données, config…',
+            '`!log <mot-clé>` — Recherche dans les logs',
+            '`!log today` — Logs du jour uniquement',
+            '`!log stats` — Statistiques par catégorie',
+            '`!log clear` — Effacer tout l\'historique *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🚫 Blacklist',
           value: [
             '`!blacklist add <cible> | <raison>` — Bannir une équipe/joueur *(staff)*',
