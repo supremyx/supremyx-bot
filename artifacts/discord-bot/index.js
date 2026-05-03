@@ -4,6 +4,7 @@ const { setupErrorHandler } = require('./utils/errorHandler');
 const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
+const { startReactionRoles } = require('./utils/reactionRoles');
 require('dotenv').config();
 
 const client = new Client({
@@ -31,6 +32,8 @@ client.once('ready', () => {
   console.log('🚨 Système automod activé');
   startAntispam(client);
   console.log('⏱️ Système anti-spam activé');
+  startReactionRoles(client);
+  console.log('🎭 Système reaction-roles activé');
 });
 
 // --- Utilitaires ---
@@ -120,6 +123,9 @@ require('./commands/antispam')(client);
 
 // --- Cooldowns ---
 require('./commands/cooldowncmd')(client);
+
+// --- Reaction roles ---
+require('./commands/reactionrole')(client);
 
 // --- Signalements ---
 require('./commands/report')(client);

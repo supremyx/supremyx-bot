@@ -185,6 +185,15 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🎭 Reaction Roles',
+          value: [
+            '`!reactionrole add <msgId> <emoji> @role [label]` — Configurer un reaction-role *(staff)*',
+            '`!reactionrole remove <msgId> <emoji>` — Supprimer un reaction-role *(staff)*',
+            '`!reactionrole clear <msgId>` — Supprimer tous les reaction-roles d\'un message *(staff)*',
+            '`!reactionrole list` — Voir tous les reaction-roles *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '⏳ Cooldowns',
           value: [
             '`!cooldowns` — Voir tous les cooldowns actifs et leurs valeurs *(staff)*',
