@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
+const { setupErrorHandler } = require('./utils/errorHandler');
 require('dotenv').config();
 
 const client = new Client({
@@ -11,6 +12,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ Erreur MongoDB:', err));
 
 client.setMaxListeners(25);
+setupErrorHandler(client);
 
 client.once('ready', () => {
   console.log(`🔥 MoSeTo connecté en tant que ${client.user.tag}`);
