@@ -40,6 +40,15 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📋 Règles',
+          value: [
+            '`!rules` — Affiche les règles du tournoi',
+            '`!setrules <titre> | <règle1> | <règle2> | ...` — Définir les règles *(staff)*',
+            '`!addrule <règle>` — Ajouter une règle à la liste *(staff)*',
+            '`!delrule <numéro>` — Supprimer une règle par son numéro *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '⚠️ Avertissements',
           value: [
             '`!warn @utilisateur <raison>` — Avertir un joueur *(staff)*',
