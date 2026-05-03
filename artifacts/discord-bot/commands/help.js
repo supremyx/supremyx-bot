@@ -313,6 +313,16 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📊 Dashboard',
+          value: [
+            '`!dashboard` — Générer le tableau de bord maintenant',
+            '`!dashboard channel #salon` — Configurer le salon de publication *(staff)*',
+            '`!dashboard auto on / off` — Publication quotidienne automatique *(staff)*',
+            '`!dashboard hour <0-23>` — Heure de publication UTC *(staff)*',
+            '`!dashboard status` — Voir la configuration *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🚨 Signalements',
           value: [
             '`!report <message>` — Signaler un problème anonymement au staff',

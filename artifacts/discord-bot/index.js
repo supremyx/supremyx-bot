@@ -8,6 +8,7 @@ const { startReactionRoles } = require('./utils/reactionRoles');
 const { startSondageManager } = require('./utils/sondageManager');
 const { startBirthdayManager } = require('./utils/birthdayManager');
 const { startLevelManager } = require('./utils/levelManager');
+const { startDashboardManager } = require('./utils/dashboardManager');
 require('dotenv').config();
 
 const client = new Client({
@@ -43,6 +44,8 @@ client.once('ready', () => {
   console.log('🎂 Système anniversaires activé');
   startLevelManager(client);
   console.log('📈 Système niveaux/XP activé');
+  startDashboardManager(client);
+  console.log('📊 Système dashboard automatique activé');
 });
 
 // --- Utilitaires ---
@@ -171,6 +174,9 @@ require('./commands/lockdown')(client);
 
 // --- Sanctions & Escalade ---
 require('./commands/sanctions')(client);
+
+// --- Dashboard ---
+require('./commands/dashboard')(client);
 
 // --- Signalements ---
 require('./commands/report')(client);
