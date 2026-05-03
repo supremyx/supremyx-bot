@@ -1,5 +1,6 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
+const Tournament = require('../database/models/Tournament');
 const { staffLog } = require('../utils/staffLog');
 
 const points = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
@@ -28,19 +29,24 @@ module.exports = (client) => {
       team.kills += kills;
       await team.save();
 
+      const activeTournoi = await Tournament.findOne({ active: true });
+
       await Match.create({
         team: name,
         placement,
         kills,
         points: pts,
+        tournamentId: activeTournoi ? activeTournoi._id.toString() : null,
+        tournamentName: activeTournoi ? activeTournoi.name : null,
         addedBy: message.author.tag
       });
 
-      message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)`);
+      const tournamentInfo = activeTournoi ? ` *(${activeTournoi.name})*` : '';
+      message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)${tournamentInfo}`);
 
       await staffLog(client, {
         action: 'addmatch',
-        details: `**Équipe :** ${name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}`,
+        details: `**Équipe :** ${name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
         author: message.author.tag
       });
     }

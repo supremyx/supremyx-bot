@@ -23,6 +23,13 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🏁 Tournois',
+          value: [
+            '`!newtournoi <nom>` — Lance un nouveau tournoi *(staff)*',
+            '`!endtournoi` — Clôture le tournoi en cours + podium final *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🏆 Classement',
           value: [
             '`!ranking` — Classement complet',

@@ -17,6 +17,14 @@ const MatchSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  tournamentId: {
+    type: String,
+    default: null
+  },
+  tournamentName: {
+    type: String,
+    default: null
+  },
   addedBy: {
     type: String
   },
