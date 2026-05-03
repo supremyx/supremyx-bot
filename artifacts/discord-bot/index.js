@@ -38,5 +38,6 @@ require('./commands/tournois')(client);
 require('./commands/deletetournoi')(client);
 require('./commands/resetmatch')(client);
 require('./commands/export')(client);
+require('./commands/backup')(client);
 
 client.login(process.env.TOKEN);

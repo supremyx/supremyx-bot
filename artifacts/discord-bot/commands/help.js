@@ -35,6 +35,7 @@ module.exports = (client) => {
             '`!resetmatch` — Remet tous les scores à zéro *(staff)*',
             '`!export` — Exporte le classement en CSV *(staff)*',
             '`!export matchs` — Exporte l\'historique des matchs en CSV *(staff)*',
+            '`!backup` — Sauvegarde complète de la base de données en JSON (DM) *(staff)*',
           ].join('\n')
         },
         {
