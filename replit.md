@@ -25,3 +25,19 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## GitHub
+
+- **Dépôt** : https://github.com/hulksilver1-eng/moseto-bot
+- **Token** : stocké dans le secret `GITHUB_PERSONAL_ACCESS_TOKEN`
+- **Remote OAuth Replit** : non configuré (intégration dismissée par l'utilisateur)
+- **Push manuel** : `git push https://hulksilver1-eng:$GITHUB_PERSONAL_ACCESS_TOKEN@github.com/hulksilver1-eng/moseto-bot.git main`
+- Note : le fichier `.git/config.lock` bloque `git remote add` — utiliser toujours l'URL complète avec token pour pousser.
+
+## Discord Bot (MoSeTo)
+
+- **Emplacement** : `artifacts/discord-bot/`
+- **Stack** : Node.js (CommonJS), discord.js v14, mongoose, dotenv
+- **Workflow** : "Discord Bot" → `cd artifacts/discord-bot && node index.js`
+- **Secrets** : TOKEN, MONGO_URI, LOG_CHANNEL_ID, ANNOUNCE_CHANNEL_ID
+- **95+ commandes** réparties en 29+ catégories
