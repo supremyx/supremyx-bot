@@ -50,6 +50,14 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📝 Notes staff',
+          value: [
+            '`!note <cible> <texte>` — Ajouter une note privée sur une équipe/joueur *(staff)*',
+            '`!notes <cible>` — Voir toutes les notes sur une cible *(staff)*',
+            '`!delnote <id>` — Supprimer une note *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🚨 Signalements',
           value: [
             '`!report <message>` — Signaler un problème anonymement au staff',
