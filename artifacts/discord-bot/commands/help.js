@@ -185,6 +185,18 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🤬 Mots interdits',
+          value: [
+            '`!automod` — Voir le statut de la détection',
+            '`!automod on / off` — Activer / désactiver *(staff)*',
+            '`!words` — Voir la liste des mots interdits *(staff)*',
+            '`!word add <mot>` — Ajouter un mot interdit *(staff)*',
+            '`!word del <mot>` — Supprimer un mot *(staff)*',
+            '`!word setup` — Charger la liste par défaut *(staff)*',
+            '`!word clear` — Vider toute la liste *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🚨 Signalements',
           value: [
             '`!report <message>` — Signaler un problème anonymement au staff',

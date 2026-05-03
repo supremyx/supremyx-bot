@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const { setupErrorHandler } = require('./utils/errorHandler');
 const { startReminder } = require('./utils/reminder');
+const { startAutomod } = require('./utils/automod');
 require('dotenv').config();
 
 const client = new Client({
@@ -25,6 +26,8 @@ client.once('ready', () => {
   console.log(`🔥 MoSeTo connecté en tant que ${client.user.tag}`);
   startReminder(client);
   console.log('⏰ Système de rappels activé');
+  startAutomod(client);
+  console.log('🚨 Système automod activé');
 });
 
 // --- Utilitaires ---
@@ -105,6 +108,9 @@ require('./commands/blacklist')(client);
 
 // --- Historique logs ---
 require('./commands/loghistory')(client);
+
+// --- Automod ---
+require('./commands/automod')(client);
 
 // --- Signalements ---
 require('./commands/report')(client);
