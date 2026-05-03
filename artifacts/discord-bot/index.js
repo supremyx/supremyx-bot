@@ -55,6 +55,8 @@ require('./commands/ping')(client);
 require('./commands/status')(client);
 require('./commands/gitpush')(client);
 require('./commands/changelog')(client);
+require('./commands/botstats')(client);
+require('./utils/commandTracker')(client);
 
 // --- Annonces ---
 require('./commands/announce')(client);
