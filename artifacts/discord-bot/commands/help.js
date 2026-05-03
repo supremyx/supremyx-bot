@@ -16,6 +16,12 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📢 Annonces',
+          value: [
+            '`!announce <message>` — Envoie une annonce en embed dans le salon dédié *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🎮 Matchs',
           value: [
             '`!addmatch <nom> <placement> <kills>` — Ajoute un résultat *(staff)*',

@@ -15,6 +15,7 @@ client.once('ready', () => {
 });
 
 require('./commands/help')(client);
+require('./commands/announce')(client);
 require('./commands/register')(client);
 require('./commands/unregister')(client);
 require('./commands/addmatch')(client);
