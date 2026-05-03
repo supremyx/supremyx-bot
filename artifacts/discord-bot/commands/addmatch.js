@@ -1,9 +1,8 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
+const Config = require('../database/models/Config');
 const { staffLog } = require('../utils/staffLog');
-
-const points = {1:10,2:6,3:5,4:4,5:3,6:2,7:1,8:1};
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -23,7 +22,15 @@ module.exports = (client) => {
       let team = await Team.findOne({ name });
       if (!team) return message.reply('Équipe inconnue');
 
-      let pts = (points[placement] || 0) + kills;
+      // Use config point system or fallback defaults
+      const config = await Config.findOne();
+      const ptMap = config?.pointSystem instanceof Map
+        ? config.pointSystem
+        : new Map([['1',10],['2',6],['3',5],['4',4],['5',3],['6',2],['7',1],['8',1]]);
+      const killBonus = config?.killBonus ?? 1;
+
+      const placementPts = ptMap.get(String(placement)) ?? 0;
+      const pts = placementPts + (kills * killBonus);
 
       team.points += pts;
       team.kills += kills;
