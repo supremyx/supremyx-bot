@@ -40,6 +40,13 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🤖 Bot',
+          value: [
+            '`!status` — Tableau de bord complet du bot (stats, uptime, ping)',
+            '`!ping` — Latence du bot',
+          ].join('\n')
+        },
+        {
           name: '🎲 Aléatoire',
           value: [
             '`!coinflip` — Pile ou face',

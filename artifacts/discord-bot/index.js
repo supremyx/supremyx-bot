@@ -48,5 +48,6 @@ require('./commands/poll')(client);
 require('./commands/warn')(client);
 require('./commands/rules')(client);
 require('./commands/random')(client);
+require('./commands/status')(client);
 
 client.login(process.env.TOKEN);
