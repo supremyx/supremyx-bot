@@ -5,6 +5,9 @@ const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
 const { startReactionRoles } = require('./utils/reactionRoles');
+const { startSondageManager } = require('./utils/sondageManager');
+const { startBirthdayManager } = require('./utils/birthdayManager');
+const { startLevelManager } = require('./utils/levelManager');
 require('dotenv').config();
 
 const client = new Client({
@@ -21,7 +24,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connecté'))
   .catch(err => console.error('❌ Erreur MongoDB:', err));
 
-client.setMaxListeners(50);
+client.setMaxListeners(100);
 setupErrorHandler(client);
 
 client.once('ready', () => {
@@ -34,6 +37,12 @@ client.once('ready', () => {
   console.log('⏱️ Système anti-spam activé');
   startReactionRoles(client);
   console.log('🎭 Système reaction-roles activé');
+  startSondageManager(client);
+  console.log('📊 Système sondages activé');
+  startBirthdayManager(client);
+  console.log('🎂 Système anniversaires activé');
+  startLevelManager(client);
+  console.log('📈 Système niveaux/XP activé');
 });
 
 // --- Utilitaires ---
@@ -126,6 +135,39 @@ require('./commands/cooldowncmd')(client);
 
 // --- Reaction roles ---
 require('./commands/reactionrole')(client);
+
+// --- Sondages temporisés ---
+require('./commands/sondage')(client);
+
+// --- Suggestions ---
+require('./commands/suggestion')(client);
+
+// --- Événements RSVP ---
+require('./commands/eventcmd')(client);
+
+// --- AFK ---
+require('./commands/afk')(client);
+
+// --- Anniversaires ---
+require('./commands/birthday')(client);
+
+// --- Embed builder ---
+require('./commands/embedbuilder')(client);
+
+// --- Welcome & Autorole ---
+require('./commands/welcome')(client);
+require('./commands/autorole')(client);
+
+// --- Infos ---
+require('./commands/userinfo')(client);
+require('./commands/serverinfo')(client);
+require('./commands/roleinfo')(client);
+
+// --- Niveaux XP ---
+require('./commands/level')(client);
+
+// --- Lock/Unlock ---
+require('./commands/lockdown')(client);
 
 // --- Signalements ---
 require('./commands/report')(client);

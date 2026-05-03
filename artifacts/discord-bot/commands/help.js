@@ -7,7 +7,7 @@ module.exports = (client) => {
     const embed = new EmbedBuilder()
       .setTitle('📖 Aide — MoSeTo')
       .setColor(0x5865F2)
-      .setDescription('Voici toutes les commandes disponibles. *(staff)* = réservé aux administrateurs.')
+      .setDescription('Toutes les commandes disponibles. *(staff)* = réservé aux administrateurs.')
       .addFields(
         {
           name: '🤖 Bot',
@@ -15,15 +15,29 @@ module.exports = (client) => {
             '`!ping` — Latence du bot',
             '`!status` — Tableau de bord complet (stats, uptime, ping)',
             '`!config` — Afficher la configuration du bot',
-            '`!setpointssystem <p:pts> ... [kill:<pts>]` — Modifier le barème de points *(staff)*',
+            '`!setpointssystem <p:pts> ... [kill:<pts>]` — Modifier le barème *(staff)*',
           ].join('\n')
         },
         {
-          name: '📢 Annonces',
+          name: '📢 Annonces & Embeds',
           value: [
-            '`!announce <message>` — Envoie une annonce en embed *(staff)*',
-            '`!motd` — Afficher le message du jour',
+            '`!announce <message>` — Annonce en embed vers le salon d\'annonce *(staff)*',
+            '`!embed <titre> | <desc> | [couleur] | [image] | [footer]` — Embed personnalisé *(staff)*',
+            '`!motd` — Message du jour',
             '`!setmotd <texte>` — Définir le message du jour *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '👋 Bienvenue & Autorole',
+          value: [
+            '`!welcome` — Voir la configuration du message de bienvenue *(staff)*',
+            '`!welcome set <message>` — Définir le message (`{user}` `{server}` `{count}`) *(staff)*',
+            '`!welcome channel #salon` — Choisir le salon de bienvenue *(staff)*',
+            '`!welcome test` — Tester le message *(staff)*',
+            '`!welcome on / off` — Activer / désactiver *(staff)*',
+            '`!autorole` — Voir la configuration de l\'autorole *(staff)*',
+            '`!autorole set @role` — Rôle automatique aux nouveaux membres *(staff)*',
+            '`!autorole on / off` — Activer / désactiver *(staff)*',
           ].join('\n')
         },
         {
@@ -45,7 +59,7 @@ module.exports = (client) => {
             '`!export` — Exporter le classement en CSV *(staff)*',
             '`!export matchs` — Exporter l\'historique des matchs en CSV *(staff)*',
             '`!backup` — Sauvegarde complète en JSON (DM) *(staff)*',
-            '`!restore` — Restaurer depuis un fichier JSON de backup *(staff)*',
+            '`!restore` — Restaurer depuis un fichier JSON *(staff)*',
           ].join('\n')
         },
         {
@@ -55,7 +69,6 @@ module.exports = (client) => {
             '`!ranking <tournoi>` — Classement d\'un tournoi',
             '`!top <n>` — Top N des équipes',
             '`!leaderboard` — Classement en direct',
-            '`!leaderboard <saison>` — Classement final d\'une saison passée',
             '`!search <nom>` — Rechercher une équipe',
             '`!compare <eq1> <eq2>` — Comparer deux équipes',
             '`!h2h <eq1> vs <eq2>` — Face à face statistique',
@@ -63,7 +76,6 @@ module.exports = (client) => {
             '`!history <nom>` — Historique des matchs',
             '`!matchs` — Dernier match de chaque équipe',
             '`!mvp` — MVP du tournoi actif',
-            '`!mvpseason` — Classement des kills',
             '`!streak <équipe>` — Série de victoires/défaites',
             '`!consistency <équipe>` — Score de régularité',
             '`!calc <placement> <kills>` — Simuler un calcul de points',
@@ -84,7 +96,7 @@ module.exports = (client) => {
           name: '🗓️ Saisons',
           value: [
             '`!newseason <nom>` — Lancer une nouvelle saison *(staff)*',
-            '`!endseason` — Clore la saison et sauvegarder le classement *(staff)*',
+            '`!endseason` — Clore la saison *(staff)*',
             '`!saisons` — Historique de toutes les saisons',
           ].join('\n')
         },
@@ -98,27 +110,87 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
-          name: '🎉 Événements',
+          name: '📊 Sondages',
+          value: [
+            '`!sondage <durée> <question> | <opt1> | <opt2> | ...` — Sondage temporisé avec résultats auto *(staff)*',
+            '`!poll <question> | <opt1> | <opt2> | ...` — Sondage simple *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '🗳️ Suggestions',
+          value: [
+            '`!suggestion <texte>` — Soumettre une idée au staff',
+            '`!setsuggestion #salon` — Configurer le salon de suggestions *(staff)*',
+            '`!sugaccept <id> [note]` — Accepter une suggestion *(staff)*',
+            '`!sugreject <id> [note]` — Refuser une suggestion *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '📅 Événements RSVP',
+          value: [
+            '`!event create <titre> | [desc] | [date]` — Créer un événement *(staff)*',
+            '`!event list` — Voir les événements actifs',
+            '`!event participants <id>` — Voir les inscrits',
+            '`!event cancel <id>` — Annuler un événement *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '🎉 Giveaways',
           value: [
             '`!giveaway <durée> <prix>` — Lancer un giveaway *(staff)*',
             '`!reroll <messageId>` — Reroll d\'un giveaway *(staff)*',
-            '`!poll <question> | <opt1> | <opt2> | ...` — Créer un sondage *(staff)*',
-            '`!remind <durée> <message>` — Se rappeler quelque chose par DM',
+          ].join('\n')
+        },
+        {
+          name: '📈 Niveaux & XP',
+          value: [
+            '`!level [@user]` — Voir son niveau et ses XP',
+            '`!levelboard` — Classement XP Top 10',
+            '`!setlevelchannel #salon` — Salon pour les annonces de level-up *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '💤 AFK',
+          value: [
+            '`!afk [message]` — Passer en mode AFK',
+            '*(Le statut se retire automatiquement à ton prochain message)*',
+          ].join('\n')
+        },
+        {
+          name: '🎂 Anniversaires',
+          value: [
+            '`!birthday set DD/MM` — Enregistrer son anniversaire',
+            '`!birthday set DD/MM/YYYY` — Avec l\'année',
+            '`!birthday list` — Voir tous les anniversaires',
+            '`!birthday check [@user]` — Vérifier un anniversaire',
+            '`!birthday del` — Supprimer son anniversaire',
+            '`!setbirthday #salon` — Salon pour les annonces *(staff)*',
           ].join('\n')
         },
         {
           name: '🛡️ Modération',
           value: [
-            '`!warn @user <raison>` — Avertir un joueur *(staff)*',
+            '`!warn @user <raison>` — Avertir un membre *(staff)*',
             '`!warns @user` — Voir les avertissements',
             '`!delwarn <id>` — Supprimer un avertissement *(staff)*',
-            '`!mute @user <minutes> [raison]` — Mettre en sourdine *(staff)*',
-            '`!unmute @user` — Lever la sourdine *(staff)*',
+            '`!mute @user <minutes> [raison]` — Timeout *(staff)*',
+            '`!unmute @user` — Lever le timeout *(staff)*',
             '`!clear <n>` — Supprimer N messages *(staff)*',
-            '`!slowmode <secondes>` — Mode lent dans un salon *(staff)*',
+            '`!lock [#salon]` — Verrouiller un salon *(staff)*',
+            '`!unlock [#salon]` — Déverrouiller un salon *(staff)*',
+            '`!slowmode <secondes> [#salon]` — Mode lent *(staff)*',
+            '`!slowmode off [#salon]` — Désactiver le mode lent *(staff)*',
             '`!dm @user <message>` — Envoyer un DM via le bot *(staff)*',
             '`!ticket` — Ouvrir un ticket privé avec le staff',
-            '`!close` — Fermer un ticket (dans le salon ticket)',
+            '`!close` — Fermer un ticket',
+          ].join('\n')
+        },
+        {
+          name: '🔍 Informations',
+          value: [
+            '`!userinfo [@user]` — Fiche détaillée d\'un membre',
+            '`!serverinfo` — Statistiques du serveur',
+            '`!roleinfo @role` — Informations sur un rôle',
           ].join('\n')
         },
         {
@@ -151,74 +223,66 @@ module.exports = (client) => {
             '`!coinflip` — Pile ou face',
             '`!randteam` — Tirage au sort des équipes enregistrées',
             '`!randteam TeamA,TeamB,...` — Tirage au sort personnalisé',
+            '`!remind <durée> <message>` — Rappel personnel par DM',
           ].join('\n')
         },
         {
           name: '📋 Historique staff',
           value: [
             '`!log` — Dernières actions staff (paginé)',
-            '`!log <page>` — Page spécifique de l\'historique',
-            '`!log <catégorie>` — Filtrer : match, modération, tournoi, données, config…',
-            '`!log <mot-clé>` — Recherche dans les logs',
-            '`!log today` — Logs du jour uniquement',
+            '`!log <page>` — Page spécifique',
+            '`!log <catégorie>` — Filtrer : match, modération, tournoi...',
+            '`!log today` — Logs du jour',
             '`!log stats` — Statistiques par catégorie',
-            '`!log clear` — Effacer tout l\'historique *(staff)*',
+            '`!log clear` — Effacer l\'historique *(staff)*',
           ].join('\n')
         },
         {
           name: '🚫 Blacklist',
           value: [
-            '`!blacklist add <cible> | <raison>` — Bannir une équipe/joueur *(staff)*',
-            '`!blacklist remove <cible>` — Retirer de la blacklist *(staff)*',
+            '`!blacklist add <cible> | <raison>` — Bannir *(staff)*',
+            '`!blacklist remove <cible>` — Retirer *(staff)*',
             '`!blacklist list` — Voir toute la blacklist',
-            '`!blacklist check <cible>` — Vérifier si une cible est bannie',
+            '`!blacklist check <cible>` — Vérifier',
           ].join('\n')
         },
         {
-          name: '🎖️ Rôles automatiques',
+          name: '🎖️ Rôles automatiques de rang',
           value: [
-            '`!setrankreward <rang> @role [label]` — Associer un rôle Discord à un rang *(staff)*',
-            '`!linkteam <équipe> @role` — Lier une équipe à son rôle Discord *(staff)*',
-            '`!rankrewards` — Voir la configuration des récompenses de rang',
-            '`!syncranks` — Synchroniser manuellement les rôles de rang *(staff)*',
-            '`!delrankreward <rang>` — Supprimer une récompense de rang *(staff)*',
+            '`!setrankreward <rang> @role [label]` — Associer un rôle à un rang *(staff)*',
+            '`!linkteam <équipe> @role` — Lier une équipe à son rôle *(staff)*',
+            '`!rankrewards` — Voir la configuration',
+            '`!syncranks` — Synchroniser manuellement *(staff)*',
+            '`!delrankreward <rang>` — Supprimer une récompense *(staff)*',
           ].join('\n')
         },
         {
           name: '🎭 Reaction Roles',
           value: [
-            '`!reactionrole add <msgId> <emoji> @role [label]` — Configurer un reaction-role *(staff)*',
-            '`!reactionrole remove <msgId> <emoji>` — Supprimer un reaction-role *(staff)*',
-            '`!reactionrole clear <msgId>` — Supprimer tous les reaction-roles d\'un message *(staff)*',
+            '`!reactionrole add <msgId> <emoji> @role [label]` — Configurer *(staff)*',
+            '`!reactionrole remove <msgId> <emoji>` — Supprimer *(staff)*',
+            '`!reactionrole clear <msgId>` — Supprimer tous sur un message *(staff)*',
             '`!reactionrole list` — Voir tous les reaction-roles *(staff)*',
           ].join('\n')
         },
         {
           name: '⏳ Cooldowns',
           value: [
-            '`!cooldowns` — Voir tous les cooldowns actifs et leurs valeurs *(staff)*',
-            '`!setcooldown <commande> <secondes>` — Modifier le délai d\'une commande *(staff)*',
-            '`!delcooldown <commande>` — Réinitialiser au délai par défaut *(staff)*',
+            '`!cooldowns` — Voir tous les cooldowns *(staff)*',
+            '`!setcooldown <commande> <secondes>` — Modifier le délai *(staff)*',
+            '`!delcooldown <commande>` — Réinitialiser au défaut *(staff)*',
           ].join('\n')
         },
         {
-          name: '⏱️ Anti-spam',
+          name: '⏱️ Anti-spam & Automod',
           value: [
-            '`!antispam` — Voir le statut et la configuration',
+            '`!antispam` — Voir la configuration anti-spam',
             '`!antispam on / off` — Activer / désactiver *(staff)*',
             '`!antispam set <messages> <secondes>` — Régler le seuil *(staff)*',
-          ].join('\n')
-        },
-        {
-          name: '🤬 Mots interdits',
-          value: [
-            '`!automod` — Voir le statut de la détection',
+            '`!automod` — Voir le statut de détection de mots',
             '`!automod on / off` — Activer / désactiver *(staff)*',
             '`!words` — Voir la liste des mots interdits *(staff)*',
-            '`!word add <mot>` — Ajouter un mot interdit *(staff)*',
-            '`!word del <mot>` — Supprimer un mot *(staff)*',
-            '`!word setup` — Charger la liste par défaut *(staff)*',
-            '`!word clear` — Vider toute la liste *(staff)*',
+            '`!word add <mot>` / `!word del <mot>` / `!word setup` / `!word clear` *(staff)*',
           ].join('\n')
         },
         {
