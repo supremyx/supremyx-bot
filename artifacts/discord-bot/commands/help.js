@@ -16,6 +16,13 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🛠️ Utilitaires',
+          value: [
+            '`!ping` — Vérifie la latence du bot',
+            '`!help` — Affiche cette aide',
+          ].join('\n')
+        },
+        {
           name: '📢 Annonces',
           value: [
             '`!announce <message>` — Envoie une annonce en embed dans le salon dédié *(staff)*',
