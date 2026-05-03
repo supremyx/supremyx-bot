@@ -1,10 +1,13 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!compare')) return;
+    const cd = checkCooldown(message.author.id, 'compare', 5);
+    if (cd) return replyCooldown(message, cd, 'compare');
 
     const args = message.content.split(' ').slice(1);
     const separator = args.indexOf('vs');

@@ -1,5 +1,6 @@
 const Match = require('../database/models/Match');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 const PAGE_SIZE = 5;
 
@@ -21,6 +22,9 @@ function buildEmbed(teamName, matches, page, totalPages) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!history')) return;
+
+    const cd = checkCooldown(message.author.id, 'history', 10);
+    if (cd) return replyCooldown(message, cd, 'history');
 
     const name = message.content.split(' ')[1];
     if (!name) return message.reply('Usage : `!history <nom>`');

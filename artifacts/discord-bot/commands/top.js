@@ -1,11 +1,14 @@
 const Team = require('../database/models/Team');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 const medals = ['🥇', '🥈', '🥉'];
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!top')) return;
+    const cd = checkCooldown(message.author.id, 'top', 10);
+    if (cd) return replyCooldown(message, cd, 'top');
 
     const n = parseInt(message.content.split(' ')[1]) || 3;
 

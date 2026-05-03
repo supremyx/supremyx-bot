@@ -1,10 +1,13 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!mvp') return;
+    const cd = checkCooldown(message.author.id, 'mvp', 15);
+    if (cd) return replyCooldown(message, cd, 'mvp');
 
     const teams = await Team.find();
     if (!teams.length) return message.channel.send('Aucune équipe enregistrée.');

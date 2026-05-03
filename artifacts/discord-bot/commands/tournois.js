@@ -1,5 +1,6 @@
 const Tournament = require('../database/models/Tournament');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 const PAGE_SIZE = 5;
 
@@ -35,6 +36,8 @@ function buildEmbed(tournaments, page, totalPages) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!tournois') return;
+    const cd = checkCooldown(message.author.id, 'tournois', 10);
+    if (cd) return replyCooldown(message, cd, 'tournois');
 
     const tournaments = await Tournament.find().sort({ startedAt: -1 });
 

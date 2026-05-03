@@ -2,12 +2,15 @@ const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 const medals = ['🥇', '🥈', '🥉'];
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!ranking')) return;
+    const cd = checkCooldown(message.author.id, 'ranking', 10);
+    if (cd) return replyCooldown(message, cd, 'ranking');
 
     const tournamentName = message.content.split(' ').slice(1).join(' ').trim();
 

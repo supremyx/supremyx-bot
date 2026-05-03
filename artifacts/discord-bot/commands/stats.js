@@ -1,10 +1,13 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content.startsWith('!stats')) {
+      const cd = checkCooldown(message.author.id, 'stats', 5);
+      if (cd) return replyCooldown(message, cd, 'stats');
 
       const name = message.content.split(' ')[1];
       if (!name) return message.reply('Usage : `!stats <nom>`');

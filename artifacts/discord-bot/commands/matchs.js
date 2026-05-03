@@ -1,10 +1,13 @@
 const Match = require('../database/models/Match');
 const Team = require('../database/models/Team');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!matchs') return;
+    const cd = checkCooldown(message.author.id, 'matchs', 15);
+    if (cd) return replyCooldown(message, cd, 'matchs');
 
     const [matches, teams] = await Promise.all([
       Match.find().sort({ createdAt: -1 }),
