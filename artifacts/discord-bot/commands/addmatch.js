@@ -3,6 +3,7 @@ const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
 const Config = require('../database/models/Config');
 const { staffLog } = require('../utils/staffLog');
+const { syncRanks } = require('../utils/syncRanks');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -50,6 +51,9 @@ module.exports = (client) => {
 
       const tournamentInfo = activeTournoi ? ` *(${activeTournoi.name})*` : '';
       message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)${tournamentInfo}`);
+
+      // Auto-sync rank roles if configured
+      syncRanks(message.guild).catch(() => {});
 
       await staffLog(client, {
         action: 'addmatch',

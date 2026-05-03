@@ -23,6 +23,10 @@ const TeamSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  roleId: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -154,6 +154,16 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🎖️ Rôles automatiques',
+          value: [
+            '`!setrankreward <rang> @role [label]` — Associer un rôle Discord à un rang *(staff)*',
+            '`!linkteam <équipe> @role` — Lier une équipe à son rôle Discord *(staff)*',
+            '`!rankrewards` — Voir la configuration des récompenses de rang',
+            '`!syncranks` — Synchroniser manuellement les rôles de rang *(staff)*',
+            '`!delrankreward <rang>` — Supprimer une récompense de rang *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🚨 Signalements',
           value: [
             '`!report <message>` — Signaler un problème anonymement au staff',

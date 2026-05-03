@@ -94,6 +94,9 @@ require('./commands/random')(client);
 // --- Rappels ---
 require('./commands/remind')(client);
 
+// --- Rangs automatiques ---
+require('./commands/rankroles')(client);
+
 // --- Config ---
 require('./commands/configbot')(client);
 
