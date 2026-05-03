@@ -179,10 +179,24 @@ module.exports = (client) => {
             '`!lock [#salon]` — Verrouiller un salon *(staff)*',
             '`!unlock [#salon]` — Déverrouiller un salon *(staff)*',
             '`!slowmode <secondes> [#salon]` — Mode lent *(staff)*',
-            '`!slowmode off [#salon]` — Désactiver le mode lent *(staff)*',
             '`!dm @user <message>` — Envoyer un DM via le bot *(staff)*',
-            '`!ticket` — Ouvrir un ticket privé avec le staff',
-            '`!close` — Fermer un ticket',
+          ].join('\n')
+        },
+        {
+          name: '🎫 Tickets',
+          value: [
+            '`!ticket` — Ouvrir un ticket support',
+            '`!ticket support / signalement / candidature` — Ouvrir avec catégorie',
+            '`!ticket panel` — Poster le panel de création *(staff)*',
+            '`!tickets` — Voir tous les tickets ouverts *(staff)*',
+            '`!claim` — Prendre en charge le ticket *(staff, dans le ticket)*',
+            '`!resolve` — Marquer comme résolu *(staff, dans le ticket)*',
+            '`!adduser @user` — Ajouter un membre au ticket *(staff)*',
+            '`!close` — Fermer et archiver le ticket',
+            '`!ticketconfig` — Voir / modifier la configuration *(staff)*',
+            '`!ticketconfig staffrole @role` — Rôle staff pour les tickets *(staff)*',
+            '`!ticketconfig transcript #salon` — Salon des transcripts *(staff)*',
+            '`!ticketconfig category <id>` — Catégorie Discord pour les tickets *(staff)*',
           ].join('\n')
         },
         {
