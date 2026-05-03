@@ -169,6 +169,9 @@ require('./commands/level')(client);
 // --- Lock/Unlock ---
 require('./commands/lockdown')(client);
 
+// --- Sanctions & Escalade ---
+require('./commands/sanctions')(client);
+
 // --- Signalements ---
 require('./commands/report')(client);
 

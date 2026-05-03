@@ -1,6 +1,7 @@
 const Warning = require('../database/models/Warning');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { addSanction, ACTION_LABELS } = require('../utils/sanctionManager');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -10,13 +11,13 @@ module.exports = (client) => {
     const args = message.content.split(' ');
     const cmd = args[0].toLowerCase();
 
-    // --- !warn <@user ou nom> <raison> ---
+    // --- !warn @user <raison> ---
     if (cmd === '!warn') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const mention = message.mentions.users.first();
       const rawTarget = args[1];
-      const reason = args.slice(mention ? 2 : 2).join(' ').trim();
+      const reason = args.slice(2).join(' ').trim();
 
       if (!rawTarget || !reason) {
         return message.reply(
@@ -29,19 +30,27 @@ module.exports = (client) => {
       const target = mention ? mention.tag : rawTarget;
       const targetId = mention ? mention.id : '';
 
-      await Warning.create({
-        target,
-        targetId,
-        reason,
-        warnedBy: message.author.tag,
-        warnedById: message.author.id
-      });
-
+      // Save to legacy Warning model (backward compat)
+      await Warning.create({ target, targetId, reason, warnedBy: message.author.tag, warnedById: message.author.id });
       const totalWarns = await Warning.countDocuments({ target });
+
+      // Save to Sanction model + check escalation
+      let escalation = null;
+      if (mention) {
+        const result = await addSanction(client, message.guild, {
+          userId: mention.id,
+          userTag: mention.tag,
+          type: 'warn',
+          reason,
+          moderatorId: message.author.id,
+          moderatorTag: message.author.tag
+        });
+        escalation = result.escalation;
+      }
 
       const embed = new EmbedBuilder()
         .setTitle('⚠️ Avertissement émis')
-        .setColor(0xFEE75C)
+        .setColor(totalWarns >= 3 ? 0xED4245 : 0xFEE75C)
         .addFields(
           { name: '🎯 Cible', value: target, inline: true },
           { name: '⚠️ Total warns', value: `${totalWarns}`, inline: true },
@@ -51,13 +60,23 @@ module.exports = (client) => {
         .setTimestamp();
 
       if (totalWarns >= 3) {
-        embed.addFields({ name: '🔴 Attention', value: `Cette cible a atteint **${totalWarns} avertissements**.` });
+        embed.addFields({ name: '🔴 Attention', value: `**${totalWarns}** avertissements au total.` });
+      }
+
+      // Show escalation if auto-triggered
+      if (escalation) {
+        const autoAction = ACTION_LABELS[escalation.rule.action];
+        const autoDur = escalation.rule.duration ? ` (${escalation.rule.duration} min)` : '';
+        embed.addFields({
+          name: '🤖 Auto-escalade déclenchée',
+          value: `**${escalation.warnCount} warns** → **${autoAction}${autoDur}** appliqué automatiquement`
+        });
         embed.setColor(0xED4245);
       }
 
       message.channel.send({ embeds: [embed] });
 
-      // Notify the user in DM if it's a mention
+      // DM the user
       if (mention) {
         const dmEmbed = new EmbedBuilder()
           .setTitle('⚠️ Tu as reçu un avertissement')
@@ -68,35 +87,24 @@ module.exports = (client) => {
           )
           .setFooter({ text: `Par ${message.author.tag}` })
           .setTimestamp();
-
-        mention.createDM()
-          .then(dm => dm.send({ embeds: [dmEmbed] }))
-          .catch(() => {});
+        mention.createDM().then(dm => dm.send({ embeds: [dmEmbed] })).catch(() => {});
       }
 
       logStaffAction(client, `⚠️ **Warn** — \`${target}\` | Raison : ${reason} | Par : ${message.author.tag}`);
       return;
     }
 
-    // --- !warns <@user ou nom> ---
+    // --- !warns @user ---
     if (cmd === '!warns') {
       const mention = message.mentions.users.first();
       const rawTarget = args[1];
-
-      if (!rawTarget) {
-        return message.reply('Usage : `!warns @utilisateur` ou `!warns <nom_équipe>`');
-      }
+      if (!rawTarget) return message.reply('Usage : `!warns @utilisateur` ou `!warns <nom_équipe>`');
 
       const target = mention ? mention.tag : rawTarget;
-      const query = mention
-        ? { targetId: mention.id }
-        : { target: { $regex: new RegExp(`^${rawTarget}$`, 'i') } };
-
+      const query = mention ? { targetId: mention.id } : { target: { $regex: new RegExp(`^${rawTarget}$`, 'i') } };
       const warns = await Warning.find(query).sort({ createdAt: -1 });
 
-      if (!warns.length) {
-        return message.reply(`✅ Aucun avertissement pour **${target}**.`);
-      }
+      if (!warns.length) return message.reply(`✅ Aucun avertissement pour **${target}**.`);
 
       const embed = new EmbedBuilder()
         .setTitle(`⚠️ Avertissements — ${target}`)
@@ -106,27 +114,19 @@ module.exports = (client) => {
 
       for (const w of warns.slice(0, 10)) {
         const date = new Date(w.createdAt).toLocaleDateString('fr-FR');
-        embed.addFields({
-          name: `#${w._id.toString().slice(-5)} — ${date}`,
-          value: `📝 ${w.reason}\n👮 Par : ${w.warnedBy}`
-        });
+        embed.addFields({ name: `#${w._id.toString().slice(-5)} — ${date}`, value: `📝 ${w.reason}\n👮 Par : ${w.warnedBy}` });
       }
 
-      if (warns.length > 10) {
-        embed.setFooter({ text: `Affichage des 10 derniers sur ${warns.length}` });
-      }
-
+      if (warns.length > 10) embed.setFooter({ text: `Affichage des 10 derniers sur ${warns.length}` });
       return message.channel.send({ embeds: [embed] });
     }
 
     // --- !delwarn <id> ---
     if (cmd === '!delwarn') {
       if (!isStaff) return message.reply('Staff uniquement');
-
       const id = args[1];
-      if (!id) return message.reply('Usage : `!delwarn <id>`\nL\'ID est visible dans `!warns`.');
+      if (!id) return message.reply('Usage : `!delwarn <id>`');
 
-      // Support short ID (last 5 chars) or full ID
       let deleted = null;
       if (id.length === 24) {
         deleted = await Warning.findByIdAndDelete(id).catch(() => null);
@@ -137,8 +137,7 @@ module.exports = (client) => {
       }
 
       if (!deleted) return message.reply('❌ Aucun avertissement trouvé avec cet ID.');
-
-      logStaffAction(client, `🗑️ **Warn supprimé** — \`${deleted.target}\` | Raison : ${deleted.reason} | Par : ${message.author.tag}`);
+      logStaffAction(client, `🗑️ **Warn supprimé** — \`${deleted.target}\` | Par : ${message.author.tag}`);
       return message.reply(`✅ Avertissement de **${deleted.target}** supprimé.`);
     }
   });

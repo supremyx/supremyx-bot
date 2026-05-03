@@ -168,6 +168,19 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📋 Sanctions & Escalade',
+          value: [
+            '`!sanctions @user` — Historique complet des sanctions d\'un membre',
+            '`!punition @user <warn|mute|kick|ban> [durée_min] | <raison>` — Appliquer une sanction *(staff)*',
+            '`!clearactions @user` — Effacer tout l\'historique de sanctions *(staff)*',
+            '`!escalade` — Voir les règles d\'escalade automatique *(staff)*',
+            '`!escalade on / off` — Activer / désactiver *(staff)*',
+            '`!escalade set <warns> <action> [durée_min]` — Configurer une règle *(staff)*',
+            '`!escalade del <warns>` — Supprimer une règle *(staff)*',
+            '`!escalade reset` — Réinitialiser aux valeurs par défaut *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🛡️ Modération',
           value: [
             '`!warn @user <raison>` — Avertir un membre *(staff)*',
