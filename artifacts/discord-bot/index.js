@@ -26,6 +26,7 @@ require('./commands/matchs')(client);
 require('./commands/mvp')(client);
 require('./commands/newtournoi')(client);
 require('./commands/endtournoi')(client);
+require('./commands/tournois')(client);
 require('./commands/resetmatch')(client);
 
 client.login(process.env.TOKEN);
