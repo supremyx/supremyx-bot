@@ -5,6 +5,14 @@ const PAGES = [
     title: '🛡️ Staff — Page 1 / 3 — Équipes, Matchs & Tournois',
     fields: [
       {
+        name: '🤖 Bot',
+        value: [
+          '`!gitpush` — Pousser les derniers commits vers GitHub',
+          '`!status` — Tableau de bord (stats, uptime, ping)',
+          '`!log` — Historique des actions staff',
+        ].join('\n')
+      },
+      {
         name: '👥 Équipes',
         value: [
           '`!register <nom>` — Inscrire une équipe',

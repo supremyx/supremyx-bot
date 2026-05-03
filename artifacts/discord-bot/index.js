@@ -53,6 +53,7 @@ require('./commands/help')(client);
 require('./commands/helpstaff')(client);
 require('./commands/ping')(client);
 require('./commands/status')(client);
+require('./commands/gitpush')(client);
 
 // --- Annonces ---
 require('./commands/announce')(client);
