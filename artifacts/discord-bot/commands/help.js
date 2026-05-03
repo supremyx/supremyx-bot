@@ -185,6 +185,14 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '⏳ Cooldowns',
+          value: [
+            '`!cooldowns` — Voir tous les cooldowns actifs et leurs valeurs *(staff)*',
+            '`!setcooldown <commande> <secondes>` — Modifier le délai d\'une commande *(staff)*',
+            '`!delcooldown <commande>` — Réinitialiser au délai par défaut *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '⏱️ Anti-spam',
           value: [
             '`!antispam` — Voir le statut et la configuration',

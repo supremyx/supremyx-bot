@@ -118,6 +118,9 @@ require('./commands/automod')(client);
 // --- Anti-spam ---
 require('./commands/antispam')(client);
 
+// --- Cooldowns ---
+require('./commands/cooldowncmd')(client);
+
 // --- Signalements ---
 require('./commands/report')(client);
 
