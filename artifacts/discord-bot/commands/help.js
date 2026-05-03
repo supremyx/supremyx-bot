@@ -16,6 +16,7 @@ const PAGES = [
           '`!gitpush` — Pousser les derniers commits vers GitHub *(staff)*',
           '`!changelog [n]` — Voir les N derniers commits du bot *(staff)*',
           '`!botstats` — Statistiques d\'utilisation du bot *(staff)*',
+          '`!dashboard web` — Lien vers le dashboard classement en ligne',
         ].join('\n')
       },
       {

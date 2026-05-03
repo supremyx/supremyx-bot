@@ -143,6 +143,26 @@ module.exports = (client) => {
         return message.channel.send({ embeds });
       }
 
+      // --- !dashboard web — lien vers le dashboard classement ---
+      if (sub === 'web') {
+        const domain = (process.env.REPLIT_DOMAINS || '').split(',')[0].trim();
+        const url    = domain ? `https://${domain}/dashboard/` : null;
+        const embed  = new EmbedBuilder()
+          .setTitle('📊 Dashboard Classement — MoSeTo')
+          .setColor(0x5865F2)
+          .setDescription(
+            url
+              ? `Consulte le classement en direct, l'évolution des points par équipe et l'historique des matchs.\n\n🔗 **[Ouvrir le Dashboard](${url})**\n\n> Actualisation automatique toutes les 30 secondes.`
+              : '⚠️ URL indisponible (variable `REPLIT_DOMAINS` absente).'
+          );
+        if (url) {
+          embed.addFields({ name: '🌐 Lien direct', value: url });
+          embed.setFooter({ text: 'MoSeTo • Dashboard Classement' });
+          embed.setTimestamp();
+        }
+        return message.channel.send({ embeds: [embed] });
+      }
+
       if (!isStaff) return message.reply('Staff uniquement');
 
       // --- !dashboard channel #salon ---
@@ -212,7 +232,8 @@ module.exports = (client) => {
 
       return message.reply(
         '**Commandes `!dashboard` :**\n' +
-        '`!dashboard` — Générer le dashboard maintenant\n' +
+        '`!dashboard` — Générer le dashboard serveur maintenant\n' +
+        '`!dashboard web` — Lien vers le dashboard classement en ligne\n' +
         '`!dashboard channel #salon` — Configurer le salon *(staff)*\n' +
         '`!dashboard auto on / off` — Activer / désactiver la publication auto *(staff)*\n' +
         '`!dashboard hour <0-23>` — Heure de publication (UTC) *(staff)*\n' +
