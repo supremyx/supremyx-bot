@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const { setupErrorHandler } = require('./utils/errorHandler');
+const { startReminder } = require('./utils/reminder');
 require('dotenv').config();
 
 const client = new Client({
@@ -16,6 +17,8 @@ setupErrorHandler(client);
 
 client.once('ready', () => {
   console.log(`🔥 MoSeTo connecté en tant que ${client.user.tag}`);
+  startReminder(client);
+  console.log('⏰ Système de rappels activé');
 });
 
 require('./commands/help')(client);
