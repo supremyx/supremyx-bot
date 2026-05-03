@@ -40,6 +40,16 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '🗓️ Saisons',
+          value: [
+            '`!leaderboard` — Classement en direct de la saison actuelle',
+            '`!leaderboard <nom>` — Classement final d\'une saison passée',
+            '`!saisons` — Historique de toutes les saisons',
+            '`!newseason <nom>` — Lancer une nouvelle saison *(staff)*',
+            '`!endseason` — Clore la saison et sauvegarder le classement *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🤖 Bot',
           value: [
             '`!status` — Tableau de bord complet du bot (stats, uptime, ping)',
