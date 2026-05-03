@@ -23,6 +23,7 @@ require('./commands/unregister')(client);
 require('./commands/addmatch')(client);
 require('./commands/ranking')(client);
 require('./commands/stats')(client);
+require('./commands/search')(client);
 require('./commands/history')(client);
 require('./commands/top')(client);
 require('./commands/matchs')(client);

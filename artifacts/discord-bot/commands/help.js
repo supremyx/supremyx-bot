@@ -48,6 +48,7 @@ module.exports = (client) => {
         {
           name: '📊 Statistiques',
           value: [
+            '`!search <nom>` — Recherche une équipe par nom partiel',
             '`!stats <nom>` — Stats détaillées d\'une équipe',
             '`!history <nom>` — Historique paginé des matchs',
             '`!matchs` — Résumé global et records',
