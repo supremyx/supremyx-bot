@@ -185,6 +185,14 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '⏱️ Anti-spam',
+          value: [
+            '`!antispam` — Voir le statut et la configuration',
+            '`!antispam on / off` — Activer / désactiver *(staff)*',
+            '`!antispam set <messages> <secondes>` — Régler le seuil *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🤬 Mots interdits',
           value: [
             '`!automod` — Voir le statut de la détection',

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { setupErrorHandler } = require('./utils/errorHandler');
 const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
+const { startAntispam } = require('./utils/antispam');
 require('dotenv').config();
 
 const client = new Client({
@@ -28,6 +29,8 @@ client.once('ready', () => {
   console.log('⏰ Système de rappels activé');
   startAutomod(client);
   console.log('🚨 Système automod activé');
+  startAntispam(client);
+  console.log('⏱️ Système anti-spam activé');
 });
 
 // --- Utilitaires ---
@@ -111,6 +114,9 @@ require('./commands/loghistory')(client);
 
 // --- Automod ---
 require('./commands/automod')(client);
+
+// --- Anti-spam ---
+require('./commands/antispam')(client);
 
 // --- Signalements ---
 require('./commands/report')(client);
