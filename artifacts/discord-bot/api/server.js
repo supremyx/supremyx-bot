@@ -92,6 +92,68 @@ app.post('/removematch', async (req, res) => {
   }
 });
 
+// GET /ranking — classement complet des équipes trié par points
+app.get('/ranking', async (req, res) => {
+  try {
+    const teams = await Team.find().sort({ points: -1, kills: -1 }).lean();
+
+    const ranking = teams.map((t, i) => ({
+      rank:   i + 1,
+      team:   t.name,
+      points: t.points,
+      kills:  t.kills,
+      wins:   t.wins,
+      losses: t.losses
+    }));
+
+    return res.json({ success: true, total: ranking.length, ranking });
+  } catch (err) {
+    console.error('[API /ranking]', err);
+    return res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+// GET /ranking/:team — stats d'une équipe spécifique
+app.get('/ranking/:team', async (req, res) => {
+  try {
+    const team = await Team.findOne({
+      name: { $regex: new RegExp(`^${req.params.team}$`, 'i') }
+    }).lean();
+
+    if (!team) return res.status(404).json({ error: `Équipe introuvable : ${req.params.team}` });
+
+    // Calcul du rang
+    const rank = await Team.countDocuments({ points: { $gt: team.points } }) + 1;
+
+    // Derniers matchs
+    const recentMatches = await Match.find({ team: team.name })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    return res.json({
+      success: true,
+      rank,
+      team:    team.name,
+      points:  team.points,
+      kills:   team.kills,
+      wins:    team.wins,
+      losses:  team.losses,
+      recentMatches: recentMatches.map(m => ({
+        matchId:   m._id,
+        points:    m.points,
+        kills:     m.kills,
+        placement: m.placement,
+        addedBy:   m.addedBy,
+        date:      m.createdAt
+      }))
+    });
+  } catch (err) {
+    console.error('[API /ranking/:team]', err);
+    return res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
 // GET /health — vérification rapide
 app.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'MoSeTo' }));
 
