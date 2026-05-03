@@ -39,5 +39,6 @@ require('./commands/deletetournoi')(client);
 require('./commands/resetmatch')(client);
 require('./commands/export')(client);
 require('./commands/backup')(client);
+require('./commands/restore')(client);
 
 client.login(process.env.TOKEN);
