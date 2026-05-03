@@ -33,7 +33,8 @@ module.exports = (client) => {
         {
           name: '🏆 Classement',
           value: [
-            '`!ranking` — Classement complet',
+            '`!ranking` — Classement général',
+            '`!ranking <tournoi>` — Classement d\'un tournoi spécifique',
             '`!top <n>` — Top N équipes (défaut : 3)',
           ].join('\n')
         },
