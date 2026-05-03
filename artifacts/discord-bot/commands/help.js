@@ -98,6 +98,7 @@ module.exports = (client) => {
             '`!newseason <nom>` — Lancer une nouvelle saison *(staff)*',
             '`!endseason` — Clore la saison *(staff)*',
             '`!saisons` — Historique de toutes les saisons',
+            '`!mvpseason` — MVP all-time : meilleure équipe sur toutes les saisons terminées',
           ].join('\n')
         },
         {

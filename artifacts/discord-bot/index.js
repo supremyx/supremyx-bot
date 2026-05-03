@@ -89,6 +89,7 @@ require('./commands/bracket')(client);
 
 // --- Saisons ---
 require('./commands/season')(client);
+require('./commands/mvpseason')(client);
 
 // --- Calendrier ---
 require('./commands/schedule')(client);
