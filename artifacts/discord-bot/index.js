@@ -40,5 +40,6 @@ require('./commands/resetmatch')(client);
 require('./commands/export')(client);
 require('./commands/backup')(client);
 require('./commands/restore')(client);
+require('./commands/schedule')(client);
 
 client.login(process.env.TOKEN);

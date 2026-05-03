@@ -40,6 +40,15 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
+          name: '📅 Calendrier',
+          value: [
+            '`!schedule` — Affiche les matchs à venir',
+            '`!schedule add <DD/MM/YYYY> <HH:MM> <equipe1,equipe2,...> [note]` — Planifier un match *(staff)*',
+            '`!schedule delete <id>` — Supprimer un match planifié *(staff)*',
+            '`!schedule clear` — Supprimer les matchs passés *(staff)*',
+          ].join('\n')
+        },
+        {
           name: '🏁 Tournois',
           value: [
             '`!newtournoi <nom>` — Lance un nouveau tournoi *(staff)*',
