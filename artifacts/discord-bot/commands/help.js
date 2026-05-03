@@ -28,6 +28,7 @@ module.exports = (client) => {
             '`!newtournoi <nom>` — Lance un nouveau tournoi *(staff)*',
             '`!endtournoi` — Clôture le tournoi en cours + podium final *(staff)*',
             '`!tournois` — Historique de tous les tournois',
+            '`!deletetournoi <nom>` — Supprime un tournoi et ses matchs *(staff)*',
           ].join('\n')
         },
         {
