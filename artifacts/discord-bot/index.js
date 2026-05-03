@@ -54,6 +54,8 @@ require('./commands/helpstaff')(client);
 require('./commands/ping')(client);
 require('./commands/status')(client);
 require('./commands/gitpush')(client);
+const { startApiServer } = require('./api/server');
+startApiServer();
 require('./commands/changelog')(client);
 require('./commands/botstats')(client);
 require('./utils/commandTracker')(client);
