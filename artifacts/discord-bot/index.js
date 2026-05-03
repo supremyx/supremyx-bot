@@ -178,6 +178,9 @@ require('./commands/sanctions')(client);
 // --- Dashboard ---
 require('./commands/dashboard')(client);
 
+// --- Règlement interactif ---
+require('./commands/reglementcmd')(client);
+
 // --- Signalements ---
 require('./commands/report')(client);
 

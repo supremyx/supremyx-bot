@@ -228,10 +228,25 @@ module.exports = (client) => {
           ].join('\n')
         },
         {
-          name: '📋 Règles',
+          name: '📖 Règlement interactif',
+          value: [
+            '`!règlement` — Afficher le règlement complet',
+            '`!règlement list` — Lister les sections | `!règlement list <num>` — Détail',
+            '`!règlement add <section> <règle>` — Ajouter une règle *(staff)*',
+            '`!règlement edit <section> <num> <texte>` — Modifier une règle *(staff)*',
+            '`!règlement del <section> <num>` — Supprimer une règle *(staff)*',
+            '`!règlement section add <emoji> <titre>` — Nouvelle section *(staff)*',
+            '`!règlement section del/rename/emoji <num>` — Gérer les sections *(staff)*',
+            '`!règlement titre <titre>` / `!règlement intro <texte>` *(staff)*',
+            '`!règlement post [#salon]` — Poster et épingler *(staff)*',
+            '`!règlement update` — Mettre à jour le message épinglé *(staff)*',
+          ].join('\n')
+        },
+        {
+          name: '📋 Règles tournoi (simple)',
           value: [
             '`!rules` — Afficher les règles du tournoi',
-            '`!setrules <titre> | <règle1> | <règle2> | ...` — Définir les règles *(staff)*',
+            '`!setrules <titre> | <règle1> | <règle2> | ...` — Définir *(staff)*',
             '`!addrule <règle>` — Ajouter une règle *(staff)*',
             '`!delrule <numéro>` — Supprimer une règle *(staff)*',
           ].join('\n')
