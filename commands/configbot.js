@@ -47,7 +47,7 @@ module.exports = (client) => {
       if (!pairs.length)
         return message.reply(
           'Usage : `!setpointssystem <place:pts> ... [kill:<pts>]`\n' +
-          'Exemple : `!setpointssystem 1:12 2:9 3:7 4:5 5:4 6:3 7:2 8:1 kill:1`'
+          'Exemple : `!setpointssystem 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
         );
 
       const config = await getOrCreateConfig();
