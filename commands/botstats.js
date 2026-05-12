@@ -54,7 +54,7 @@ module.exports = (client) => {
       ).join('\n') || '—';
 
       const embed = new EmbedBuilder()
-        .setTitle('📊 Statistiques du Bot — MoSeTo')
+        .setTitle('📊 Statistiques du Bot — SUPREMYX')
         .setColor(0x5865F2)
         .addFields(
           {
@@ -83,7 +83,7 @@ module.exports = (client) => {
             inline: true
           }
         )
-        .setFooter({ text: 'MoSeTo • Statistiques en temps réel' })
+        .setFooter({ text: 'SUPREMYX • Statistiques en temps réel' })
         .setTimestamp();
 
       message.channel.send({ embeds: [embed] });
