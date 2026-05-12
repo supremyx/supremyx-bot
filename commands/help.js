@@ -2,7 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentTyp
 
 const PAGES = [
   {
-    title: '📖 Aide MoSeTo — Page 1 / 6 — Bot & Annonces',
+    title: '📖 Aide SUPREMYX — Page 1 / 6 — Bot & Annonces',
     fields: [
       {
         name: '🤖 Bot',
