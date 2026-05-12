@@ -120,7 +120,7 @@ async function buildDashboardEmbed(guild, client) {
     mainEmbed.addFields({ name: '🚨 Dernières sanctions', value: rows });
   }
 
-  mainEmbed.setFooter({ text: `MoSeTo • ${guild.name} • Données en temps réel` });
+  mainEmbed.setFooter({ text: `SUPREMYX • ${guild.name} • Données en temps réel` });
 
   return [mainEmbed];
 }
@@ -148,7 +148,7 @@ module.exports = (client) => {
         const domain = (process.env.REPLIT_DOMAINS || '').split(',')[0].trim();
         const url    = domain ? `https://${domain}/dashboard/` : null;
         const embed  = new EmbedBuilder()
-          .setTitle('📊 Dashboard Classement — MoSeTo')
+          .setTitle('📊 Dashboard Classement — SUPREMYX')
           .setColor(0x5865F2)
           .setDescription(
             url
@@ -157,7 +157,7 @@ module.exports = (client) => {
           );
         if (url) {
           embed.addFields({ name: '🌐 Lien direct', value: url });
-          embed.setFooter({ text: 'MoSeTo • Dashboard Classement' });
+          embed.setFooter({ text: 'SUPREMYX • Dashboard Classement' });
           embed.setTimestamp();
         }
         return message.channel.send({ embeds: [embed] });
