@@ -41,7 +41,7 @@ module.exports = (client) => {
     const memberCount = client.guilds.cache.reduce((acc, g) => acc + g.memberCount, 0);
 
     const embed = new EmbedBuilder()
-      .setTitle('📊 Tableau de bord — MoSeTo')
+      .setTitle('📊 Tableau de bord — SUPREMYX')
       .setColor(0x5865F2)
       .setThumbnail(client.user.displayAvatarURL())
       .addFields(
@@ -60,7 +60,7 @@ module.exports = (client) => {
         { name: '📡 Ping', value: `${ping} ms`, inline: true },
         { name: '🌐 Serveurs', value: `${guildCount} (${memberCount} membres)`, inline: true }
       )
-      .setFooter({ text: `MoSeTo • ${client.user.tag}` })
+      .setFooter({ text: `SUPREMYX • ${client.user.tag}` })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
