@@ -53,7 +53,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide MoSeTo — Page 2 / 6 — Équipes & Matchs',
+    title: '📖 Aide SUPREMYX — Page 2 / 6 — Équipes & Matchs',
     fields: [
       {
         name: '👥 Équipes',
@@ -93,7 +93,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide MoSeTo — Page 3 / 6 — Statistiques & Tournois',
+    title: '📖 Aide SUPREMYX — Page 3 / 6 — Statistiques & Tournois',
     fields: [
       {
         name: '📊 Statistiques',
@@ -147,7 +147,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide MoSeTo — Page 4 / 6 — Modération & Sanctions',
+    title: '📖 Aide SUPREMYX — Page 4 / 6 — Modération & Sanctions',
     fields: [
       {
         name: '🛡️ Modération',
@@ -199,7 +199,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide MoSeTo — Page 5 / 6 — Tickets & Communauté',
+    title: '📖 Aide SUPREMYX — Page 5 / 6 — Tickets & Communauté',
     fields: [
       {
         name: '🎫 Tickets',
@@ -250,7 +250,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide MoSeTo — Page 6 / 6 — Infos & Divers',
+    title: '📖 Aide SUPREMYX — Page 6 / 6 — Infos & Divers',
     fields: [
       {
         name: '🔍 Informations',
@@ -323,7 +323,7 @@ function buildEmbed(page) {
     .setTitle(p.title)
     .setColor(0x5865F2)
     .setDescription('*(staff)* = réservé aux administrateurs. Navigue avec les boutons ◀ ▶')
-    .setFooter({ text: `MoSeTo • Page ${page + 1} sur ${PAGES.length}` })
+    .setFooter({ text: `SUPREMYX • Page ${page + 1} sur ${PAGES.length}` })
     .setTimestamp();
 
   for (const field of p.fields) {
