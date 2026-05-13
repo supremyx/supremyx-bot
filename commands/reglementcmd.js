@@ -11,9 +11,6 @@ async function getOrCreate(guildId) {
       guildId,
       sections: [
         {
-          
-        },
-        {
           emoji: '🎮',
           title: 'Règles de compétition',
           rules: ['Tout match doit être rapporté au staff.', 'Les résultats doivent être prouvés par screenshot.', 'Tout abandon intentionnel est sanctionné.']
