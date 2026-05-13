@@ -57,6 +57,8 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
+  console.log("Message reçu :", message.content);
+
   if (message.content.startsWith('!ai')) {
     const prompt = message.content.slice(3).trim();
 
@@ -65,22 +67,20 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
+      console.log("Prompt envoyé :", prompt);
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }]
       });
 
-      const text = response.choices?.[0]?.message?.content;
+      console.log("Réponse IA OK");
 
-      if (!text) {
-        return message.reply("❌ Aucune réponse générée.");
-      }
-
-      return message.reply(text);
+      message.reply(response.choices[0].message.content);
 
     } catch (error) {
-      console.error("❌ Erreur OpenAI:", error);
-      return message.reply("⚠️ Erreur avec l’IA, réessaie plus tard.");
+      console.error("Erreur OpenAI :", error);
+      message.reply("⚠️ Erreur avec l'IA.");
     }
   }
 });
