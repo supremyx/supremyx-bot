@@ -11,6 +11,16 @@ async function getOrCreate(guildId) {
       guildId,
       sections: [
         {
+          emoji: '📜',
+          title: 'Règles générales',
+          rules: ['Respectez tous les membres.', 'Aucun langage offensant ou discriminatoire.', 'Pas de spam ni de flood.']
+        },
+        {
+          emoji: '🎮',
+          title: 'Règles de compétition',
+          rules: ['Tout match doit être rapporté au staff.', 'Les résultats doivent être prouvés par screenshot.', 'Tout abandon intentionnel est sanctionné.']
+        },
+        {
           emoji: '⚠️',
           title: 'Sanctions',
           rules: ['1er manquement : avertissement.', '2e manquement : mute temporaire.', '3e manquement : exclusion.']
