@@ -233,11 +233,3 @@ require('./commands/report')(client);
 require('./commands/roster')(client);
 
 client.login(process.env.TOKEN);
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection:', reason);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-});
