@@ -1,4 +1,7 @@
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
@@ -21,10 +24,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent
   ]
-});
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
 });
 
 mongoose.connect(process.env.MONGO_URI)
@@ -57,8 +56,6 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  console.log("Message reçu :", message.content);
-
   if (message.content.startsWith('!ai')) {
     const prompt = message.content.slice(3).trim();
 
@@ -67,20 +64,14 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-      console.log("Prompt envoyé :", prompt);
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }]
-      });
-
-      console.log("Réponse IA OK");
-
-      message.reply(response.choices[0].message.content);
+      message.reply(response);
 
     } catch (error) {
-      console.error("Erreur OpenAI :", error);
-      message.reply("⚠️ Erreur avec l'IA.");
+      console.error(error);
+      message.reply("⚠️ Erreur avec l'IA Gemini.");
     }
   }
 });
@@ -233,11 +224,3 @@ require('./commands/report')(client);
 require('./commands/roster')(client);
 
 client.login(process.env.TOKEN);
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection:', reason);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-});
