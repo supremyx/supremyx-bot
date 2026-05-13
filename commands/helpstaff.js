@@ -190,7 +190,7 @@ function buildEmbed(page) {
     .setTitle(p.title)
     .setColor(0xED4245)
     .setDescription('Toutes les commandes réservées aux administrateurs. Navigue avec les boutons ◀ ▶')
-    .setFooter({ text: `MoSeTo Staff • Page ${page + 1} sur ${PAGES.length}` })
+    .setFooter({ text: `SUPREMYX Staff • Page ${page + 1} sur ${PAGES.length}` })
     .setTimestamp();
 
   for (const field of p.fields) {
