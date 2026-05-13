@@ -58,15 +58,19 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (message.content.startsWith('!ai')) {
-    const prompt = message.content.replace('!ai', '');
+  const prompt = message.content.slice(3).trim();
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }]
-    });
-
-    message.reply(response.choices[0].message.content);
+  if (!prompt) {
+    return message.reply("❗ Écris quelque chose après !ai");
   }
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }]
+  });
+
+  message.reply(response.choices[0].message.content);
+}
 });
 
 // --- Utilitaires ---
