@@ -1,3 +1,5 @@
+const OpenAI = require('openai');
+
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const { setupErrorHandler } = require('./utils/errorHandler');
@@ -19,6 +21,10 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent
   ]
+});
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 mongoose.connect(process.env.MONGO_URI)
@@ -46,6 +52,21 @@ client.once('ready', () => {
   console.log('📈 Système niveaux/XP activé');
   startDashboardManager(client);
   console.log('📊 Système dashboard automatique activé');
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  if (message.content.startsWith('!ai')) {
+    const prompt = message.content.replace('!ai', '');
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }]
+    });
+
+    message.reply(response.choices[0].message.content);
+  }
 });
 
 // --- Utilitaires ---
