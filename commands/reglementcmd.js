@@ -11,9 +11,7 @@ async function getOrCreate(guildId) {
       guildId,
       sections: [
         {
-          title: 'Bienvenue sur SUPREMYX – l’élite du gaming compétitif.
-Respect, discipline et performance sont nos valeurs.
-Notre objectif est de développer l’e-sport en Côte d’Ivoire et de créer une scène compétitive sérieuse et respectée.'
+          
         },
         {
           emoji: '🎮',
