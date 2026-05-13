@@ -11,7 +11,7 @@ module.exports = (client) => {
     const text = message.content.split(' ').slice(1).join(' ').trim();
     if (!text) return message.reply('Usage : `!announce <message>`');
 
-    const channelId = process.env.ANNOUNCE_CHANNEL_ID;
+    const channelId = process.env.1498861682221383740;
     if (!channelId)
       return message.reply('❌ `ANNOUNCE_CHANNEL_ID` non configuré. Ajoute l\'ID du salon d\'annonces dans les variables d\'environnement.');
 
