@@ -1,7 +1,10 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash-latest"
+});
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
@@ -70,8 +73,8 @@ client.on('messageCreate', async (message) => {
       message.reply(response);
 
     } catch (error) {
-      console.error(error);
-      message.reply("⚠️ Erreur avec l'IA Gemini.");
+      console.error("Erreur Gemini :", error);
+      message.reply("⚠️ Erreur avec Gemini.");
     }
   }
 });
