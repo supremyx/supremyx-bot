@@ -58,18 +58,30 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (message.content.startsWith('!ai')) {
-  const prompt = message.content.slice(3).trim();
+    const prompt = message.content.slice(3).trim();
 
-  if (!prompt) {
-    return message.reply("❗ Écris quelque chose après !ai");
-  }
+    if (!prompt) {
+      return message.reply("❗ Écris quelque chose après !ai");
+    }
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }]
-  });
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }]
+      });
 
-  message.reply(response.choices[0].message.content);
+      const text = response.choices?.[0]?.message?.content;
+
+      if (!text) {
+        return message.reply("❌ Aucune réponse générée.");
+      }
+
+      return message.reply(text);
+
+    } catch (error) {
+      console.error("❌ Erreur OpenAI:", error);
+      return message.reply("⚠️ Erreur avec l’IA, réessaie plus tard.");
+    }
   }
 });
 
@@ -221,3 +233,11 @@ require('./commands/report')(client);
 require('./commands/roster')(client);
 
 client.login(process.env.TOKEN);
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+});
