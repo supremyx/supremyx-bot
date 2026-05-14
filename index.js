@@ -55,6 +55,13 @@ client.once('ready', () => {
   console.log('📊 Système dashboard automatique activé');
 });
 
+const OpenAI = require('openai');
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1"
+});
+
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
@@ -67,7 +74,7 @@ client.on('messageCreate', async (message) => {
 
     try {
       const response = await openai.chat.completions.create({
-        model: "mistralai/mistral-7b-instruct",
+        model: "openrouter/auto",
         messages: [
           { role: "user", content: prompt }
         ]
@@ -76,7 +83,7 @@ client.on('messageCreate', async (message) => {
       message.reply(response.choices[0].message.content);
 
     } catch (error) {
-      console.error(error);
+      console.error("Erreur IA :", error);
       message.reply("⚠️ Erreur IA.");
     }
   }
