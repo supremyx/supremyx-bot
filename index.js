@@ -1,3 +1,11 @@
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 const OpenAI = require('openai');
 
 const openai = new OpenAI({
@@ -55,37 +63,40 @@ client.once('ready', () => {
   console.log('📊 Système dashboard automatique activé');
 });
 
-const OpenAI = require('openai');
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1"
-});
-
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  if (message.content.startsWith('!ai')) {
-    const prompt = message.content.slice(3).trim();
+  if (!message.content.startsWith('!ai')) return;
 
-    if (!prompt) {
-      return message.reply("❗ Écris quelque chose après !ai");
+  const prompt = message.content.slice(3).trim();
+
+  if (!prompt) {
+    return message.reply("❗ Mets un texte après !ai");
+  }
+
+  try {
+    console.log("Envoi à OpenRouter...");
+
+    const response = await openai.chat.completions.create({
+      model: "openrouter/auto",
+      messages: [
+        { role: "user", content: prompt }
+      ]
+    });
+
+    console.log("Réponse reçue");
+
+    const reply = response?.choices?.[0]?.message?.content;
+
+    if (!reply) {
+      return message.reply("⚠️ Réponse vide de l'IA.");
     }
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: "openrouter/auto",
-        messages: [
-          { role: "user", content: prompt }
-        ]
-      });
+    await message.reply(reply);
 
-      message.reply(response.choices[0].message.content);
-
-    } catch (error) {
-      console.error("Erreur IA :", error);
-      message.reply("⚠️ Erreur IA.");
-    }
+  } catch (err) {
+    console.error("ERREUR COMPLETE :", err);
+    message.reply("⚠️ IA indisponible.");
   }
 });
 
