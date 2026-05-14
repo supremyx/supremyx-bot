@@ -1,9 +1,8 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const OpenAI = require('openai');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash-latest"
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1"
 });
 
 const { Client, GatewayIntentBits } = require('discord.js');
@@ -67,14 +66,18 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const response = await openai.chat.completions.create({
+        model: "mistralai/mistral-7b-instruct",
+        messages: [
+          { role: "user", content: prompt }
+        ]
+      });
 
-      message.reply(response);
+      message.reply(response.choices[0].message.content);
 
     } catch (error) {
-      console.error("Erreur Gemini :", error);
-      message.reply("⚠️ Erreur avec Gemini.");
+      console.error(error);
+      message.reply("⚠️ Erreur IA.");
     }
   }
 });
