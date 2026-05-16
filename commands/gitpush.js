@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
 
 const REPO_DIR = '/home/runner/workspace';
-const REMOTE = `https://hulksilver1-eng:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/hulksilver1-eng/moseto-bot.git`;
+const REMOTE = `https://supremyx:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
 
 function run(cmd, cwd) {
   return new Promise((resolve, reject) => {
