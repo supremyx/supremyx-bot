@@ -24,6 +24,7 @@ const PAGES = [
         name: '📢 Annonces & Embeds',
         value: [
           '`!announce <message>` — Annonce en embed *(staff)*',
+          '`!say [#salon] <texte>` — Envoyer du texte simple (+ médias joints) *(staff)*',
           '`!embed <titre> | <desc> | [couleur] | [image] | [footer]` — Embed personnalisé *(staff)*',
           '`!motd` — Message du jour',
           '`!setmotd <texte>` — Définir le message du jour *(staff)*',
