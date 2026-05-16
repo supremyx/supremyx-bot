@@ -17,7 +17,7 @@ const PAGES = [
           '`!changelog [n]` — Voir les N derniers commits du bot *(staff)*',
           '`!botstats` — Statistiques d\'utilisation du bot *(staff)*',
           '`!dashboard web` — Lien vers le dashboard classement en ligne',
-          '`!ai <text>` — Utilisation de l'intelligence artificielle',
+          '`!ai <text>` — Utilisation de l’intelligence artificielle',
         ].join('\n')
       },
       {
