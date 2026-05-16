@@ -14,7 +14,7 @@ app.use(express.json());
 const router = express.Router();
 
 // GET /health
-router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'MoSeTo' }));
+router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'SUPREMYX' }));
 
 // GET /ranking — classement complet trié par points
 router.get('/ranking', async (req, res) => {

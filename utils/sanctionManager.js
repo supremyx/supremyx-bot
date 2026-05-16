@@ -84,7 +84,7 @@ async function checkEscalation(client, guild, data) {
       reason: `Auto-escalade — ${warnCount} avertissements`,
       duration: rule.duration || null,
       moderatorId: 'BOT',
-      moderatorTag: 'MoSeTo (Auto)',
+      moderatorTag: 'SUPREMYX (Auto)',
       autoEscalation: true
     });
 

@@ -36,7 +36,7 @@ module.exports = (client) => {
         { name: '🚀 Boosts', value: `${boosts} boost(s) — ${BOOST_LEVEL[boostLevel] || 'Aucun'}`, inline: true },
         { name: '🌍 Région', value: guild.preferredLocale || 'Non définie', inline: true }
       )
-      .setFooter({ text: `MoSeTo • ${guild.name}` })
+      .setFooter({ text: `SUPREMYX • ${guild.name}` })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

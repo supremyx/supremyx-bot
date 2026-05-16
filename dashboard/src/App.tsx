@@ -286,9 +286,9 @@ export default function App() {
       {/* Header */}
       <header className="bg-[#1a1a2e] border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">M</div>
+          <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">S</div>
           <div>
-            <h1 className="text-base font-bold leading-none">MoSeTo</h1>
+            <h1 className="text-base font-bold leading-none">SUPREMYX</h1>
             <p className="text-xs text-gray-400 mt-0.5">Classement en direct</p>
           </div>
         </div>
@@ -372,7 +372,7 @@ export default function App() {
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          MoSeTo Dashboard · Actualisation automatique toutes les 30 secondes
+          SUPREMYX Dashboard · Actualisation automatique toutes les 30 secondes
         </p>
       </main>
     </div>

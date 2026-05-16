@@ -47,7 +47,7 @@ module.exports = (client) => {
     try {
       const dm = await message.author.createDM();
       await dm.send({
-        content: '**💾 Backup MoSeTo** — Conserve ce fichier en lieu sûr.',
+        content: '**💾 Backup SUPREMYX** — Conserve ce fichier en lieu sûr.',
         files: [file]
       });
       message.channel.send({ embeds: [embed] });

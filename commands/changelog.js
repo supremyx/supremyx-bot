@@ -63,7 +63,7 @@ module.exports = (client) => {
         .setTitle(i === 0 ? `📋 Changelog — ${n} derniers commits` : `📋 Changelog (suite ${i + 1})`)
         .setColor(0x5865F2)
         .setDescription(chunks[i])
-        .setFooter({ text: `MoSeTo • hulksilver1-eng/moseto-bot • Page ${i + 1}/${chunks.length}` })
+        .setFooter({ text: `SUPREMYX • hulksilver1-eng/moseto-bot • Page ${i + 1}/${chunks.length}` })
         .setTimestamp();
 
       await message.channel.send({ embeds: [embed] });
