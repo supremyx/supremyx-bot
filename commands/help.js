@@ -118,6 +118,10 @@ const PAGES = [
           '`!streak <équipe>` — Série de victoires/défaites',
           '`!consistency <équipe>` — Score de régularité',
           '`!calc <placement> <kills>` — Simuler un calcul de points',
+          '`!playerstats <pseudo>` — Stats individuelles d\'un joueur',
+          '`!playerboard [équipe]` — Top joueurs par kills',
+          '`!playermatch <équipe> <joueur> <kills>` — Enregistrer kills d\'un joueur *(staff)*',
+          '`!playerreset <équipe> <joueur>` — Remettre stats d\'un joueur à zéro *(staff)*',
         ].join('\n')
       },
       {

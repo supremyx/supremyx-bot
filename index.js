@@ -174,6 +174,9 @@ require('./commands/rules')(client);
 require('./commands/note')(client);
 require('./commands/achievement')(client);
 
+// --- Stats joueurs ---
+require('./commands/playerstats')(client);
+
 // --- Aléatoire ---
 require('./commands/random')(client);
 
