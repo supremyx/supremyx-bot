@@ -28,12 +28,23 @@ const PAGES = [
       {
         name: '🎮 Matchs & Exports',
         value: [
-          '`!addmatch <nom> <placement> <kills>` — Ajouter un résultat',
+          '`!addmatch <nom> <placement> <kills>` — Ajouter un résultat (équipe unique)',
+          '`!result <eq:place:kills> [eq:place:kills ...]` — Résultats multi-équipes en direct',
+          '`!result from <scheduleId> <eq:place:kills> [...]` — Résultats liés à un match planifié',
+          '`!result channel #salon` — Salon des résultats en direct',
+          '`!result status` — Voir la configuration résultats',
           '`!resetmatch` — Remettre tous les scores à zéro',
           '`!export` — Classement en CSV',
           '`!export matchs` — Historique des matchs en CSV',
           '`!backup` — Sauvegarde complète JSON (DM)',
           '`!restore` — Restaurer depuis un fichier JSON',
+        ].join('\n')
+      },
+      {
+        name: '👤 Stats joueurs individuels',
+        value: [
+          '`!playermatch <équipe> <joueur> <kills>` — Enregistrer les kills d\'un joueur',
+          '`!playerreset <équipe> <joueur>` — Réinitialiser les stats d\'un joueur',
         ].join('\n')
       },
       {
@@ -50,8 +61,12 @@ const PAGES = [
         name: '📅 Calendrier & Config',
         value: [
           '`!schedule add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Planifier un match',
+          '`!schedule edit <id> <DD/MM/YYYY> <HH:MM> [équipes] [note]` — Modifier un match planifié',
           '`!schedule delete <id>` — Supprimer un match planifié',
           '`!schedule clear` — Supprimer les matchs passés',
+          '`!schedule channel #salon` — Salon pour les rappels automatiques',
+          '`!schedule remind <on|off> [24h|1h|15m]` — Activer/désactiver les rappels',
+          '`!schedule status` — Voir la configuration des rappels',
           '`!setpointssystem <p:pts> ... [kill:<pts>]` — Modifier le barème',
         ].join('\n')
       },
@@ -143,6 +158,7 @@ const PAGES = [
         name: '📢 Annonces & Communauté',
         value: [
           '`!announce <message>` — Annonce en embed',
+          '`!say [#salon] <texte>` — Envoyer un message simple (+ médias joints)',
           '`!setmotd <texte>` — Définir le message du jour',
           '`!embed <titre> | <desc> | [couleur] | [image] | [footer]` — Embed custom',
           '`!sondage <durée> <question> | <opt1> | <opt2>` — Sondage temporisé',
@@ -173,10 +189,13 @@ const PAGES = [
           '`!notes <cible>` — Voir les notes sur une cible',
           '`!delnote <id>` — Supprimer une note',
           '`!achievement [emoji] <équipe> <titre> | [desc]` — Attribuer un trophée',
-          '`!setrules <titre> | <règle1> | <règle2>` — Définir les règles',
-          '`!addrule <règle>` — Ajouter une règle',
-          '`!delrule <numéro>` — Supprimer une règle',
-          '`!règlement post/update/section/add/edit/del` — Gérer le règlement',
+          '`!setrules <titre> | <règle1> | <règle2>` — Définir les règles tournoi',
+          '`!addrule <règle>` — Ajouter une règle tournoi',
+          '`!editrule <num> <texte>` — Modifier une règle tournoi',
+          '`!moverule <de> <vers>` — Réordonner une règle tournoi',
+          '`!delrule <numéro>` — Supprimer une règle tournoi',
+          '`!clearrules` — Effacer toutes les règles tournoi',
+          '`!règlement post/update/section/add/edit/del` — Gérer le règlement serveur',
           '`!dashboard channel/auto/hour` — Configurer le dashboard',
         ].join('\n')
       },
