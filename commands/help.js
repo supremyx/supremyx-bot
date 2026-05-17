@@ -85,6 +85,9 @@ const PAGES = [
         name: '🎮 Matchs',
         value: [
           '`!addmatch <nom> <placement> <kills>` — Ajouter un résultat *(staff)*',
+          '`!result <eq:place:kills> [eq:place:kills ...]` — Résultats multi-équipes en direct *(staff)*',
+          '`!result from <scheduleId> <eq:place:kills> [...]` — Résultats liés à un match planifié *(staff)*',
+          '`!result channel #salon` — Salon pour les résultats *(staff)*',
           '`!resetmatch` — Remettre tous les scores à zéro *(staff)*',
           '`!export` — Exporter le classement en CSV *(staff)*',
           '`!export matchs` — Exporter l\'historique des matchs *(staff)*',

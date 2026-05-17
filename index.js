@@ -118,6 +118,7 @@ require('./utils/commandTracker')(client);
 // --- Annonces ---
 require('./commands/announce')(client);
 require('./commands/say')(client);
+require('./commands/result')(client);
 require('./commands/motd')(client, true);
 
 // --- Équipes ---
