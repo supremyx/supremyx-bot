@@ -71,6 +71,9 @@ client.on('messageCreate', async (message) => {
 
   if (!message.content.startsWith('!ai')) return;
 
+  if (!message.member?.permissions.has('Administrator'))
+    return message.reply('⛔ Cette commande est réservée au staff.');
+
   const prompt = message.content.slice(3).trim();
 
   if (!prompt) {

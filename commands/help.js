@@ -360,6 +360,9 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!help') return;
 
+    if (!message.member?.permissions.has('Administrator'))
+      return message.reply('⛔ Cette commande est réservée au staff.');
+
     let page = 0;
 
     const prev = new ButtonBuilder()
