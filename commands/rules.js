@@ -5,19 +5,25 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!rules') && !content.startsWith('!setrules') && !content.startsWith('!addrule') && !content.startsWith('!delrule')) return;
+    if (
+      !content.startsWith('!rules') &&
+      !content.startsWith('!setrules') &&
+      !content.startsWith('!addrule') &&
+      !content.startsWith('!delrule') &&
+      !content.startsWith('!editrule') &&
+      !content.startsWith('!moverule') &&
+      !content.startsWith('!clearrules')
+    ) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
 
-    // --- !rules — afficher les règles ---
+    // ─── !rules — afficher ────────────────────────────────────────
     if (cmd === '!rules') {
       const doc = await Rules.findOne();
-
-      if (!doc || !doc.rules.length) {
-        return message.reply('Aucune règle définie pour le moment. Un staff peut en ajouter avec `!setrules`.');
-      }
+      if (!doc || !doc.rules.length)
+        return message.reply('Aucune règle de tournoi définie. Un staff peut en ajouter avec `!setrules`.');
 
       const rulesText = doc.rules.map((r, i) => `**${i + 1}.** ${r}`).join('\n');
       const lastUpdate = new Date(doc.updatedAt).toLocaleDateString('fr-FR');
@@ -32,24 +38,20 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !setrules <titre> | règle1 | règle2 | ... ---
+    // ─── !setrules <titre> | règle1 | règle2 | ... ────────────────
     if (cmd === '!setrules') {
-      if (!isStaff) return message.reply('Staff uniquement');
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const raw = content.slice('!setrules'.length).trim();
-      if (!raw) {
+      if (!raw)
         return message.reply(
-          '**Usage :**\n' +
-          '`!setrules <titre> | <règle1> | <règle2> | ...`\n\n' +
-          '**Exemple :**\n' +
-          '`!setrules Règles Saison 2 | Pas de cheating | Respect obligatoire | 3 matches minimum`'
+          '**Usage :** `!setrules <titre> | <règle1> | <règle2> | ...`\n' +
+          '**Exemple :** `!setrules Règles S2 | Pas de cheating | Respect obligatoire`'
         );
-      }
 
       const parts = raw.split('|').map(p => p.trim()).filter(Boolean);
-      if (parts.length < 2) {
+      if (parts.length < 2)
         return message.reply('❌ Il faut au moins un titre et une règle. Sépare-les avec `|`.');
-      }
 
       const title = parts[0];
       const rules = parts.slice(1);
@@ -63,22 +65,22 @@ module.exports = (client) => {
       const embed = new EmbedBuilder()
         .setTitle('✅ Règles mises à jour')
         .setColor(0x57F287)
-        .setDescription(`**${rules.length}** règle(s) enregistrée(s) sous le titre **${title}**.\nUtilise \`!rules\` pour les afficher.`)
+        .setDescription(`**${rules.length}** règle(s) enregistrée(s) sous **${title}**.\nUtilise \`!rules\` pour les afficher.`)
         .setFooter({ text: `Défini par ${message.author.tag}` })
         .setTimestamp();
 
-      logStaffAction(client, `📋 **Règles mises à jour** — ${rules.length} règle(s) | Titre : "${title}" | Par : ${message.author.tag}`);
+      logStaffAction(client, `📋 **Règles tournoi** — ${rules.length} règle(s) | Titre : "${title}" | Par : ${message.author.tag}`);
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !addrule <règle> — ajouter une règle à la liste existante ---
+    // ─── !addrule <règle> ─────────────────────────────────────────
     if (cmd === '!addrule') {
-      if (!isStaff) return message.reply('Staff uniquement');
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const rule = content.slice('!addrule'.length).trim();
       if (!rule) return message.reply('Usage : `!addrule <texte de la règle>`');
 
-      const doc = await Rules.findOne();
+      let doc = await Rules.findOne();
       if (!doc) return message.reply('❌ Aucune règle définie. Utilise d\'abord `!setrules` pour créer la liste.');
 
       doc.rules.push(rule);
@@ -89,24 +91,84 @@ module.exports = (client) => {
       return message.reply(`✅ Règle **${doc.rules.length}** ajoutée : *${rule}*`);
     }
 
-    // --- !delrule <numéro> — supprimer une règle par son numéro ---
+    // ─── !editrule <numéro> <nouveau texte> ───────────────────────
+    if (cmd === '!editrule') {
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
+
+      const num = parseInt(args[1]);
+      const newText = args.slice(2).join(' ').trim();
+
+      const doc = await Rules.findOne();
+      if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle définie.');
+      if (isNaN(num) || num < 1 || num > doc.rules.length)
+        return message.reply(`❌ Numéro invalide. Les règles vont de **1** à **${doc.rules.length}**.`);
+      if (!newText) return message.reply('Usage : `!editrule <numéro> <nouveau texte>`');
+
+      const old = doc.rules[num - 1];
+      doc.rules[num - 1] = newText;
+      doc.updatedBy = message.author.tag;
+      await doc.save();
+
+      logStaffAction(client, `✏️ **Règle modifiée** — #${num} | Par : ${message.author.tag}`);
+      return message.reply(`✅ Règle **${num}** modifiée :\n~~${old}~~\n→ ${newText}`);
+    }
+
+    // ─── !moverule <numéro> <nouvelle position> ───────────────────
+    if (cmd === '!moverule') {
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
+
+      const from = parseInt(args[1]);
+      const to   = parseInt(args[2]);
+
+      const doc = await Rules.findOne();
+      if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle définie.');
+      if (isNaN(from) || from < 1 || from > doc.rules.length ||
+          isNaN(to)   || to   < 1 || to   > doc.rules.length)
+        return message.reply(`❌ Numéros invalides. Les règles vont de **1** à **${doc.rules.length}**.\nUsage : \`!moverule <de> <vers>\``);
+      if (from === to) return message.reply('⚠️ La règle est déjà à cette position.');
+
+      const [moved] = doc.rules.splice(from - 1, 1);
+      doc.rules.splice(to - 1, 0, moved);
+      doc.updatedBy = message.author.tag;
+      await doc.save();
+
+      logStaffAction(client, `🔀 **Règle déplacée** — #${from} → #${to} | Par : ${message.author.tag}`);
+      return message.reply(`✅ Règle déplacée de la position **${from}** vers **${to}** : *${moved}*`);
+    }
+
+    // ─── !delrule <numéro> ────────────────────────────────────────
     if (cmd === '!delrule') {
-      if (!isStaff) return message.reply('Staff uniquement');
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const num = parseInt(args[1]);
       const doc = await Rules.findOne();
 
       if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle définie.');
-      if (isNaN(num) || num < 1 || num > doc.rules.length) {
-        return message.reply(`❌ Numéro invalide. Les règles vont de 1 à ${doc.rules.length}.`);
-      }
+      if (isNaN(num) || num < 1 || num > doc.rules.length)
+        return message.reply(`❌ Numéro invalide. Les règles vont de **1** à **${doc.rules.length}**.`);
 
       const removed = doc.rules.splice(num - 1, 1)[0];
       doc.updatedBy = message.author.tag;
       await doc.save();
 
       logStaffAction(client, `🗑️ **Règle supprimée** — "${removed}" | Par : ${message.author.tag}`);
-      return message.reply(`✅ Règle **${num}** supprimée : *${removed}*`);
+      return message.reply(`✅ Règle **${num}** supprimée : ~~${removed}~~`);
+    }
+
+    // ─── !clearrules — tout effacer ───────────────────────────────
+    if (cmd === '!clearrules') {
+      if (!isStaff) return message.reply('❌ Staff uniquement.');
+
+      const doc = await Rules.findOne();
+      if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle à effacer.');
+
+      const count = doc.rules.length;
+      doc.rules = [];
+      doc.updatedBy = message.author.tag;
+      await doc.save();
+
+      logStaffAction(client, `🗑️ **Toutes les règles effacées** — ${count} règle(s) | Par : ${message.author.tag}`);
+      return message.reply(`✅ **${count}** règle(s) supprimée(s). Utilise \`!setrules\` pour en redéfinir.`);
     }
   });
 };
