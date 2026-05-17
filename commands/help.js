@@ -142,8 +142,12 @@ const PAGES = [
         value: [
           '`!schedule` — Afficher les matchs à venir',
           '`!schedule add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Planifier *(staff)*',
-          '`!schedule delete <id>` — Supprimer un match planifié *(staff)*',
+          '`!schedule edit <id> <DD/MM/YYYY> <HH:MM> [équipes] [note]` — Modifier *(staff)*',
+          '`!schedule delete <id>` — Supprimer *(staff)*',
           '`!schedule clear` — Supprimer les matchs passés *(staff)*',
+          '`!schedule channel #salon` — Salon pour les rappels *(staff)*',
+          '`!schedule remind <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
+          '`!schedule status` — Voir la configuration *(staff)*',
         ].join('\n')
       },
     ]

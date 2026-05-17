@@ -24,6 +24,7 @@ const { startSondageManager } = require('./utils/sondageManager');
 const { startBirthdayManager } = require('./utils/birthdayManager');
 const { startLevelManager } = require('./utils/levelManager');
 const { startDashboardManager } = require('./utils/dashboardManager');
+const { startScheduleManager } = require('./utils/scheduleManager');
 require('dotenv').config();
 
 const client = new Client({
@@ -61,6 +62,8 @@ client.once('ready', () => {
   console.log('📈 Système niveaux/XP activé');
   startDashboardManager(client);
   console.log('📊 Système dashboard automatique activé');
+  startScheduleManager(client);
+  console.log('📅 Système rappels calendrier activé');
 });
 
 client.on('messageCreate', async (message) => {
