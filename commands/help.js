@@ -314,18 +314,28 @@ const PAGES = [
         ].join('\n')
       },
       {
-        name: '📝 Notes & Trophées & Règlement',
+        name: '📝 Notes & Trophées',
         value: [
           '`!note <cible> <texte>` — Note privée *(staff)*',
           '`!notes <cible>` — Voir les notes *(staff)*',
           '`!achievement [emoji] <équipe> <titre>` — Attribuer un trophée *(staff)*',
           '`!achievements <équipe>` — Voir les trophées',
+        ].join('\n')
+      },
+      {
+        name: '📋 Règlement serveur',
+        value: [
           '`!règlement` — Afficher le règlement serveur',
           '`!règlement add <section> <règle>` — Ajouter une règle *(staff)*',
           '`!règlement edit <section> <num> <texte>` — Modifier une règle *(staff)*',
           '`!règlement del <section> <num>` — Supprimer une règle *(staff)*',
           '`!règlement section add/del/rename` — Gérer les sections *(staff)*',
           '`!règlement post [#salon]` — Poster et épingler *(staff)*',
+        ].join('\n')
+      },
+      {
+        name: '🔧 Règles tournoi & Logs',
+        value: [
           '`!rules` — Règles du tournoi',
           '`!setrules <titre> | règle1 | ...` — Définir les règles tournoi *(staff)*',
           '`!addrule <règle>` — Ajouter une règle tournoi *(staff)*',
