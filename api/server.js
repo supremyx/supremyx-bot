@@ -11,17 +11,8 @@ const app  = express();
 const PORT = 3000;
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const ALLOWED_ORIGINS = [
-  'https://supremyx.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5000',
-];
-
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-    cb(new Error('CORS non autorisé'));
-  },
+  origin: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
