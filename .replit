@@ -7,6 +7,10 @@ stack = "BEST_EFFORT_FALLBACK"
 channel = "stable-25_05"
 
 [[ports]]
+localPort = 3000
+externalPort = 3001
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
