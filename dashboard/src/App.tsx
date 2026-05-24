@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
@@ -231,9 +231,34 @@ function TeamRow({ t, flash, onClick }: { t: Team; flash: boolean; onClick: () =
   );
 }
 
+// ─── Bot Status Hook ──────────────────────────────────────────────────────────
+function useBotStatus() {
+  const [online, setOnline] = useState<boolean | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const check = useCallback(async () => {
+    try {
+      const res = await fetch("/api/health", { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      setOnline(data.status === "ok");
+    } catch {
+      setOnline(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    check();
+    const id = setInterval(check, 30_000);
+    return () => { clearInterval(id); if (timer.current) clearTimeout(timer.current); };
+  }, [check]);
+
+  return online;
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   useMatchNotifications();
+  const botOnline = useBotStatus();
 
   const [page, setPage]                   = useState<Page>("classement");
   const [ranking, setRanking]             = useState<Team[]>([]);
@@ -322,10 +347,30 @@ export default function App() {
       <header className="bg-[#1a1a2e] border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">S</div>
+            <div className="relative">
+              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">S</div>
+              {botOnline !== null && (
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1a1a2e] ${
+                  botOnline ? "bg-emerald-400" : "bg-red-500"
+                }`} />
+              )}
+            </div>
             <div>
               <h1 className="text-base font-bold leading-none">SUPREMYX</h1>
-              <p className="text-xs text-gray-400 mt-0.5">Classement en direct</p>
+              <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${
+                botOnline === null ? "text-gray-400" :
+                botOnline ? "text-emerald-400" : "text-red-400"
+              }`}>
+                {botOnline === null && "Vérification…"}
+                {botOnline === true  && <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                  Bot en ligne
+                </>}
+                {botOnline === false && <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                  Bot hors ligne
+                </>}
+              </p>
             </div>
           </div>
           {/* Nav tabs */}
