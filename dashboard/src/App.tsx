@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import TournoisPage from "./pages/TournoisPage";
+
+type Page = "classement" | "tournois";
 
 interface Team {
   rank: number;
@@ -224,6 +227,7 @@ function TeamRow({ t, flash, onClick }: { t: Team; flash: boolean; onClick: () =
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [page, setPage]             = useState<Page>("classement");
   const [ranking, setRanking]       = useState<Team[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -285,27 +289,72 @@ export default function App() {
 
       {/* Header */}
       <header className="bg-[#1a1a2e] border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">S</div>
-          <div>
-            <h1 className="text-base font-bold leading-none">SUPREMYX</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Classement en direct</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center font-black text-lg select-none">S</div>
+            <div>
+              <h1 className="text-base font-bold leading-none">SUPREMYX</h1>
+              <p className="text-xs text-gray-400 mt-0.5">Classement en direct</p>
+            </div>
           </div>
+          {/* Nav tabs */}
+          <nav className="hidden sm:flex items-center gap-1 ml-2">
+            {([
+              { key: "classement", label: "🏆 Classement" },
+              { key: "tournois",   label: "🎮 Tournois"   },
+            ] as { key: Page; label: string }[]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setPage(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  page === key
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-400">
-          {lastUpdate && (
+          {lastUpdate && page === "classement" && (
             <span className="hidden sm:inline">Mis à jour à {lastUpdate.toLocaleTimeString("fr-FR")}</span>
           )}
-          <button
-            onClick={() => { fetchRanking(); setCountdown(30); }}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-          >
-            ↻ Actualiser <span className="opacity-60 font-normal">({countdown}s)</span>
-          </button>
+          {page === "classement" && (
+            <button
+              onClick={() => { fetchRanking(); setCountdown(30); }}
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            >
+              ↻ Actualiser <span className="opacity-60 font-normal">({countdown}s)</span>
+            </button>
+          )}
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      {/* Mobile nav */}
+      <div className="sm:hidden flex gap-1 bg-[#1a1a2e] border-b border-white/10 px-4 py-2">
+        {([
+          { key: "classement", label: "🏆 Classement" },
+          { key: "tournois",   label: "🎮 Tournois"   },
+        ] as { key: Page; label: string }[]).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setPage(key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              page === key
+                ? "bg-indigo-600 text-white"
+                : "text-gray-400 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {page === "tournois" && <TournoisPage />}
+
+      <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>
         {/* Summary cards */}
         {ranking.length > 0 && (
           <div className="grid grid-cols-3 gap-4 mb-8">
