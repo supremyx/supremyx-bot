@@ -5,8 +5,9 @@ import {
 import TournoisPage from "./pages/TournoisPage";
 import JoueursPage from "./pages/JoueursPage";
 import RostersPage from "./pages/RostersPage";
+import CalendrierPage from "./pages/CalendrierPage";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier";
 
 interface Team {
   rank: number;
@@ -302,10 +303,11 @@ export default function App() {
           {/* Nav tabs */}
           <nav className="hidden sm:flex items-center gap-1 ml-2">
             {([
-              { key: "classement", label: "🏆 Classement" },
-              { key: "tournois",   label: "🎮 Tournois"   },
-              { key: "joueurs",    label: "💀 Joueurs"     },
-              { key: "rosters",    label: "🛡️ Rosters"    },
+              { key: "classement",  label: "🏆 Classement" },
+              { key: "tournois",    label: "🎮 Tournois"   },
+              { key: "joueurs",     label: "💀 Joueurs"    },
+              { key: "rosters",     label: "🛡️ Rosters"   },
+              { key: "calendrier",  label: "📅 Calendrier" },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
               <button
                 key={key}
@@ -339,10 +341,11 @@ export default function App() {
       {/* Mobile nav */}
       <div className="sm:hidden flex gap-1 bg-[#1a1a2e] border-b border-white/10 px-4 py-2">
         {([
-          { key: "classement", label: "🏆 Classement" },
-          { key: "tournois",   label: "🎮 Tournois"   },
-          { key: "joueurs",    label: "💀 Joueurs"     },
-          { key: "rosters",    label: "🛡️ Rosters"    },
+          { key: "classement",  label: "🏆 Classement" },
+          { key: "tournois",    label: "🎮 Tournois"   },
+          { key: "joueurs",     label: "💀 Joueurs"    },
+          { key: "rosters",     label: "🛡️ Rosters"   },
+          { key: "calendrier",  label: "📅 Calendrier" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
@@ -358,9 +361,10 @@ export default function App() {
         ))}
       </div>
 
-      {page === "tournois" && <TournoisPage />}
-      {page === "joueurs" && <JoueursPage />}
-      {page === "rosters" && <RostersPage />}
+      {page === "tournois"   && <TournoisPage />}
+      {page === "joueurs"    && <JoueursPage />}
+      {page === "rosters"    && <RostersPage />}
+      {page === "calendrier" && <CalendrierPage />}
 
       <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>
         {/* Summary cards */}
