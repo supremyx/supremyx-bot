@@ -2,11 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import { Toaster } from "sonner";
 import TournoisPage from "./pages/TournoisPage";
 import JoueursPage from "./pages/JoueursPage";
 import RostersPage from "./pages/RostersPage";
 import CalendrierPage from "./pages/CalendrierPage";
 import GlobalSearch from "./components/GlobalSearch";
+import { useMatchNotifications } from "./hooks/useMatchNotifications";
 
 type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier";
 
@@ -231,6 +233,8 @@ function TeamRow({ t, flash, onClick }: { t: Team; flash: boolean; onClick: () =
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  useMatchNotifications();
+
   const [page, setPage]                   = useState<Page>("classement");
   const [ranking, setRanking]             = useState<Team[]>([]);
   const [lastUpdate, setLastUpdate]       = useState<Date | null>(null);
@@ -299,6 +303,17 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0f0f1a] text-white" style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
+      <Toaster
+        position="bottom-right"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: "#1a1a2e",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "#fff",
+          },
+        }}
+      />
       {selected && (
         <DetailModal teamName={selected} onClose={() => setSelected(null)} />
       )}
