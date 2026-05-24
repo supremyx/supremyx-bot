@@ -120,12 +120,12 @@ function PlayerModal({ name, onClose }: { name: string; onClose: () => void }) {
   );
 }
 
-export default function JoueursPage() {
+export default function JoueursPage({ initialSelected }: { initialSelected?: string }) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initialSelected ?? null);
 
   useEffect(() => {
     fetch("/api/players?limit=100")

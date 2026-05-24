@@ -6,6 +6,7 @@ import TournoisPage from "./pages/TournoisPage";
 import JoueursPage from "./pages/JoueursPage";
 import RostersPage from "./pages/RostersPage";
 import CalendrierPage from "./pages/CalendrierPage";
+import GlobalSearch from "./components/GlobalSearch";
 
 type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier";
 
@@ -230,14 +231,26 @@ function TeamRow({ t, flash, onClick }: { t: Team; flash: boolean; onClick: () =
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage]             = useState<Page>("classement");
-  const [ranking, setRanking]       = useState<Team[]>([]);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
-  const [flash, setFlash]           = useState<Set<string>>(new Set());
-  const [countdown, setCountdown]   = useState(30);
-  const [selected, setSelected]     = useState<string | null>(null);
+  const [page, setPage]                   = useState<Page>("classement");
+  const [ranking, setRanking]             = useState<Team[]>([]);
+  const [lastUpdate, setLastUpdate]       = useState<Date | null>(null);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState<string | null>(null);
+  const [flash, setFlash]                 = useState<Set<string>>(new Set());
+  const [countdown, setCountdown]         = useState(30);
+  const [selected, setSelected]           = useState<string | null>(null);
+  const [searchedPlayer, setSearchedPlayer] = useState<string | undefined>(undefined);
+
+  const handleSearchTeam = useCallback((name: string) => {
+    setPage("classement");
+    setSelected(name);
+  }, []);
+
+  const handleSearchPlayer = useCallback((name: string) => {
+    setSearchedPlayer(undefined);
+    setTimeout(() => setSearchedPlayer(name), 0);
+    setPage("joueurs");
+  }, []);
 
   const fetchRanking = useCallback(async () => {
     try {
@@ -323,9 +336,10 @@ export default function App() {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-400">
+        <div className="flex items-center gap-3 text-sm text-gray-400">
+          <GlobalSearch onSelectTeam={handleSearchTeam} onSelectPlayer={handleSearchPlayer} />
           {lastUpdate && page === "classement" && (
-            <span className="hidden sm:inline">Mis à jour à {lastUpdate.toLocaleTimeString("fr-FR")}</span>
+            <span className="hidden lg:inline">Mis à jour à {lastUpdate.toLocaleTimeString("fr-FR")}</span>
           )}
           {page === "classement" && (
             <button
@@ -362,7 +376,7 @@ export default function App() {
       </div>
 
       {page === "tournois"   && <TournoisPage />}
-      {page === "joueurs"    && <JoueursPage />}
+      {page === "joueurs"    && <JoueursPage initialSelected={searchedPlayer} />}
       {page === "rosters"    && <RostersPage />}
       {page === "calendrier" && <CalendrierPage />}
 
