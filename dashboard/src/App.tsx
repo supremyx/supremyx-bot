@@ -4,8 +4,9 @@ import {
 } from "recharts";
 import TournoisPage from "./pages/TournoisPage";
 import JoueursPage from "./pages/JoueursPage";
+import RostersPage from "./pages/RostersPage";
 
-type Page = "classement" | "tournois" | "joueurs";
+type Page = "classement" | "tournois" | "joueurs" | "rosters";
 
 interface Team {
   rank: number;
@@ -304,6 +305,7 @@ export default function App() {
               { key: "classement", label: "🏆 Classement" },
               { key: "tournois",   label: "🎮 Tournois"   },
               { key: "joueurs",    label: "💀 Joueurs"     },
+              { key: "rosters",    label: "🛡️ Rosters"    },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
               <button
                 key={key}
@@ -340,6 +342,7 @@ export default function App() {
           { key: "classement", label: "🏆 Classement" },
           { key: "tournois",   label: "🎮 Tournois"   },
           { key: "joueurs",    label: "💀 Joueurs"     },
+          { key: "rosters",    label: "🛡️ Rosters"    },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
@@ -357,6 +360,7 @@ export default function App() {
 
       {page === "tournois" && <TournoisPage />}
       {page === "joueurs" && <JoueursPage />}
+      {page === "rosters" && <RostersPage />}
 
       <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>
         {/* Summary cards */}
