@@ -468,7 +468,28 @@ export default function App() {
               <h2 className="font-bold">🏆 Classement Général</h2>
               <p className="text-xs text-gray-500 mt-0.5">Cliquer sur une équipe pour voir le détail</p>
             </div>
-            {loading && <span className="text-xs text-gray-400 animate-pulse">Chargement…</span>}
+            <div className="flex items-center gap-3">
+              {loading && <span className="text-xs text-gray-400 animate-pulse">Chargement…</span>}
+              {ranking.length > 0 && (
+                <button
+                  onClick={() => {
+                    const header = ["Rang", "Équipe", "Points", "Kills", "Victoires", "Défaites"];
+                    const rows = ranking.map(t => [t.rank, t.team, t.points, t.kills, t.wins, t.losses]);
+                    const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+                    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `supremyx-classement-${new Date().toISOString().slice(0, 10)}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  ⬇ Exporter CSV
+                </button>
+              )}
+            </div>
           </div>
 
           {error ? (
