@@ -3,8 +3,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import TournoisPage from "./pages/TournoisPage";
+import JoueursPage from "./pages/JoueursPage";
 
-type Page = "classement" | "tournois";
+type Page = "classement" | "tournois" | "joueurs";
 
 interface Team {
   rank: number;
@@ -302,6 +303,7 @@ export default function App() {
             {([
               { key: "classement", label: "🏆 Classement" },
               { key: "tournois",   label: "🎮 Tournois"   },
+              { key: "joueurs",    label: "💀 Joueurs"     },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
               <button
                 key={key}
@@ -337,6 +339,7 @@ export default function App() {
         {([
           { key: "classement", label: "🏆 Classement" },
           { key: "tournois",   label: "🎮 Tournois"   },
+          { key: "joueurs",    label: "💀 Joueurs"     },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
@@ -353,6 +356,7 @@ export default function App() {
       </div>
 
       {page === "tournois" && <TournoisPage />}
+      {page === "joueurs" && <JoueursPage />}
 
       <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>
         {/* Summary cards */}
