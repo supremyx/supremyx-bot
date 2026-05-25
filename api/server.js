@@ -12,10 +12,27 @@ const app  = express();
 const PORT = 3000;
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://supremyx.xyz',
+  'https://www.supremyx.xyz',
+  /\.supremyx\.xyz$/,
+  /\.replit\.app$/,
+  /\.replit\.dev$/,
+  'http://localhost:3000',
+  'http://localhost:5000',
+];
+
 app.use(cors({
-  origin: true,
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // server-to-server / curl
+    const ok = ALLOWED_ORIGINS.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    cb(ok ? null : new Error('CORS: origine non autorisée'), ok);
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-api-key'],
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -32,7 +49,30 @@ function requireApiKey(req, res, next) {
 const router = express.Router();
 
 // ── GET /health ───────────────────────────────────────────────────────────────
-router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'SUPREMYX' }));
+router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'SUPREMYX', ts: new Date() }));
+
+// ── GET /api-docs ─────────────────────────────────────────────────────────────
+router.get('/api-docs', (_req, res) => res.json({
+  name: 'SUPREMYX Bot API',
+  version: '1.0.0',
+  description: 'API publique du bot SUPREMYX — lecture libre, écriture protégée par x-api-key.',
+  base: '/bot-api',
+  endpoints: [
+    { method: 'GET',  path: '/health',           auth: false, description: 'Statut du bot' },
+    { method: 'GET',  path: '/ranking',           auth: false, description: 'Classement général des équipes' },
+    { method: 'GET',  path: '/ranking/:team',     auth: false, description: 'Détail + timeline d\'une équipe' },
+    { method: 'GET',  path: '/players',           auth: false, description: 'Classement joueurs par kills' },
+    { method: 'GET',  path: '/players/:name',     auth: false, description: 'Détail d\'un joueur' },
+    { method: 'GET',  path: '/results',           auth: false, description: 'Derniers résultats de matchs (query: limit, max 50)' },
+    { method: 'GET',  path: '/schedule',          auth: false, description: 'Matchs à venir (query: past=true pour tout voir)' },
+    { method: 'GET',  path: '/tournaments',       auth: false, description: 'Liste des tournois' },
+    { method: 'GET',  path: '/rosters',           auth: false, description: 'Tous les rosters' },
+    { method: 'GET',  path: '/rosters/:team',     auth: false, description: 'Roster d\'une équipe' },
+    { method: 'GET',  path: '/logs',              auth: false, description: 'Logs d\'activité staff (query: limit, category)' },
+    { method: 'POST', path: '/addpoints',         auth: true,  description: 'Ajouter des points/kills à une équipe (body: team, points, kills)' },
+    { method: 'POST', path: '/removematch',       auth: true,  description: 'Supprimer un match (body: team ou matchId)' },
+  ],
+}));
 
 // ── GET /ranking ──────────────────────────────────────────────────────────────
 router.get('/ranking', async (req, res) => {
