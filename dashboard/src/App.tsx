@@ -8,10 +8,11 @@ import JoueursPage from "./pages/JoueursPage";
 import RostersPage from "./pages/RostersPage";
 import CalendrierPage from "./pages/CalendrierPage";
 import StatsPage from "./pages/StatsPage";
+import LogsPage from "./pages/LogsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs";
 
 interface Team {
   rank: number;
@@ -383,6 +384,7 @@ export default function App() {
               { key: "rosters",     label: "🛡️ Rosters"   },
               { key: "calendrier",  label: "📅 Calendrier" },
               { key: "stats",       label: "📊 Stats" },
+              { key: "logs",        label: "📋 Logs" },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
               <button
                 key={key}
@@ -423,6 +425,7 @@ export default function App() {
           { key: "rosters",     label: "🛡️ Rosters"   },
           { key: "calendrier",  label: "📅 Calendrier" },
           { key: "stats",       label: "📊 Stats" },
+          { key: "logs",        label: "📋 Logs" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
@@ -443,6 +446,7 @@ export default function App() {
       {page === "rosters"    && <RostersPage />}
       {page === "calendrier" && <CalendrierPage />}
       {page === "stats"      && <StatsPage />}
+      {page === "logs"       && <LogsPage />}
 
       <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>
         {/* Summary cards */}

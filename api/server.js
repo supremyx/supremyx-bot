@@ -1,11 +1,12 @@
 const express = require('express');
 const cors    = require('cors');
-const Team       = require('../database/models/Team');
-const Match      = require('../database/models/Match');
-const Schedule   = require('../database/models/Schedule');
-const PlayerStat = require('../database/models/PlayerStat');
-const Roster     = require('../database/models/Roster');
-const Tournament = require('../database/models/Tournament');
+const Team          = require('../database/models/Team');
+const Match         = require('../database/models/Match');
+const Schedule      = require('../database/models/Schedule');
+const PlayerStat    = require('../database/models/PlayerStat');
+const Roster        = require('../database/models/Roster');
+const Tournament    = require('../database/models/Tournament');
+const StaffLogEntry = require('../database/models/StaffLogEntry');
 
 const app  = express();
 const PORT = 3000;
@@ -263,6 +264,31 @@ router.get('/rosters/:team', async (req, res) => {
     });
   } catch (err) {
     console.error('[API /rosters/:team]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /logs ─────────────────────────────────────────────────────────────────
+// Dernières entrées du log staff, triées par date décroissante
+router.get('/logs', async (req, res) => {
+  try {
+    const limit    = Math.min(parseInt(req.query.limit) || 100, 500);
+    const category = req.query.category;
+    const query    = category ? { category } : {};
+    const entries  = await StaffLogEntry.find(query)
+      .sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({
+      success: true,
+      total: entries.length,
+      logs: entries.map(e => ({
+        _id:       e._id,
+        message:   e.message,
+        category:  e.category,
+        createdAt: e.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error('[API /logs]', err);
     return res.status(500).json({ error: 'Erreur interne' });
   }
 });
