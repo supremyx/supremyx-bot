@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { apiUrl } from "../lib/api";
 
 interface LogEntry {
   _id: string;
@@ -59,7 +60,7 @@ export default function LogsPage() {
 
   async function fetchLogs() {
     try {
-      const res = await fetch("/api/logs?limit=200");
+      const res = await fetch(apiUrl("/api/logs?limit=200"));
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       setLogs(data.logs ?? []);
