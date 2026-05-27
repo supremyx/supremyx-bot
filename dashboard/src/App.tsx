@@ -11,6 +11,7 @@ import StatsPage from "./pages/StatsPage";
 import LogsPage from "./pages/LogsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
+import { apiUrl } from "./lib/api";
 
 type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs";
 
@@ -240,7 +241,7 @@ function useBotStatus() {
 
   const check = useCallback(async () => {
     try {
-      const res = await fetch("/api/health", { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(apiUrl("/api/health"), { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       setOnline(data.status === "ok");
     } catch {
@@ -285,7 +286,7 @@ export default function App() {
 
   const fetchRanking = useCallback(async () => {
     try {
-      const res  = await fetch("/api/ranking");
+      const res  = await fetch(apiUrl("/api/ranking"));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
