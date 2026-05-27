@@ -9,11 +9,12 @@ import RostersPage from "./pages/RostersPage";
 import CalendrierPage from "./pages/CalendrierPage";
 import StatsPage from "./pages/StatsPage";
 import LogsPage from "./pages/LogsPage";
+import ResultsPage from "./pages/ResultsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats";
 
 interface Team {
   rank: number;
@@ -384,6 +385,7 @@ export default function App() {
               { key: "joueurs",     label: "💀 Joueurs"    },
               { key: "rosters",     label: "🛡️ Rosters"   },
               { key: "calendrier",  label: "📅 Calendrier" },
+              { key: "resultats",   label: "🎯 Résultats"  },
               { key: "stats",       label: "📊 Stats" },
               { key: "logs",        label: "📋 Logs" },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
@@ -425,6 +427,7 @@ export default function App() {
           { key: "joueurs",     label: "💀 Joueurs"    },
           { key: "rosters",     label: "🛡️ Rosters"   },
           { key: "calendrier",  label: "📅 Calendrier" },
+          { key: "resultats",   label: "🎯 Résultats"  },
           { key: "stats",       label: "📊 Stats" },
           { key: "logs",        label: "📋 Logs" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
@@ -446,6 +449,7 @@ export default function App() {
       {page === "joueurs"    && <JoueursPage initialSelected={searchedPlayer} />}
       {page === "rosters"    && <RostersPage />}
       {page === "calendrier" && <CalendrierPage />}
+      {page === "resultats"  && <ResultsPage />}
       {page === "stats"      && <StatsPage />}
       {page === "logs"       && <LogsPage />}
 
