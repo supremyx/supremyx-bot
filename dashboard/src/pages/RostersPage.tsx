@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Member {
   displayName: string;
@@ -112,7 +113,7 @@ export default function RostersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("/api/rosters")
+    fetch(apiUrl("/api/rosters"))
       .then(r => r.json())
       .then(d => { setRosters(d.rosters ?? []); setLoading(false); })
       .catch(() => { setError("Impossible de charger les données."); setLoading(false); });
