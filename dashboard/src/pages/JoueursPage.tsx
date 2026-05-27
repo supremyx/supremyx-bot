@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Player {
   rank: number;
@@ -128,7 +129,7 @@ export default function JoueursPage({ initialSelected }: { initialSelected?: str
   const [selected, setSelected] = useState<string | null>(initialSelected ?? null);
 
   useEffect(() => {
-    fetch("/api/players?limit=100")
+    fetch(apiUrl("/api/players?limit=100"))
       .then(r => r.json())
       .then(d => { setPlayers(d.players ?? []); setLoading(false); })
       .catch(() => { setError("Impossible de charger les données."); setLoading(false); });
