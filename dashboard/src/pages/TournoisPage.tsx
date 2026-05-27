@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Tournament {
   id: string;
@@ -48,8 +49,8 @@ export default function TournoisPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/tournaments").then(r => r.json()),
-      fetch("/api/results").then(r => r.json()),
+      fetch(apiUrl("/api/tournaments")).then(r => r.json()),
+      fetch(apiUrl("/api/results")).then(r => r.json()),
     ])
       .then(([t, r]) => {
         setTournaments(t.tournaments ?? []);
