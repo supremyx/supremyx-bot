@@ -16,6 +16,11 @@ git config user.email "bot@supremyx.xyz"
 git config user.name "SUPREMYX Bot"
 git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"
 
+git fetch origin main
+git stash
+git rebase origin/main
+git stash pop || true
+
 git add -A
 if git diff --cached --quiet; then
   echo "✅ Rien à pousser, tout est à jour"
