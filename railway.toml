@@ -7,5 +7,5 @@ startCommand = "node index.js"
 restartPolicyType = "on-failure"
 restartPolicyMaxRetries = 3
 
-[[services]]
-name = "supremyx-bot"
+[service]
+internalPort = 3000

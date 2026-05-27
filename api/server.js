@@ -18,6 +18,8 @@ const ALLOWED_ORIGINS = [
   /\.supremyx\.xyz$/,
   /\.replit\.app$/,
   /\.replit\.dev$/,
+  /\.github\.io$/,
+  /\.up\.railway\.app$/,
   'http://localhost:3000',
   'http://localhost:5000',
 ];
