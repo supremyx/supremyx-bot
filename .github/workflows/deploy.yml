@@ -41,7 +41,7 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           NODE_ENV: production
-        run: BASE_PATH=/supremyx-bot/ pnpm run build
+        run: BASE_PATH=/ pnpm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
