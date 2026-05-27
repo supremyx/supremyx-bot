@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -46,8 +47,8 @@ export default function StatsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/ranking").then(r => r.json()),
-      fetch("/api/results?limit=50").then(r => r.json()),
+      fetch(apiUrl("/api/ranking")).then(r => r.json()),
+      fetch(apiUrl("/api/results?limit=50")).then(r => r.json()),
     ]).then(([r, res]) => {
       const t: Team[] = r.ranking ?? [];
       setTeams(t);
