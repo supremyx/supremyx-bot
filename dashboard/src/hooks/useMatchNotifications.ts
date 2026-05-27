@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { apiUrl } from "../lib/api";
 
 interface MatchEntry {
   id: string;
@@ -21,7 +22,7 @@ export function useMatchNotifications() {
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch("/api/results");
+        const res = await fetch(apiUrl("/api/results"));
         if (!res.ok) return;
         const data = await res.json();
         const matches: MatchEntry[] = data.recentMatchEntries ?? [];
