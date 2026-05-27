@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface ScheduledMatch {
   id: string;
@@ -57,8 +58,8 @@ export default function CalendrierPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/schedule").then(r => r.json()),
-      fetch("/api/schedule?past=true").then(r => r.json()),
+      fetch(apiUrl("/api/schedule")).then(r => r.json()),
+      fetch(apiUrl("/api/schedule?past=true")).then(r => r.json()),
     ]).then(([upcoming, all]) => {
       const upcomingIds = new Set((upcoming.schedule ?? []).map((m: ScheduledMatch) => m.id));
       const pastMatches = (all.schedule ?? []).filter(
