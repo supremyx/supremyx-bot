@@ -349,6 +349,66 @@ router.get('/logs', async (req, res) => {
 });
 
 // ── GET /tournaments ──────────────────────────────────────────────────────────
+router.get('/tournaments/:id', async (req, res) => {
+  try {
+    const t = await Tournament.findById(req.params.id).lean();
+    if (!t) return res.status(404).json({ error: 'Tournoi introuvable' });
+
+    const matches = await Match.find({ tournamentId: String(t._id) })
+      .sort({ createdAt: 1 }).lean();
+
+    // Group matches into rounds: matches within 10 minutes of each other = same round
+    const rounds = [];
+    let currentRound = [];
+    for (const m of matches) {
+      if (currentRound.length === 0) {
+        currentRound.push(m);
+      } else {
+        const last = currentRound[currentRound.length - 1];
+        const diffMs = new Date(m.createdAt) - new Date(last.createdAt);
+        if (diffMs <= 10 * 60 * 1000) {
+          currentRound.push(m);
+        } else {
+          rounds.push(currentRound);
+          currentRound = [m];
+        }
+      }
+    }
+    if (currentRound.length > 0) rounds.push(currentRound);
+
+    // Per-team standings
+    const standingsMap = new Map();
+    for (const m of matches) {
+      const s = standingsMap.get(m.team) || { team: m.team, points: 0, kills: 0, wins: 0, matches: 0 };
+      s.points  += m.points;
+      s.kills   += m.kills;
+      s.matches += 1;
+      if (m.placement === 1) s.wins += 1;
+      standingsMap.set(m.team, s);
+    }
+    const standings = Array.from(standingsMap.values())
+      .sort((a, b) => b.points - a.points || b.kills - a.kills)
+      .map((s, i) => ({ ...s, rank: i + 1 }));
+
+    return res.json({
+      success: true,
+      tournament: { id: t._id, name: t.name, active: t.active, createdAt: t.createdAt, endedAt: t.endedAt || null },
+      standings,
+      rounds: rounds.map((r, i) => ({
+        roundNumber: i + 1,
+        date: r[0].createdAt,
+        entries: r.sort((a, b) => a.placement - b.placement || b.kills - a.kills)
+          .map(m => ({ team: m.team, placement: m.placement, kills: m.kills, points: m.points })),
+      })),
+      matchCount: matches.length,
+      teamCount: standingsMap.size,
+    });
+  } catch (err) {
+    console.error('[API /tournaments/:id]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 router.get('/tournaments', async (req, res) => {
   try {
     const tournaments = await Tournament.find().sort({ createdAt: -1 }).lean();

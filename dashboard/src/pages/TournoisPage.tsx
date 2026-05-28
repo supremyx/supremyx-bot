@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "../lib/api";
+import TournamentDetailView from "./TournamentDetailView";
 
 interface Tournament {
   id: string;
@@ -46,6 +47,7 @@ export default function TournoisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"tournois" | "resultats">("tournois");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -66,6 +68,18 @@ export default function TournoisPage() {
 
   const active = tournaments.filter(t => t.active);
   const ended = tournaments.filter(t => !t.active);
+
+  // If a tournament is selected, show its detail
+  if (selectedId) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <TournamentDetailView
+          tournamentId={selectedId}
+          onBack={() => setSelectedId(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -103,6 +117,7 @@ export default function TournoisPage() {
           <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 overflow-hidden">
             <div className="px-5 py-4 border-b border-white/10">
               <h2 className="font-bold">🟢 Tournois actifs</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Cliquer pour voir le classement et les rounds</p>
             </div>
             {active.length === 0 ? (
               <div className="py-12 text-center text-gray-500">
@@ -112,17 +127,26 @@ export default function TournoisPage() {
             ) : (
               <ul className="divide-y divide-white/10">
                 {active.map(t => (
-                  <li key={t.id} className="px-5 py-4 flex items-center justify-between">
+                  <li
+                    key={t.id}
+                    onClick={() => setSelectedId(t.id)}
+                    className="px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group"
+                  >
                     <div>
-                      <p className="font-semibold text-white">{t.name}</p>
+                      <p className="font-semibold text-white group-hover:text-indigo-300 transition-colors">
+                        {t.name}
+                      </p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         Créé le {fmtDate(t.createdAt)}
                       </p>
                     </div>
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      En cours
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        En cours
+                      </span>
+                      <span className="text-gray-600 group-hover:text-gray-400 transition-colors text-sm">›</span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -134,10 +158,15 @@ export default function TournoisPage() {
             <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 overflow-hidden">
               <div className="px-5 py-4 border-b border-white/10">
                 <h2 className="font-bold text-gray-400">⚫ Tournois terminés</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Cliquer pour consulter les résultats</p>
               </div>
               <ul className="divide-y divide-white/10">
                 {ended.map(t => (
-                  <li key={t.id} className="px-5 py-4 flex items-center justify-between opacity-60">
+                  <li
+                    key={t.id}
+                    onClick={() => setSelectedId(t.id)}
+                    className="px-5 py-4 flex items-center justify-between opacity-70 hover:opacity-100 hover:bg-white/5 transition-all cursor-pointer group"
+                  >
                     <div>
                       <p className="font-semibold text-white">{t.name}</p>
                       <p className="text-xs text-gray-500 mt-0.5">
@@ -145,12 +174,23 @@ export default function TournoisPage() {
                         {t.endedAt && ` · Terminé le ${fmtDate(t.endedAt)}`}
                       </p>
                     </div>
-                    <span className="text-xs font-semibold text-gray-500 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
-                      Terminé
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-gray-500 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+                        Terminé
+                      </span>
+                      <span className="text-gray-600 group-hover:text-gray-400 transition-colors text-sm">›</span>
+                    </div>
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {tournaments.length === 0 && (
+            <div className="py-16 text-center text-gray-500">
+              <div className="text-4xl mb-3">🏆</div>
+              <p className="text-sm">Aucun tournoi enregistré pour le moment.</p>
+              <p className="text-xs text-gray-600 mt-1">Utilise <code className="bg-white/5 px-1 rounded">!starttournoi</code> dans Discord</p>
             </div>
           )}
         </div>
