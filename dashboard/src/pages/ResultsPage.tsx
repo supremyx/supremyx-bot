@@ -49,7 +49,7 @@ function LiveDot() {
   );
 }
 
-export default function ResultsPage() {
+export default function ResultsPage({ onTeamClick }: { onTeamClick?: (name: string) => void }) {
   const [entries, setEntries] = useState<MatchEntry[]>([]);
   const [completed, setCompleted] = useState<CompletedMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -238,8 +238,13 @@ export default function ResultsPage() {
                             fmtDate(m.date)
                           )}
                         </td>
-                        <td className="py-3 px-4 font-semibold text-white">
-                          {m.team}
+                        <td className="py-3 px-4 font-semibold">
+                          <button
+                            onClick={() => onTeamClick?.(m.team)}
+                            className={`transition-colors ${onTeamClick ? "hover:text-indigo-300 cursor-pointer" : "cursor-default text-white"}`}
+                          >
+                            {m.team}
+                          </button>
                           {isNew && (
                             <span className="ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
                               nouveau

@@ -113,19 +113,31 @@ router.get('/ranking/:team', async (req, res) => {
       return { date: m.createdAt, pts: cumul, match_pts: m.points, kills: m.kills, placement: m.placement };
     });
 
-    const recentMatches = [...allMatches].reverse().slice(0, 10);
+    const matchCount = allMatches.length;
+    const validPlacements = allMatches.filter(m => m.placement > 0);
+    const avgPlacement = validPlacements.length
+      ? (validPlacements.reduce((s, m) => s + m.placement, 0) / validPlacements.length).toFixed(2)
+      : null;
+    const killsPerMatch = matchCount ? (team.kills / matchCount).toFixed(2) : null;
+    const winRate = matchCount ? ((team.wins / matchCount) * 100).toFixed(1) : null;
+
+    const matchHistory = [...allMatches].reverse().map(m => ({
+      matchId: m._id, points: m.points, kills: m.kills,
+      placement: m.placement, addedBy: m.addedBy, date: m.createdAt,
+      tournamentName: m.tournamentName,
+    }));
 
     return res.json({
       success: true, rank,
       team: team.name, points: team.points, kills: team.kills,
       wins: team.wins, losses: team.losses,
-      matchCount: allMatches.length,
+      matchCount,
+      avgPlacement: avgPlacement ? parseFloat(avgPlacement) : null,
+      killsPerMatch: killsPerMatch ? parseFloat(killsPerMatch) : null,
+      winRate: winRate ? parseFloat(winRate) : null,
       timeline,
-      recentMatches: recentMatches.map(m => ({
-        matchId: m._id, points: m.points, kills: m.kills,
-        placement: m.placement, addedBy: m.addedBy, date: m.createdAt,
-        tournamentName: m.tournamentName,
-      })),
+      matchHistory,
+      recentMatches: matchHistory.slice(0, 10),
     });
   } catch (err) {
     console.error('[API /ranking/:team]', err);
