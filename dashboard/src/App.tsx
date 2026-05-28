@@ -8,11 +8,12 @@ import StatsPage from "./pages/StatsPage";
 import LogsPage from "./pages/LogsPage";
 import ResultsPage from "./pages/ResultsPage";
 import TeamPage from "./pages/TeamPage";
+import ComparisonPage from "./pages/ComparisonPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison";
 
 interface Team {
   rank: number;
@@ -87,11 +88,18 @@ export default function App() {
   const [flash, setFlash]                 = useState<Set<string>>(new Set());
   const [countdown, setCountdown]         = useState(30);
   const [activeTeam, setActiveTeam]       = useState<string | null>(null);
+  const [compareWith, setCompareWith]     = useState<string | null>(null);
   const [searchedPlayer, setSearchedPlayer] = useState<string | undefined>(undefined);
 
   const goToTeam = useCallback((name: string) => {
     setActiveTeam(name);
     setPage("equipe");
+  }, []);
+
+  const goToComparison = useCallback((a: string, b?: string) => {
+    setActiveTeam(a);
+    setCompareWith(b ?? null);
+    setPage("comparaison");
   }, []);
 
   const handleSearchTeam = useCallback((name: string) => {
@@ -202,6 +210,7 @@ export default function App() {
               { key: "rosters",     label: "🛡️ Rosters"   },
               { key: "calendrier",  label: "📅 Calendrier" },
               { key: "resultats",   label: "🎯 Résultats"  },
+              { key: "comparaison", label: "⚔️ Comparer"   },
               { key: "stats",       label: "📊 Stats" },
               { key: "logs",        label: "📋 Logs" },
             ] as { key: Page; label: string }[]).map(({ key, label }) => (
@@ -244,6 +253,7 @@ export default function App() {
           { key: "rosters",     label: "🛡️ Rosters"   },
           { key: "calendrier",  label: "📅 Calendrier" },
           { key: "resultats",   label: "🎯 Résultats"  },
+          { key: "comparaison", label: "⚔️ Comparer"   },
           { key: "stats",       label: "📊 Stats" },
           { key: "logs",        label: "📋 Logs" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
@@ -269,7 +279,18 @@ export default function App() {
       {page === "stats"      && <StatsPage />}
       {page === "logs"       && <LogsPage />}
       {page === "equipe" && activeTeam && (
-        <TeamPage teamName={activeTeam} onBack={() => setPage("classement")} />
+        <TeamPage
+          teamName={activeTeam}
+          onBack={() => setPage("classement")}
+          onCompare={(name) => goToComparison(name)}
+        />
+      )}
+      {page === "comparaison" && (
+        <ComparisonPage
+          initialA={activeTeam ?? undefined}
+          initialB={compareWith ?? undefined}
+          onBack={() => setPage("classement")}
+        />
       )}
 
       <main className={`max-w-3xl mx-auto px-4 py-8 ${page !== "classement" ? "hidden" : ""}`}>

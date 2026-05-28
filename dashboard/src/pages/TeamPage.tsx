@@ -69,9 +69,11 @@ const ROWS_PER_PAGE = 20;
 export default function TeamPage({
   teamName,
   onBack,
+  onCompare,
 }: {
   teamName: string;
   onBack: () => void;
+  onCompare?: (name: string) => void;
 }) {
   const [detail, setDetail] = useState<TeamDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +166,14 @@ export default function TeamPage({
             )}
           </p>
         </div>
+        {onCompare && (
+          <button
+            onClick={() => onCompare(detail.team)}
+            className="mt-1 px-3 py-1.5 rounded-lg bg-violet-600/30 hover:bg-violet-600/50 border border-violet-500/30 text-violet-300 hover:text-white text-sm font-semibold transition-colors cursor-pointer shrink-0"
+          >
+            ⚔️ Comparer
+          </button>
+        )}
       </div>
 
       {/* Win-rate bar */}
