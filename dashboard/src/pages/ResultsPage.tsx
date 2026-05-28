@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../lib/api";
 
 interface MatchEntry {
@@ -37,13 +37,31 @@ const placementColor = (p: number) => {
   return "text-gray-400";
 };
 
+function LiveDot() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+      </span>
+      LIVE
+    </span>
+  );
+}
+
 export default function ResultsPage() {
   const [entries, setEntries] = useState<MatchEntry[]>([]);
   const [completed, setCompleted] = useState<CompletedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"entries" | "completed">("entries");
+  const [liveConnected, setLiveConnected] = useState(false);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
+  const esRef = useRef<EventSource | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Initial load
   useEffect(() => {
     fetch(apiUrl("/api/results?limit=50"))
       .then((r) => {
@@ -61,29 +79,95 @@ export default function ResultsPage() {
       });
   }, []);
 
+  // SSE connection for real-time updates
+  useEffect(() => {
+    let unmounted = false;
+
+    function connect() {
+      if (unmounted) return;
+      const es = new EventSource(apiUrl("/api/events"));
+      esRef.current = es;
+
+      es.onopen = () => setLiveConnected(true);
+
+      es.addEventListener("newMatch", (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          const freshEntry: MatchEntry = {
+            id: `live-${Date.now()}`,
+            team: data.team,
+            placement: data.placement,
+            kills: data.kills,
+            points: data.points,
+            tournamentName: data.tournamentName ?? null,
+            date: new Date().toISOString(),
+          };
+          setEntries((prev) => [freshEntry, ...prev].slice(0, 50));
+          setNewIds((prev) => {
+            const next = new Set(prev);
+            next.add(freshEntry.id);
+            // Remove highlight after 4s
+            setTimeout(() => {
+              setNewIds((s) => {
+                const n = new Set(s);
+                n.delete(freshEntry.id);
+                return n;
+              });
+            }, 4000);
+            return next;
+          });
+          // Switch to entries tab automatically if on completed
+          setTab("entries");
+        } catch {
+          // ignore malformed events
+        }
+      });
+
+      es.onerror = () => {
+        setLiveConnected(false);
+        es.close();
+        esRef.current = null;
+        if (!unmounted) {
+          reconnectTimer.current = setTimeout(connect, 5_000);
+        }
+      };
+    }
+
+    connect();
+
+    return () => {
+      unmounted = true;
+      esRef.current?.close();
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    };
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setTab("entries")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
-            tab === "entries"
-              ? "bg-indigo-600 text-white"
-              : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-          }`}
-        >
-          🎯 Résultats par équipe
-        </button>
-        <button
-          onClick={() => setTab("completed")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
-            tab === "completed"
-              ? "bg-indigo-600 text-white"
-              : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-          }`}
-        >
-          ✅ Matchs terminés
-        </button>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTab("entries")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+              tab === "entries"
+                ? "bg-indigo-600 text-white"
+                : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            🎯 Résultats par équipe
+          </button>
+          <button
+            onClick={() => setTab("completed")}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+              tab === "completed"
+                ? "bg-indigo-600 text-white"
+                : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            ✅ Matchs terminés
+          </button>
+        </div>
+        {liveConnected && <LiveDot />}
       </div>
 
       {loading && (
@@ -102,11 +186,17 @@ export default function ResultsPage() {
 
       {!loading && !error && tab === "entries" && (
         <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/10">
-            <h2 className="font-bold">🎯 Derniers résultats de matchs</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {entries.length} entrée{entries.length !== 1 ? "s" : ""} récente{entries.length !== 1 ? "s" : ""}
-            </p>
+          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+            <div>
+              <h2 className="font-bold">🎯 Derniers résultats de matchs</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {entries.length} entrée{entries.length !== 1 ? "s" : ""} récente
+                {entries.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            {liveConnected && (
+              <span className="text-xs text-gray-500">mise à jour en temps réel</span>
+            )}
           </div>
 
           {entries.length === 0 ? (
@@ -128,25 +218,45 @@ export default function ResultsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.map((m, i) => (
-                    <tr
-                      key={m.id}
-                      className={`border-b border-white/5 transition-colors hover:bg-white/5 ${
-                        i % 2 === 0 ? "" : "bg-white/[0.02]"
-                      }`}
-                    >
-                      <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmtDate(m.date)}</td>
-                      <td className="py-3 px-4 font-semibold text-white">{m.team}</td>
-                      <td className={`py-3 px-4 text-center font-bold ${placementColor(m.placement)}`}>
-                        {MEDAL[m.placement] ?? `#${m.placement}`}
-                      </td>
-                      <td className="py-3 px-4 text-center text-indigo-300 font-bold">+{m.points}</td>
-                      <td className="py-3 px-4 text-center text-red-400 font-semibold">{m.kills}</td>
-                      <td className="py-3 px-4 text-gray-500 text-xs hidden sm:table-cell">
-                        {m.tournamentName ?? "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {entries.map((m, i) => {
+                    const isNew = newIds.has(m.id);
+                    return (
+                      <tr
+                        key={m.id}
+                        className={`border-b border-white/5 transition-all duration-700 ${
+                          isNew
+                            ? "bg-emerald-500/10 border-l-2 border-l-emerald-500"
+                            : i % 2 === 0
+                            ? "hover:bg-white/5"
+                            : "bg-white/[0.02] hover:bg-white/5"
+                        }`}
+                      >
+                        <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">
+                          {isNew ? (
+                            <span className="text-emerald-400 font-semibold">À l'instant</span>
+                          ) : (
+                            fmtDate(m.date)
+                          )}
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-white">
+                          {m.team}
+                          {isNew && (
+                            <span className="ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                              nouveau
+                            </span>
+                          )}
+                        </td>
+                        <td className={`py-3 px-4 text-center font-bold ${placementColor(m.placement)}`}>
+                          {MEDAL[m.placement] ?? `#${m.placement}`}
+                        </td>
+                        <td className="py-3 px-4 text-center text-indigo-300 font-bold">+{m.points}</td>
+                        <td className="py-3 px-4 text-center text-red-400 font-semibold">{m.kills}</td>
+                        <td className="py-3 px-4 text-gray-500 text-xs hidden sm:table-cell">
+                          {m.tournamentName ?? "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -159,7 +269,8 @@ export default function ResultsPage() {
           <div className="px-5 py-4 border-b border-white/10">
             <h2 className="font-bold">✅ Matchs planifiés terminés</h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              {completed.length} match{completed.length !== 1 ? "s" : ""} terminé{completed.length !== 1 ? "s" : ""}
+              {completed.length} match{completed.length !== 1 ? "s" : ""} terminé
+              {completed.length !== 1 ? "s" : ""}
             </p>
           </div>
 
