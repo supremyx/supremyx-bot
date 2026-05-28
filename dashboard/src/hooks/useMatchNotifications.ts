@@ -2,71 +2,68 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { apiUrl } from "../lib/api";
 
-interface MatchEntry {
-  id: string;
+interface MatchEvent {
   team: string;
   placement: number;
   kills: number;
   points: number;
-  tournamentName: string;
-  date: string;
+  tournamentName: string | null;
 }
 
-const POLL_INTERVAL = 30_000;
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
+function showMatchToast(m: MatchEvent) {
+  const placement = m.placement > 0 ? (MEDAL[m.placement] ?? `#${m.placement}`) : null;
+  toast(`🎮 Nouveau match — ${m.team}`, {
+    description: [
+      placement && `Place : ${placement}`,
+      `+${m.points} pts · ${m.kills} kills`,
+      m.tournamentName && `Tournoi : ${m.tournamentName}`,
+    ]
+      .filter(Boolean)
+      .join("  ·  "),
+    duration: 7000,
+  });
+}
+
 export function useMatchNotifications() {
-  const seenIds = useRef<Set<string>>(new Set());
-  const initialized = useRef(false);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    async function check() {
-      try {
-        const res = await fetch(apiUrl("/api/results"));
-        if (!res.ok) return;
-        const data = await res.json();
-        const matches: MatchEntry[] = data.recentMatchEntries ?? [];
+    let unmounted = false;
 
-        if (!initialized.current) {
-          // First load — just store current IDs, don't notify
-          for (const m of matches) seenIds.current.add(m.id);
-          initialized.current = true;
-          return;
+    function connect() {
+      if (unmounted) return;
+
+      const es = new EventSource(apiUrl("/api/events"));
+      esRef.current = es;
+
+      es.addEventListener("newMatch", (e) => {
+        try {
+          const data: MatchEvent = JSON.parse(e.data);
+          showMatchToast(data);
+        } catch {
+          // ignore malformed events
         }
+      });
 
-        const newMatches = matches.filter(m => !seenIds.current.has(m.id));
-
-        if (newMatches.length > 1) {
-          // Multiple new matches at once — show a summary
-          toast("🎮 Nouveaux matchs enregistrés", {
-            description: `${newMatches.length} nouveaux résultats viennent d'être ajoutés.`,
-            duration: 6000,
-          });
-          for (const m of newMatches) seenIds.current.add(m.id);
-        } else if (newMatches.length === 1) {
-          const m = newMatches[0];
-          const placement = m.placement > 0
-            ? (MEDAL[m.placement] ?? `#${m.placement}`)
-            : null;
-          toast(`🎮 Nouveau match — ${m.team}`, {
-            description: [
-              placement && `Place : ${placement}`,
-              `+${m.points} pts · ${m.kills} kills`,
-              m.tournamentName && `Tournoi : ${m.tournamentName}`,
-            ].filter(Boolean).join("  ·  "),
-            duration: 7000,
-          });
-          seenIds.current.add(m.id);
+      es.onerror = () => {
+        es.close();
+        esRef.current = null;
+        // Reconnect after 5s on error
+        if (!unmounted) {
+          reconnectTimer.current = setTimeout(connect, 5_000);
         }
-      } catch {
-        // silently ignore network errors
-      }
+      };
     }
 
-    // Initial check
-    check();
+    connect();
 
-    const id = setInterval(check, POLL_INTERVAL);
-    return () => clearInterval(id);
+    return () => {
+      unmounted = true;
+      esRef.current?.close();
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    };
   }, []);
 }

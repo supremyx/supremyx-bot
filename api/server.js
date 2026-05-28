@@ -1,5 +1,6 @@
 const express = require('express');
 const cors    = require('cors');
+const eventBus = require('../utils/eventBus');
 const Team          = require('../database/models/Team');
 const Match         = require('../database/models/Match');
 const Schedule      = require('../database/models/Schedule');
@@ -418,6 +419,31 @@ router.post('/removematch', requireApiKey, async (req, res) => {
     console.error('[API /removematch]', err);
     return res.status(500).json({ error: 'Erreur interne' });
   }
+});
+
+// ── GET /events (SSE) ─────────────────────────────────────────────────────────
+router.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  // Send a heartbeat every 25s to keep the connection alive
+  const heartbeat = setInterval(() => {
+    res.write(': heartbeat\n\n');
+  }, 25_000);
+
+  const onMatch = (data) => {
+    res.write(`event: newMatch\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  eventBus.on('newMatch', onMatch);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventBus.off('newMatch', onMatch);
+  });
 });
 
 // ─── Mount ───────────────────────────────────────────────────────────────────

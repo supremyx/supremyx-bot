@@ -5,6 +5,7 @@ const Config = require('../database/models/Config');
 const Blacklist = require('../database/models/Blacklist');
 const { staffLog } = require('../utils/staffLog');
 const { syncRanks } = require('../utils/syncRanks');
+const eventBus = require('../utils/eventBus');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -57,6 +58,14 @@ module.exports = (client) => {
 
       const tournamentInfo = activeTournoi ? ` *(${activeTournoi.name})*` : '';
       message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)${tournamentInfo}`);
+
+      eventBus.emit('newMatch', {
+        team: name,
+        placement,
+        kills,
+        points: pts,
+        tournamentName: activeTournoi ? activeTournoi.name : null,
+      });
 
       // Auto-sync rank roles if configured
       syncRanks(message.guild).catch(() => {});
