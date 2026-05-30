@@ -16,61 +16,56 @@ interface Roster {
 }
 
 const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-const ROLE_COLOR: Record<string, string> = {
-  captain:   "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-  leader:    "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-  coach:     "text-blue-400 bg-blue-400/10 border-blue-400/20",
-  manager:   "text-purple-400 bg-purple-400/10 border-purple-400/20",
-  substitute:"text-gray-400 bg-white/5 border-white/10",
-  sub:       "text-gray-400 bg-white/5 border-white/10",
-  member:    "text-indigo-300 bg-indigo-400/10 border-indigo-400/20",
-  player:    "text-indigo-300 bg-indigo-400/10 border-indigo-400/20",
+const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  captain:    { bg: "rgba(234,179,8,0.15)",   text: "#fde047", border: "rgba(234,179,8,0.3)"   },
+  leader:     { bg: "rgba(234,179,8,0.15)",   text: "#fde047", border: "rgba(234,179,8,0.3)"   },
+  coach:      { bg: "rgba(59,130,246,0.15)",  text: "#93c5fd", border: "rgba(59,130,246,0.3)"  },
+  manager:    { bg: "rgba(168,85,247,0.15)",  text: "#d8b4fe", border: "rgba(168,85,247,0.3)"  },
+  substitute: { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)" },
+  sub:        { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)" },
+  member:     { bg: "rgba(212,150,58,0.15)",  text: "var(--primary)", border: "rgba(212,150,58,0.3)" },
+  player:     { bg: "rgba(212,150,58,0.15)",  text: "var(--primary)", border: "rgba(212,150,58,0.3)" },
 };
+const DEFAULT_ROLE = { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)" };
 
 function roleStyle(role: string) {
-  const key = role.toLowerCase();
-  return ROLE_COLOR[key] ?? "text-gray-300 bg-white/5 border-white/10";
+  return ROLE_COLORS[role.toLowerCase()] ?? DEFAULT_ROLE;
 }
 
 function TeamCard({ roster }: { roster: Roster }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 overflow-hidden">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer"
+    <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full px-5 py-4 flex items-center justify-between transition-colors cursor-pointer"
+        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center font-black text-indigo-300 text-sm select-none">
+          <div className="size-9 rounded-full flex items-center justify-center font-black text-sm select-none" style={{ background: "rgba(212,150,58,0.15)", border: "1px solid rgba(212,150,58,0.3)", color: "var(--primary)" }}>
             {roster.teamName.charAt(0).toUpperCase()}
           </div>
           <div className="text-left">
-            <p className="font-bold text-white">{roster.teamName}</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="font-bold text-sm">{roster.teamName}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
               {roster.members.length} membre{roster.members.length !== 1 ? "s" : ""} · Mis à jour le {fmtDate(roster.updatedAt)}
             </p>
           </div>
         </div>
-        <span className={`text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
-          ▾
-        </span>
+        <span className="transition-transform duration-200" style={{ color: "var(--muted-foreground)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
       </button>
 
       {open && (
-        <div className="border-t border-white/10">
+        <div style={{ borderTop: "1px solid var(--border)" }}>
           {roster.members.length === 0 ? (
-            <p className="text-center text-gray-500 text-sm py-6">Aucun membre dans cette équipe.</p>
+            <p className="text-center text-sm py-6" style={{ color: "var(--muted-foreground)" }}>Aucun membre dans cette équipe.</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-white/10">
+                <tr className="text-xs uppercase tracking-wider" style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
                   <th className="py-2 px-5 text-left">Joueur</th>
                   <th className="py-2 px-5 text-left">Rôle</th>
                   <th className="py-2 px-5 text-left hidden sm:table-cell">Depuis</th>
@@ -78,25 +73,21 @@ function TeamCard({ roster }: { roster: Roster }) {
                 </tr>
               </thead>
               <tbody>
-                {roster.members.map((m, i) => (
-                  <tr
-                    key={m.userId + i}
-                    className={`border-b border-white/5 ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}
-                  >
-                    <td className="py-2.5 px-5 font-semibold text-white">{m.displayName}</td>
-                    <td className="py-2.5 px-5">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${roleStyle(m.role)}`}>
-                        {m.role}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-5 text-gray-400 text-xs hidden sm:table-cell">
-                      {m.joinedAt ? fmtDate(m.joinedAt) : "—"}
-                    </td>
-                    <td className="py-2.5 px-5 text-gray-500 text-xs hidden md:table-cell">
-                      {m.note || "—"}
-                    </td>
-                  </tr>
-                ))}
+                {roster.members.map((m, i) => {
+                  const rc = roleStyle(m.role);
+                  return (
+                    <tr key={m.userId + i} style={{ borderBottom: "1px solid var(--border)", background: i % 2 !== 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                      <td className="py-2.5 px-5 font-semibold text-sm">{m.displayName}</td>
+                      <td className="py-2.5 px-5">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
+                          {m.role}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-5 text-xs hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{m.joinedAt ? fmtDate(m.joinedAt) : "—"}</td>
+                      <td className="py-2.5 px-5 text-xs hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>{m.note || "—"}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -127,65 +118,50 @@ export default function RostersPage() {
   const totalMembers = rosters.reduce((s, r) => s + r.members.length, 0);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-
-      {/* Summary cards */}
+    <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
       {rosters.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: "Équipes",  value: rosters.length, color: "text-indigo-400" },
-            { label: "Membres",  value: totalMembers,   color: "text-emerald-400" },
+            { label: "Équipes",  value: rosters.length, color: "var(--primary)" },
+            { label: "Membres",  value: totalMembers,   color: "#34d399" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="bg-[#1a1a2e] rounded-xl p-4 border border-white/10 text-center">
-              <div className={`text-2xl font-black ${color}`}>{value}</div>
-              <div className="text-xs text-gray-400 mt-1">{label}</div>
+            <div key={label} className="rounded-xl p-4 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <div className="text-2xl font-black" style={{ color }}>{value}</div>
+              <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{label}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Header + search */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="font-bold text-white">🛡️ Rosters des équipes</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Cliquer sur une équipe pour voir ses membres</p>
+          <h2 className="font-bold text-sm">Rosters des équipes</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Cliquer sur une équipe pour voir ses membres</p>
         </div>
         {rosters.length > 0 && (
-          <input
-            type="text"
-            placeholder="Rechercher…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-36"
+          <input type="text" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)}
+            className="rounded-lg px-3 py-1.5 text-xs focus:outline-none w-36"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
           />
         )}
       </div>
 
-      {loading && (
-        <div className="py-20 text-center text-gray-400 animate-pulse">Chargement…</div>
-      )}
-      {error && (
-        <div className="py-16 text-center">
-          <div className="text-4xl mb-3">⚠️</div>
-          <p className="text-red-400 font-semibold">{error}</p>
-        </div>
-      )}
+      {loading && <div className="py-20 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>}
+      {error && <div className="py-16 text-center"><div className="text-4xl mb-3">⚠️</div><p className="text-red-400 font-semibold">{error}</p></div>}
       {!loading && !error && rosters.length === 0 && (
-        <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 py-16 text-center text-gray-500">
+        <div className="rounded-xl py-16 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
           <div className="text-3xl mb-2">🛡️</div>
           <p className="text-sm">Aucun roster enregistré pour le moment.</p>
         </div>
       )}
       {!loading && !error && rosters.length > 0 && filtered.length === 0 && (
-        <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 py-10 text-center text-gray-500 text-sm">
+        <div className="rounded-xl py-10 text-center text-sm" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
           Aucun résultat pour « {search} »
         </div>
       )}
       {!loading && !error && filtered.length > 0 && (
         <div className="space-y-3">
-          {filtered.map(r => (
-            <TeamCard key={r.teamName} roster={r} />
-          ))}
+          {filtered.map(r => <TeamCard key={r.teamName} roster={r} />)}
         </div>
       )}
     </div>
