@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Toaster } from "sonner";
-import { Trophy, Medal, Award, Users, Zap, Target, Menu, X, Search } from "lucide-react";
+import { Trophy, Medal, Award, Users, Zap, Target, Menu, X } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import TournoisPage from "./pages/TournoisPage";
 import JoueursPage from "./pages/JoueursPage";
 import RostersPage from "./pages/RostersPage";
@@ -341,25 +343,112 @@ export default function App() {
                 Cliquer sur une équipe pour voir le détail
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {loading && <span className="text-xs animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</span>}
               {ranking.length > 0 && (
-                <button
-                  onClick={() => {
-                    const header = ["Rang", "Équipe", "Points", "Kills", "Victoires", "Défaites"];
-                    const rows = ranking.map(t => [t.rank, t.team, t.points, t.kills, t.wins, t.losses]);
-                    const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-                    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a"); a.href = url;
-                    a.download = `supremyx-classement-${new Date().toISOString().slice(0, 10)}.csv`;
-                    a.click(); URL.revokeObjectURL(url);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                  style={{ background: "var(--muted)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }}
-                >
-                  ⬇ Exporter CSV
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      const header = ["Rang", "Équipe", "Points", "Kills", "Victoires", "Défaites"];
+                      const rows = ranking.map(t => [t.rank, t.team, t.points, t.kills, t.wins, t.losses]);
+                      const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+                      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a"); a.href = url;
+                      a.download = `supremyx-classement-${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click(); URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                    style={{ background: "var(--muted)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }}
+                  >
+                    ⬇ CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                      const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+                      // Header band
+                      doc.setFillColor(212, 150, 58);
+                      doc.rect(0, 0, 210, 20, "F");
+                      doc.setTextColor(255, 255, 255);
+                      doc.setFontSize(14);
+                      doc.setFont("helvetica", "bold");
+                      doc.text("SUPREMYX CI — Classement Général", 14, 13);
+
+                      // Subtitle
+                      doc.setFillColor(30, 28, 40);
+                      doc.rect(0, 20, 210, 10, "F");
+                      doc.setFontSize(8);
+                      doc.setFont("helvetica", "normal");
+                      doc.setTextColor(180, 180, 190);
+                      doc.text(`Généré le ${date}  ·  ${ranking.length} équipe${ranking.length > 1 ? "s" : ""}  ·  ${totalPoints.toLocaleString("fr-FR")} pts totaux`, 14, 27);
+
+                      // Table
+                      autoTable(doc, {
+                        startY: 34,
+                        head: [["#", "Équipe", "Points", "Kills", "V", "D", "Winrate"]],
+                        body: ranking.map(t => [
+                          t.rank,
+                          t.team,
+                          t.points.toLocaleString("fr-FR"),
+                          t.kills.toLocaleString("fr-FR"),
+                          t.wins,
+                          t.losses,
+                          t.wins + t.losses > 0
+                            ? `${Math.round((t.wins / (t.wins + t.losses)) * 100)}%`
+                            : "—",
+                        ]),
+                        styles: {
+                          fontSize: 9,
+                          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+                          textColor: [220, 220, 230],
+                          fillColor: [22, 21, 30],
+                          lineColor: [50, 48, 65],
+                          lineWidth: 0.2,
+                        },
+                        headStyles: {
+                          fillColor: [40, 38, 55],
+                          textColor: [212, 150, 58],
+                          fontStyle: "bold",
+                          fontSize: 8,
+                          halign: "center",
+                        },
+                        columnStyles: {
+                          0: { halign: "center", cellWidth: 12 },
+                          1: { halign: "left",   cellWidth: 70 },
+                          2: { halign: "center", cellWidth: 24, textColor: [212, 150, 58] as [number, number, number], fontStyle: "bold" },
+                          3: { halign: "center", cellWidth: 22, textColor: [248, 113, 113] as [number, number, number] },
+                          4: { halign: "center", cellWidth: 18, textColor: [52, 211, 153] as [number, number, number] },
+                          5: { halign: "center", cellWidth: 18, textColor: [244, 63, 94] as [number, number, number] },
+                          6: { halign: "center", cellWidth: 26 },
+                        },
+                        alternateRowStyles: { fillColor: [26, 24, 38] },
+                        didDrawRow: (data) => {
+                          if (data.row.index < 3) {
+                            const colors: [number, number, number][] = [[250, 204, 21], [209, 213, 219], [217, 119, 6]];
+                            doc.setFillColor(...colors[data.row.index]);
+                            doc.rect(14, data.row.y, 1.5, data.row.height, "F");
+                          }
+                        },
+                      });
+
+                      // Footer
+                      const pageH = doc.internal.pageSize.height;
+                      doc.setFillColor(30, 28, 40);
+                      doc.rect(0, pageH - 10, 210, 10, "F");
+                      doc.setFontSize(7);
+                      doc.setTextColor(120, 120, 130);
+                      doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.xyz", 14, pageH - 3.5);
+
+                      doc.save(`supremyx-classement-${new Date().toISOString().slice(0, 10)}.pdf`);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                    style={{ background: "rgba(212,150,58,0.15)", color: "var(--primary)", border: "1px solid rgba(212,150,58,0.3)" }}
+                  >
+                    📄 PDF
+                  </button>
+                </>
               )}
             </div>
           </div>
