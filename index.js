@@ -66,11 +66,21 @@ client.once('ready', () => {
   console.log('📅 Système rappels calendrier activé');
 });
 
+const aiCooldowns = new Map();
+const AI_COOLDOWN_MS = 15000; // 15s par utilisateur
+
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (!message.content.startsWith('!ai')) return;
 
+  const now = Date.now();
+  const lastUsed = aiCooldowns.get(message.author.id) || 0;
+  const remaining = AI_COOLDOWN_MS - (now - lastUsed);
+  if (remaining > 0) {
+    return message.reply(`⏳ Cooldown IA : attends encore **${Math.ceil(remaining / 1000)}s** avant de réutiliser \`!ai\`.`);
+  }
+  aiCooldowns.set(message.author.id, now);
 
   const prompt = message.content.slice(3).trim();
 

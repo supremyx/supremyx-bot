@@ -10,4 +10,4 @@ const commandStatSchema = new mongoose.Schema({
   usedAt:    { type: Date, default: Date.now, index: true }
 });
 
-module.exports = mongoose.model('CommandStat', commandStatSchema);
+module.exports = mongoose.models.CommandStat || mongoose.model('CommandStat', commandStatSchema);

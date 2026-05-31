@@ -12,17 +12,17 @@ module.exports = (client) => {
       const name = message.content.split(' ')[1];
       if (!name) return message.reply('Usage : `!unregister <nom>`');
 
-      const team = await Team.findOneAndDelete({ name });
+      const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');
 
-      const matchCount = await Match.countDocuments({ team: name });
-      await Match.deleteMany({ team: name });
+      const matchCount = await Match.countDocuments({ team: team.name });
+      await Match.deleteMany({ team: team.name });
 
-      message.reply(`🗑️ **${name}** a été supprimée (équipe + historique).`);
+      message.reply(`🗑️ **${team.name}** a été supprimée (équipe + historique).`);
 
       await staffLog(client, {
         action: 'unregister',
-        details: `**Équipe supprimée :** ${name}\n**Matchs supprimés :** ${matchCount}`,
+        details: `**Équipe supprimée :** ${team.name}\n**Matchs supprimés :** ${matchCount}`,
         author: message.author.tag
       });
     }

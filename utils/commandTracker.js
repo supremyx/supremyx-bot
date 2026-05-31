@@ -1,4 +1,4 @@
-const CommandStat = require('../models/CommandStat');
+const CommandStat = require('../database/models/CommandStat');
 
 /**
  * Call this once in index.js — passively tracks every !command used.

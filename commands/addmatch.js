@@ -27,7 +27,7 @@ module.exports = (client) => {
         return message.reply(`🚫 **${name}** est dans la blacklist.\nRaison : *${blacklisted.reason}*`);
       }
 
-      let team = await Team.findOne({ name });
+      let team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');
 
       // Use config point system or fallback defaults

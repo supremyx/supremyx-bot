@@ -101,28 +101,33 @@ const PAGES = [
     title: '📖 Aide SUPREMYX — Page 3 / 6 — Statistiques & Tournois',
     fields: [
       {
-        name: '📊 Statistiques',
+        name: '📊 Statistiques — Équipes',
         value: [
           '`!ranking` — Classement général',
           '`!ranking <tournoi>` — Classement d\'un tournoi',
           '`!top <n>` — Top N des équipes',
           '`!leaderboard` — Classement en direct',
           '`!search <nom>` — Rechercher une équipe',
-          '`!compare <eq1> vs <eq2>` — Comparer deux équipes (stats en direct)',
-          '`!compare season <eq1> vs <eq2>` — Comparaison sur l\'historique des saisons',
-          '`!h2h <eq1> vs <eq2>` — Face à face statistique (matchs)',
+          '`!compare <eq1> vs <eq2>` — Comparer deux équipes',
+          '`!compare season <eq1> vs <eq2>` — Comparaison sur les saisons',
+          '`!h2h <eq1> vs <eq2>` — Face à face statistique',
           '`!stats <nom>` — Statistiques détaillées',
           '`!teaminfo <nom>` — Fiche complète (stats + roster + tournois)',
           '`!history <nom>` — Historique des matchs',
           '`!matchs` — Dernier match de chaque équipe',
+        ].join('\n')
+      },
+      {
+        name: '📊 Statistiques — Joueurs & Divers',
+        value: [
           '`!mvp` — MVP du tournoi actif',
           '`!streak <équipe>` — Série de victoires/défaites',
           '`!consistency <équipe>` — Score de régularité',
           '`!calc <placement> <kills>` — Simuler un calcul de points',
           '`!playerstats <pseudo>` — Stats individuelles d\'un joueur',
           '`!playerboard [équipe]` — Top joueurs par kills',
-          '`!playermatch <équipe> <joueur> <kills>` — Enregistrer kills d\'un joueur *(staff)*',
-          '`!playerreset <équipe> <joueur>` — Remettre stats d\'un joueur à zéro *(staff)*',
+          '`!playermatch <équipe> <joueur> <kills>` — Enregistrer kills *(staff)*',
+          '`!playerreset <équipe> <joueur>` — Reset stats joueur *(staff)*',
         ].join('\n')
       },
       {

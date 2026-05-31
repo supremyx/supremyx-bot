@@ -1,6 +1,8 @@
 const Team = require('../database/models/Team');
 const RankReward = require('../database/models/RankReward');
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * Syncs Discord rank reward roles based on current standings.
  * Requires teams to have a roleId (set via !linkteam).
@@ -15,22 +17,21 @@ async function syncRanks(guild) {
 
     if (!rewards.length) return;
 
-    // Collect all reward role IDs to strip them cleanly
     const allRewardRoleIds = rewards.map(r => r.roleId);
 
-    // Fetch all members (requires GuildMembers intent)
     await guild.members.fetch();
 
-    // Strip all rank reward roles from everyone first
+    // Strip all rank reward roles — with delay to avoid rate limits
     for (const roleId of allRewardRoleIds) {
       const role = guild.roles.cache.get(roleId);
       if (!role) continue;
       for (const [, member] of role.members) {
         await member.roles.remove(role).catch(() => {});
+        await sleep(300);
       }
     }
 
-    // Assign rank reward roles to team members based on current standings
+    // Assign rank reward roles to team members — with delay
     for (const reward of rewards) {
       const teamAtRank = teams[reward.rank - 1];
       if (!teamAtRank?.roleId) continue;
@@ -41,10 +42,11 @@ async function syncRanks(guild) {
 
       for (const [, member] of teamRole.members) {
         await member.roles.add(rewardRole).catch(() => {});
+        await sleep(300);
       }
     }
   } catch (err) {
-    // Silent fail — rank sync is non-critical
+    console.error('[syncRanks] Erreur:', err.message);
   }
 }
 
