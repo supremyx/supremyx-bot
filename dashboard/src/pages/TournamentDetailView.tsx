@@ -197,6 +197,88 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
               <p className="text-sm">Aucun match enregistré dans ce tournoi.</p>
             </div>
           ) : (
+            <>
+              <div className="px-5 py-3 flex justify-end" style={{ borderBottom: "1px solid var(--border)" }}>
+                <button
+                  onClick={() => {
+                    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                    const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+                    doc.setFillColor(212, 150, 58);
+                    doc.rect(0, 0, 210, 20, "F");
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(`SUPREMYX CI — ${tournament.name}`, 14, 13);
+
+                    doc.setFillColor(30, 28, 40);
+                    doc.rect(0, 20, 210, 10, "F");
+                    doc.setFontSize(8);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(180, 180, 190);
+                    const status = tournament.active ? "En cours" : "Terminé";
+                    doc.text(`Généré le ${date}  ·  ${standings.length} équipe${standings.length > 1 ? "s" : ""}  ·  ${matchCount} matchs  ·  ${status}`, 14, 27);
+
+                    autoTable(doc, {
+                      startY: 34,
+                      head: [["#", "Équipe", "Points", "Kills", "Victoires", "Matchs"]],
+                      body: standings.map(s => [
+                        s.rank,
+                        s.team,
+                        s.points.toLocaleString("fr-FR"),
+                        s.kills.toLocaleString("fr-FR"),
+                        s.wins,
+                        s.matches,
+                      ]),
+                      styles: {
+                        fontSize: 9,
+                        cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+                        textColor: [220, 220, 230],
+                        fillColor: [22, 21, 30],
+                        lineColor: [50, 48, 65],
+                        lineWidth: 0.2,
+                      },
+                      headStyles: {
+                        fillColor: [40, 38, 55],
+                        textColor: [212, 150, 58],
+                        fontStyle: "bold",
+                        fontSize: 8,
+                        halign: "center",
+                      },
+                      columnStyles: {
+                        0: { halign: "center", cellWidth: 12 },
+                        1: { halign: "left",   cellWidth: 70 },
+                        2: { halign: "center", cellWidth: 28, textColor: [212, 150, 58] as [number, number, number], fontStyle: "bold" },
+                        3: { halign: "center", cellWidth: 24, textColor: [248, 113, 113] as [number, number, number] },
+                        4: { halign: "center", cellWidth: 28, textColor: [52, 211, 153] as [number, number, number] },
+                        5: { halign: "center", cellWidth: 24 },
+                      },
+                      alternateRowStyles: { fillColor: [26, 24, 38] },
+                      didDrawRow: (data) => {
+                        if (data.row.index < 3) {
+                          const colors: [number, number, number][] = [[250, 204, 21], [209, 213, 219], [217, 119, 6]];
+                          doc.setFillColor(...colors[data.row.index]);
+                          doc.rect(14, data.row.y, 1.5, data.row.height, "F");
+                        }
+                      },
+                    });
+
+                    const pageH = doc.internal.pageSize.height;
+                    doc.setFillColor(30, 28, 40);
+                    doc.rect(0, pageH - 10, 210, 10, "F");
+                    doc.setFontSize(7);
+                    doc.setTextColor(120, 120, 130);
+                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.xyz", 14, pageH - 3.5);
+
+                    const slug = tournament.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                    doc.save(`supremyx-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  style={{ background: "rgba(212,150,58,0.15)", color: "var(--primary)", border: "1px solid rgba(212,150,58,0.3)" }}
+                >
+                  📄 PDF
+                </button>
+              </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
