@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { apiUrl } from "../lib/api";
 
 interface Player {
@@ -40,73 +42,61 @@ function PlayerModal({ name, onClose }: { name: string; onClose: () => void }) {
   }, [name]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-[#1a1a2e] z-10">
+      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{ background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
           <div>
             <h2 className="font-bold text-lg">{name}</h2>
             {detail && (
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                 {detail.teams.join(", ")} · {detail.totalMatches} match{detail.totalMatches !== 1 ? "s" : ""}
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer text-lg"
-          >
-            ×
-          </button>
+          <button onClick={onClose} className="size-8 rounded-lg flex items-center justify-center text-lg transition-colors cursor-pointer" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>×</button>
         </div>
 
-        {loading && <div className="py-20 text-center text-gray-400 animate-pulse">Chargement…</div>}
+        {loading && <div className="py-20 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>}
         {error && <div className="py-20 text-center text-red-400">{error}</div>}
 
         {detail && (
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Total kills",  value: detail.totalKills.toLocaleString("fr-FR"), color: "text-red-400" },
-                { label: "Moy. kills",   value: detail.avgKills,                           color: "text-orange-400" },
-                { label: "Best kills",   value: detail.bestKills,                          color: "text-yellow-400" },
-                { label: "Matchs",       value: detail.totalMatches,                       color: "text-indigo-300" },
+                { label: "Total kills",  value: detail.totalKills.toLocaleString("fr-FR"), color: "#f87171" },
+                { label: "Moy. kills",   value: detail.avgKills,                           color: "#fb923c" },
+                { label: "Best kills",   value: detail.bestKills,                          color: "#facc15" },
+                { label: "Matchs",       value: detail.totalMatches,                       color: "var(--primary)" },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-white/5 rounded-xl p-3 text-center border border-white/10">
-                  <div className={`text-xl font-black ${color}`}>{value}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+                <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                  <div className="text-xl font-black" style={{ color }}>{value}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>{label}</div>
                 </div>
               ))}
             </div>
 
             {detail.history.length > 0 && (
               <div>
-                <h3 className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">
+                <h3 className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: "var(--muted-foreground)" }}>
                   Historique des 20 derniers matchs
                 </h3>
-                <div className="rounded-xl border border-white/10 overflow-hidden">
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-xs text-gray-500 border-b border-white/10">
+                      <tr className="text-xs" style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
                         <th className="py-2 px-3 text-left">Date</th>
                         <th className="py-2 px-3 text-center">Kills</th>
-                        {detail.teams.length > 1 && (
-                          <th className="py-2 px-3 text-left hidden sm:table-cell">Équipe</th>
-                        )}
+                        {detail.teams.length > 1 && <th className="py-2 px-3 text-left hidden sm:table-cell">Équipe</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {detail.history.map((h, i) => (
-                        <tr key={i} className={`border-b border-white/5 ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}>
-                          <td className="py-2 px-3 text-gray-400 text-xs">{fmtDate(h.date)}</td>
+                        <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: i % 2 !== 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                          <td className="py-2 px-3 text-xs" style={{ color: "var(--muted-foreground)" }}>{fmtDate(h.date)}</td>
                           <td className="py-2 px-3 text-center text-red-400 font-bold">{h.kills}</td>
-                          {detail.teams.length > 1 && (
-                            <td className="py-2 px-3 text-gray-500 text-xs hidden sm:table-cell">
-                              {h.teamName || "—"}
-                            </td>
-                          )}
+                          {detail.teams.length > 1 && <td className="py-2 px-3 text-xs hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{h.teamName || "—"}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -141,66 +131,137 @@ export default function JoueursPage({ initialSelected }: { initialSelected?: str
   );
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
       {selected && <PlayerModal name={selected} onClose={() => setSelected(null)} />}
 
-      {/* Summary cards */}
       {players.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Joueurs",        value: players.length,                                            color: "text-indigo-400" },
-            { label: "Total kills",    value: players.reduce((s, p) => s + p.totalKills, 0).toLocaleString("fr-FR"), color: "text-red-400" },
-            { label: "Meilleur kill",  value: Math.max(...players.map(p => p.bestKills), 0),             color: "text-yellow-400" },
+            { label: "Joueurs",       value: players.length,                                                          color: "var(--primary)" },
+            { label: "Total kills",   value: players.reduce((s, p) => s + p.totalKills, 0).toLocaleString("fr-FR"), color: "#f87171" },
+            { label: "Meilleur kill", value: Math.max(...players.map(p => p.bestKills), 0),                          color: "#facc15" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="bg-[#1a1a2e] rounded-xl p-4 border border-white/10 text-center">
-              <div className={`text-2xl font-black ${color}`}>{value}</div>
-              <div className="text-xs text-gray-400 mt-1">{label}</div>
+            <div key={label} className="rounded-xl p-4 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <div className="text-2xl font-black" style={{ color }}>{value}</div>
+              <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{label}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Leaderboard */}
-      <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-4">
+      <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <div className="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
           <div>
-            <h2 className="font-bold">💀 Classement Joueurs</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Cliquer sur un joueur pour voir le détail</p>
+            <h2 className="font-bold text-sm">Classement Joueurs</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Cliquer sur un joueur pour voir le détail</p>
           </div>
-          {players.length > 0 && (
-            <input
-              type="text"
-              placeholder="Rechercher…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-36"
-            />
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {players.length > 0 && (
+              <>
+                <input type="text" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)}
+                  className="rounded-lg px-3 py-1.5 text-xs focus:outline-none w-36"
+                  style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                />
+                <button
+                  onClick={() => {
+                    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                    const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+                    doc.setFillColor(212, 150, 58);
+                    doc.rect(0, 0, 210, 20, "F");
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("SUPREMYX CI — Classement Joueurs", 14, 13);
+
+                    doc.setFillColor(30, 28, 40);
+                    doc.rect(0, 20, 210, 10, "F");
+                    doc.setFontSize(8);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(180, 180, 190);
+                    doc.text(`Généré le ${date}  ·  ${players.length} joueur${players.length > 1 ? "s" : ""}`, 14, 27);
+
+                    autoTable(doc, {
+                      startY: 34,
+                      head: [["#", "Joueur", "Équipe", "Kills totaux", "Moy. kills", "Best", "Matchs"]],
+                      body: players.map(p => [
+                        p.rank,
+                        p.displayName,
+                        p.teamName,
+                        p.totalKills.toLocaleString("fr-FR"),
+                        p.avgKills,
+                        p.bestKills,
+                        p.totalMatches,
+                      ]),
+                      styles: {
+                        fontSize: 9,
+                        cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+                        textColor: [220, 220, 230],
+                        fillColor: [22, 21, 30],
+                        lineColor: [50, 48, 65],
+                        lineWidth: 0.2,
+                      },
+                      headStyles: {
+                        fillColor: [40, 38, 55],
+                        textColor: [212, 150, 58],
+                        fontStyle: "bold",
+                        fontSize: 8,
+                        halign: "center",
+                      },
+                      columnStyles: {
+                        0: { halign: "center", cellWidth: 12 },
+                        1: { halign: "left",   cellWidth: 52 },
+                        2: { halign: "left",   cellWidth: 40 },
+                        3: { halign: "center", cellWidth: 28, textColor: [248, 113, 113] as [number, number, number] },
+                        4: { halign: "center", cellWidth: 24, textColor: [212, 150, 58] as [number, number, number] },
+                        5: { halign: "center", cellWidth: 20, textColor: [250, 204, 21] as [number, number, number] },
+                        6: { halign: "center", cellWidth: 20 },
+                      },
+                      alternateRowStyles: { fillColor: [26, 24, 38] },
+                      didDrawRow: (data) => {
+                        if (data.row.index < 3) {
+                          const colors: [number, number, number][] = [[250, 204, 21], [209, 213, 219], [217, 119, 6]];
+                          doc.setFillColor(...colors[data.row.index]);
+                          doc.rect(14, data.row.y, 1.5, data.row.height, "F");
+                        }
+                      },
+                    });
+
+                    const pageH = doc.internal.pageSize.height;
+                    doc.setFillColor(30, 28, 40);
+                    doc.rect(0, pageH - 10, 210, 10, "F");
+                    doc.setFontSize(7);
+                    doc.setTextColor(120, 120, 130);
+                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.xyz", 14, pageH - 3.5);
+
+                    doc.save(`supremyx-joueurs-${new Date().toISOString().slice(0, 10)}.pdf`);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  style={{ background: "rgba(212,150,58,0.15)", color: "var(--primary)", border: "1px solid rgba(212,150,58,0.3)" }}
+                >
+                  📄 PDF
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        {loading && (
-          <div className="py-16 text-center text-gray-400 animate-pulse">Chargement…</div>
-        )}
-        {error && (
-          <div className="py-16 text-center">
-            <div className="text-4xl mb-3">⚠️</div>
-            <p className="text-red-400 font-semibold">{error}</p>
-          </div>
-        )}
+        {loading && <div className="py-16 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>}
+        {error && <div className="py-16 text-center"><div className="text-4xl mb-3">⚠️</div><p className="text-red-400 font-semibold">{error}</p></div>}
         {!loading && !error && players.length === 0 && (
-          <div className="py-16 text-center text-gray-500">
+          <div className="py-16 text-center" style={{ color: "var(--muted-foreground)" }}>
             <div className="text-3xl mb-2">👤</div>
             <p className="text-sm">Aucun joueur enregistré pour le moment.</p>
           </div>
         )}
         {!loading && !error && players.length > 0 && filtered.length === 0 && (
-          <div className="py-10 text-center text-gray-500 text-sm">Aucun résultat pour « {search} »</div>
+          <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Aucun résultat pour « {search} »</div>
         )}
         {!loading && !error && filtered.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-white/10">
+                <tr className="text-xs uppercase tracking-wider" style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
                   <th className="py-2 px-4 text-center">#</th>
                   <th className="py-2 px-4 text-left">Joueur</th>
                   <th className="py-2 px-4 text-left hidden sm:table-cell">Équipe</th>
@@ -212,28 +273,20 @@ export default function JoueursPage({ initialSelected }: { initialSelected?: str
               </thead>
               <tbody>
                 {filtered.map((p, i) => (
-                  <tr
-                    key={p.displayName + p.teamName}
-                    onClick={() => setSelected(p.displayName)}
-                    className={`border-b border-white/10 cursor-pointer transition-colors hover:bg-indigo-500/10 ${
-                      p.rank <= 3 ? "bg-white/5" : ""
-                    }`}
+                  <tr key={p.displayName + p.teamName} onClick={() => setSelected(p.displayName)} className="cursor-pointer transition-colors"
+                    style={{ borderBottom: "1px solid var(--border)", background: p.rank <= 3 ? "rgba(212,150,58,0.04)" : "transparent" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(212,150,58,0.08)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = p.rank <= 3 ? "rgba(212,150,58,0.04)" : "transparent")}
                   >
                     <td className="py-3 px-4 text-center font-bold text-lg w-12">
-                      {search ? (
-                        <span className="text-gray-400 text-base">{p.rank}</span>
-                      ) : (
-                        MEDAL[p.rank] ?? <span className="text-gray-400 text-base">{p.rank}</span>
-                      )}
+                      {search ? <span className="text-base" style={{ color: "var(--muted-foreground)" }}>{p.rank}</span> : (MEDAL[p.rank] ?? <span className="text-base" style={{ color: "var(--muted-foreground)" }}>{p.rank}</span>)}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-white">{p.displayName}</td>
-                    <td className="py-3 px-4 text-gray-400 text-xs hidden sm:table-cell">{p.teamName}</td>
-                    <td className="py-3 px-4 text-center text-red-400 font-bold text-base">
-                      {p.totalKills.toLocaleString("fr-FR")}
-                    </td>
+                    <td className="py-3 px-4 font-semibold">{p.displayName}</td>
+                    <td className="py-3 px-4 text-xs hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{p.teamName}</td>
+                    <td className="py-3 px-4 text-center text-red-400 font-bold text-base">{p.totalKills.toLocaleString("fr-FR")}</td>
                     <td className="py-3 px-4 text-center text-orange-400 hidden sm:table-cell">{p.avgKills}</td>
                     <td className="py-3 px-4 text-center text-yellow-400 hidden sm:table-cell">{p.bestKills}</td>
-                    <td className="py-3 px-4 text-center text-gray-400 hidden sm:table-cell">{p.totalMatches}</td>
+                    <td className="py-3 px-4 text-center hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{p.totalMatches}</td>
                   </tr>
                 ))}
               </tbody>

@@ -91,9 +91,9 @@ module.exports = (client) => {
         .join('\n') || '—';
 
       const [p1, p2]  = indicator(t1.totalPoints, t2.totalPoints);
-      [k1, k2]        = indicator(t1.totalKills,  t2.totalKills);
-      [s1, s2]        = indicator(t1.wins1st,      t2.wins1st);
-      [d1, d2]        = indicator(t1.podiums,      t2.podiums);
+      const [k1, k2] = indicator(t1.totalKills,  t2.totalKills);
+      const [s1, s2] = indicator(t1.wins1st,      t2.wins1st);
+      const [d1, d2] = indicator(t1.podiums,      t2.podiums);
 
       const leader = t1.wins1st > t2.wins1st ? t1.name
         : t2.wins1st > t1.wins1st ? t2.name

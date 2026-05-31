@@ -112,6 +112,7 @@ const PAGES = [
           '`!compare season <eq1> vs <eq2>` — Comparaison sur l\'historique des saisons',
           '`!h2h <eq1> vs <eq2>` — Face à face statistique (matchs)',
           '`!stats <nom>` — Statistiques détaillées',
+          '`!teaminfo <nom>` — Fiche complète (stats + roster + tournois)',
           '`!history <nom>` — Historique des matchs',
           '`!matchs` — Dernier match de chaque équipe',
           '`!mvp` — MVP du tournoi actif',
@@ -129,6 +130,7 @@ const PAGES = [
         value: [
           '`!newtournoi <nom>` — Lancer un tournoi *(staff)*',
           '`!endtournoi` — Clôturer le tournoi en cours *(staff)*',
+          '`!tournoi <nom>` — Détails et classement d\'un tournoi spécifique',
           '`!tournois` — Historique de tous les tournois',
           '`!deletetournoi <nom>` — Supprimer un tournoi *(staff)*',
           '`!bracket` — Bracket depuis les équipes enregistrées',
@@ -198,6 +200,7 @@ const PAGES = [
           '`!automod on / off` — Détection de mots interdits *(staff)*',
           '`!words` — Voir la liste des mots interdits *(staff)*',
           '`!word add <mot>` / `!word del <mot>` / `!word clear` *(staff)*',
+          '`!word setup` — Charger la liste de mots par défaut *(staff)*',
         ].join('\n')
       },
       {
@@ -318,6 +321,7 @@ const PAGES = [
         value: [
           '`!note <cible> <texte>` — Note privée *(staff)*',
           '`!notes <cible>` — Voir les notes *(staff)*',
+          '`!delnote <id>` — Supprimer une note *(staff)*',
           '`!achievement [emoji] <équipe> <titre>` — Attribuer un trophée *(staff)*',
           '`!achievements <équipe>` — Voir les trophées',
         ].join('\n')
@@ -344,7 +348,9 @@ const PAGES = [
           '`!delrule <num>` — Supprimer une règle tournoi *(staff)*',
           '`!clearrules` — Effacer toutes les règles tournoi *(staff)*',
           '`!log` — Historique des actions staff (paginé)',
-          '`!cooldowns` — Voir / modifier les cooldowns *(staff)*',
+          '`!cooldowns` — Voir tous les cooldowns actifs *(staff)*',
+          '`!setcooldown <cmd> <secondes>` — Modifier un cooldown *(staff)*',
+          '`!delcooldown <cmd>` — Réinitialiser un cooldown *(staff)*',
         ].join('\n')
       },
     ]
@@ -369,9 +375,6 @@ function buildEmbed(page) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!help') return;
-
-    if (!message.member?.permissions.has('Administrator'))
-      return message.reply('⛔ Cette commande est réservée au staff.');
 
     let page = 0;
 

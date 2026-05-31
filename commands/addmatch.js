@@ -41,7 +41,9 @@ module.exports = (client) => {
       const pts = placementPts + (kills * killBonus);
 
       team.points += pts;
-      team.kills += kills;
+      team.kills  += kills;
+      if (placement === 1) team.wins   += 1;
+      else                 team.losses += 1;
       await team.save();
 
       const activeTournoi = await Tournament.findOne({ active: true });

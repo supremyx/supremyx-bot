@@ -71,8 +71,6 @@ client.on('messageCreate', async (message) => {
 
   if (!message.content.startsWith('!ai')) return;
 
-  if (!message.member?.permissions.has('Administrator'))
-    return message.reply('⛔ Cette commande est réservée au staff.');
 
   const prompt = message.content.slice(3).trim();
 
@@ -146,11 +144,13 @@ require('./commands/top')(client);
 require('./commands/matchs')(client);
 require('./commands/mvp')(client);
 require('./commands/stats_advanced')(client);
+require('./commands/teaminfo')(client);
 
 // --- Tournois ---
 require('./commands/newtournoi')(client);
 require('./commands/endtournoi')(client);
 require('./commands/tournois')(client);
+require('./commands/tournoidetail')(client);
 require('./commands/deletetournoi')(client);
 require('./commands/bracket')(client);
 

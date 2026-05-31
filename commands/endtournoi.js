@@ -17,30 +17,40 @@ module.exports = (client) => {
     if (!tournament)
       return message.reply('❌ Aucun tournoi en cours. Lance-en un avec `!newtournoi <nom>`.');
 
-    const teams = await Team.find().sort({ points: -1 });
-    const matchCount = await Match.countDocuments({ tournamentId: tournament._id });
-    const totalKills = teams.reduce((sum, t) => sum + t.kills, 0);
+    // Use tournament-specific match data to compute standings
+    const matches = await Match.find({ tournamentId: tournament._id.toString() });
+    const matchCount = matches.length;
 
-    const winner = teams[0] || null;
-    const duration = Math.floor((Date.now() - tournament.startedAt) / (1000 * 60 * 60));
+    const statsMap = {};
+    for (const m of matches) {
+      if (!statsMap[m.team]) statsMap[m.team] = { points: 0, kills: 0 };
+      statsMap[m.team].points += m.points;
+      statsMap[m.team].kills  += m.kills;
+    }
+    const sorted = Object.entries(statsMap).sort((a, b) => b[1].points - a[1].points);
+    const totalKills = sorted.reduce((sum, [, s]) => sum + s.kills, 0);
 
-    tournament.active = false;
-    tournament.endedBy = message.author.tag;
-    tournament.winner = winner ? winner.name : null;
+    const winnerName = sorted.length > 0 ? sorted[0][0] : null;
+    const winnerPts  = winnerName ? sorted[0][1].points : 0;
+    const duration   = Math.floor((Date.now() - tournament.startedAt) / (1000 * 60 * 60));
+
+    tournament.active       = false;
+    tournament.endedBy      = message.author.tag;
+    tournament.winner       = winnerName;
     tournament.totalMatches = matchCount;
-    tournament.totalKills = totalKills;
-    tournament.endedAt = new Date();
+    tournament.totalKills   = totalKills;
+    tournament.endedAt      = new Date();
     await tournament.save();
 
-    const podium = teams.slice(0, 3).map((t, i) =>
-      `${medals[i] || `#${i + 1}`} **${t.name}** — ${t.points} pts | ${t.kills} kills`
+    const podium = sorted.slice(0, 3).map(([name, s], i) =>
+      `${medals[i] || `#${i + 1}`} **${name}** — ${s.points} pts | ${s.kills} kills`
     ).join('\n') || 'Aucune équipe';
 
     const embed = new EmbedBuilder()
       .setTitle(`🏆 Fin du tournoi — ${tournament.name}`)
       .setColor(0xF1C40F)
       .addFields(
-        { name: '🥇 Vainqueur', value: winner ? `**${winner.name}** avec ${winner.points} pts` : 'Aucun', inline: false },
+        { name: '🥇 Vainqueur', value: winnerName ? `**${winnerName}** avec ${winnerPts} pts` : 'Aucun', inline: false },
         { name: '🎖️ Podium final', value: podium, inline: false },
         { name: '🎮 Matchs joués', value: `${matchCount}`, inline: true },
         { name: '💀 Kills totaux', value: `${totalKills}`, inline: true },
@@ -53,7 +63,7 @@ module.exports = (client) => {
 
     await staffLog(client, {
       action: 'resetmatch',
-      details: `**Tournoi terminé :** ${tournament.name}\n**Vainqueur :** ${winner ? winner.name : 'Aucun'}\n**Matchs :** ${matchCount}`,
+      details: `**Tournoi terminé :** ${tournament.name}\n**Vainqueur :** ${winnerName ?? 'Aucun'}\n**Matchs :** ${matchCount}`,
       author: message.author.tag
     });
   });

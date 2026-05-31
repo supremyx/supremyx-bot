@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const CommandStat = require('../models/CommandStat');
+const CommandStat = require('../database/models/CommandStat');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {

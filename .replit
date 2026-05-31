@@ -34,6 +34,10 @@ args = "Start Discord Bot"
 task = "workflow.run"
 args = "Push to GitHub"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Auto-push GitHub"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -64,6 +68,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "bash scripts/push-to-github.sh"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Auto-push GitHub"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/autopush.sh"
 
 [workflows.workflow.metadata]
 outputType = "console"
