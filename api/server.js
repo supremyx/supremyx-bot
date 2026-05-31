@@ -8,6 +8,11 @@ const PlayerStat    = require('../database/models/PlayerStat');
 const Roster        = require('../database/models/Roster');
 const Tournament    = require('../database/models/Tournament');
 const StaffLogEntry = require('../database/models/StaffLogEntry');
+const Season        = require('../database/models/Season');
+const Warning       = require('../database/models/Warning');
+const Sanction      = require('../database/models/Sanction');
+const Blacklist     = require('../database/models/Blacklist');
+const CommandStat   = require('../database/models/CommandStat');
 
 const app  = express();
 const PORT = 3000;
@@ -489,6 +494,170 @@ router.post('/removematch', requireApiKey, async (req, res) => {
     });
   } catch (err) {
     console.error('[API /removematch]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /seasons ──────────────────────────────────────────────────────────────
+router.get('/seasons', async (req, res) => {
+  try {
+    const seasons = await Season.find().sort({ createdAt: -1 }).lean();
+    return res.json({
+      success: true,
+      total: seasons.length,
+      seasons: seasons.map(s => ({
+        _id:       s._id,
+        name:      s.name,
+        active:    s.active,
+        startedBy: s.startedBy,
+        endedBy:   s.endedBy,
+        endedAt:   s.endedAt || null,
+        createdAt: s.createdAt,
+        snapshot:  s.snapshot || [],
+      })),
+    });
+  } catch (err) {
+    console.error('[API /seasons]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /warnings ─────────────────────────────────────────────────────────────
+router.get('/warnings', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const entries = await Warning.find().sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({
+      success: true,
+      total: entries.length,
+      warnings: entries.map(w => ({
+        _id:       w._id,
+        target:    w.target,
+        targetId:  w.targetId,
+        reason:    w.reason,
+        warnedBy:  w.warnedBy,
+        createdAt: w.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error('[API /warnings]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /sanctions ────────────────────────────────────────────────────────────
+router.get('/sanctions', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const entries = await Sanction.find().sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({
+      success: true,
+      total: entries.length,
+      sanctions: entries.map(s => ({
+        _id:            s._id,
+        userTag:        s.userTag,
+        userId:         s.userId,
+        type:           s.type,
+        reason:         s.reason,
+        duration:       s.duration,
+        moderatorTag:   s.moderatorTag,
+        autoEscalation: s.autoEscalation,
+        active:         s.active,
+        createdAt:      s.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error('[API /sanctions]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /blacklist ─────────────────────────────────────────────────────────────
+router.get('/blacklist', async (req, res) => {
+  try {
+    const entries = await Blacklist.find().sort({ createdAt: -1 }).lean();
+    return res.json({
+      success: true,
+      total: entries.length,
+      blacklist: entries.map(b => ({
+        _id:       b._id,
+        target:    b.target,
+        reason:    b.reason,
+        addedBy:   b.addedBy,
+        createdAt: b.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error('[API /blacklist]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /botstats ─────────────────────────────────────────────────────────────
+router.get('/botstats', async (req, res) => {
+  try {
+    const all = await CommandStat.find().lean();
+
+    // Aggregate by command
+    const cmdMap = new Map();
+    const userMap = new Map();
+    const dayMap = new Map();
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    for (const e of all) {
+      // Per command
+      if (!cmdMap.has(e.command)) cmdMap.set(e.command, { count: 0, lastUsed: null, users: new Map() });
+      const cmd = cmdMap.get(e.command);
+      cmd.count++;
+      const usedAt = new Date(e.usedAt);
+      if (!cmd.lastUsed || usedAt > new Date(cmd.lastUsed)) cmd.lastUsed = e.usedAt;
+      cmd.users.set(e.username, (cmd.users.get(e.username) || 0) + 1);
+
+      // Global top users
+      userMap.set(e.username, (userMap.get(e.username) || 0) + 1);
+
+      // Daily activity (last 7 days)
+      if (usedAt >= sevenDaysAgo) {
+        const day = usedAt.toISOString().slice(0, 10);
+        dayMap.set(day, (dayMap.get(day) || 0) + 1);
+      }
+    }
+
+    const commands = Array.from(cmdMap.entries())
+      .map(([command, v]) => ({
+        command,
+        count: v.count,
+        lastUsed: v.lastUsed,
+        topUsers: Array.from(v.users.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([username, count]) => ({ username, count })),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const topUsers = Array.from(userMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .map(([username, count]) => ({ username, count }));
+
+    // Fill missing days in last 7 days
+    const dailyActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      dailyActivity.push({ date: d, count: dayMap.get(d) || 0 });
+    }
+
+    return res.json({
+      success: true,
+      totalUsage: all.length,
+      uniqueCommands: cmdMap.size,
+      commands,
+      topUsers,
+      dailyActivity,
+    });
+  } catch (err) {
+    console.error('[API /botstats]', err);
     return res.status(500).json({ error: 'Erreur interne' });
   }
 });

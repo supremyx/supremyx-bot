@@ -9,13 +9,13 @@ module.exports = (client) => {
       const cd = checkCooldown(message.author.id, 'stats', 5);
       if (cd) return replyCooldown(message, cd, 'stats');
 
-      const name = message.content.split(' ')[1];
+      const name = message.content.split(' ').slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!stats <nom>`');
 
-      const team = await Team.findOne({ name });
-      if (!team) return message.reply('Équipe inconnue');
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      if (!team) return message.reply(`❌ Équipe **${name}** introuvable.`);
 
-      const matches = await Match.find({ team: name }).sort({ createdAt: -1 });
+      const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 });
       const matchCount = matches.length;
       const bestPlacement = matchCount > 0 ? Math.min(...matches.map(m => m.placement)) : '-';
       const avgKills = matchCount > 0 ? (team.kills / matchCount).toFixed(1) : '0';

@@ -26,11 +26,15 @@ module.exports = (client) => {
     const cd = checkCooldown(message.author.id, 'history', 10);
     if (cd) return replyCooldown(message, cd, 'history');
 
-    const name = message.content.split(' ')[1];
+    const name = message.content.split(' ').slice(1).join(' ').trim();
     if (!name) return message.reply('Usage : `!history <nom>`');
 
-    const matches = await Match.find({ team: name }).sort({ createdAt: -1 });
-    if (!matches.length) return message.reply(`Aucun match enregistré pour **${name}**.`);
+    const Team = require('../database/models/Team');
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    if (!team) return message.reply(`❌ Équipe **${name}** introuvable.`);
+
+    const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 });
+    if (!matches.length) return message.reply(`Aucun match enregistré pour **${team.name}**.`);
 
     const totalPages = Math.ceil(matches.length / PAGE_SIZE);
     let page = 0;
@@ -50,7 +54,7 @@ module.exports = (client) => {
     const row = new ActionRowBuilder().addComponents(prev, next);
 
     const reply = await message.channel.send({
-      embeds: [buildEmbed(name, matches, page, totalPages)],
+      embeds: [buildEmbed(team.name, matches, page, totalPages)],
       components: totalPages > 1 ? [row] : []
     });
 
@@ -70,7 +74,7 @@ module.exports = (client) => {
       next.setDisabled(page === totalPages - 1);
 
       await interaction.update({
-        embeds: [buildEmbed(name, matches, page, totalPages)],
+        embeds: [buildEmbed(team.name, matches, page, totalPages)],
         components: [new ActionRowBuilder().addComponents(prev, next)]
       });
     });

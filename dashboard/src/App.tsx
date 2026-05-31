@@ -12,11 +12,14 @@ import LogsPage from "./pages/LogsPage";
 import ResultsPage from "./pages/ResultsPage";
 import TeamPage from "./pages/TeamPage";
 import ComparisonPage from "./pages/ComparisonPage";
+import SaisonsPage from "./pages/SaisonsPage";
+import ModerationPage from "./pages/ModerationPage";
+import BotStatsPage from "./pages/BotStatsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats";
 
 interface Team {
   rank: number;
@@ -30,12 +33,15 @@ interface Team {
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "classement",  label: "Classement",  icon: "🏆" },
   { key: "tournois",    label: "Tournois",     icon: "🎮" },
+  { key: "saisons",     label: "Saisons",      icon: "🗓️" },
   { key: "joueurs",     label: "Joueurs",      icon: "💀" },
   { key: "rosters",     label: "Rosters",      icon: "🛡️" },
   { key: "calendrier",  label: "Calendrier",   icon: "📅" },
   { key: "resultats",   label: "Résultats",    icon: "🎯" },
   { key: "comparaison", label: "Comparer",     icon: "⚔️" },
   { key: "stats",       label: "Stats",        icon: "📊" },
+  { key: "moderation",  label: "Modération",   icon: "🛡️" },
+  { key: "botstats",    label: "Bot Stats",    icon: "🤖" },
   { key: "logs",        label: "Logs",         icon: "📋" },
 ];
 
@@ -279,6 +285,9 @@ export default function App() {
       {page === "comparaison" && (
         <ComparisonPage initialA={activeTeam ?? undefined} initialB={compareWith ?? undefined} onBack={() => setPage("classement")} />
       )}
+      {page === "saisons"    && <SaisonsPage />}
+      {page === "moderation" && <ModerationPage />}
+      {page === "botstats"   && <BotStatsPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>

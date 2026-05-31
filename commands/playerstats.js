@@ -40,19 +40,19 @@ module.exports = (client) => {
           '**Exemple :** `!playermatch TeamA Pseudo 12`'
         );
 
-      // Verify team exists
-      const team = await Team.findOne({ name: teamName });
+      // Verify team exists (case-insensitive)
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe inconnue : **${teamName}**`);
 
       // Get team's last match to link placement/tournament
-      const lastMatch = await Match.findOne({ team: teamName }).sort({ createdAt: -1 });
+      const lastMatch = await Match.findOne({ team: team.name }).sort({ createdAt: -1 });
       const placement      = lastMatch?.placement      ?? 0;
       const tournamentName = lastMatch?.tournamentName ?? '';
       const matchId        = lastMatch?._id?.toString() ?? '';
 
       // Upsert player stat
       const stat = await PlayerStat.findOneAndUpdate(
-        { guildId: message.guild.id, teamName, displayName: playerName },
+        { guildId: message.guild.id, teamName: team.name, displayName: playerName },
         {
           $inc:  { totalKills: kills, totalMatches: 1 },
           $push: { history: { kills, teamPlacement: placement, tournamentName, matchId, date: new Date() } },
@@ -68,9 +68,9 @@ module.exports = (client) => {
       }
 
       const avg = (stat.totalKills / stat.totalMatches).toFixed(1);
-      logStaffAction(client, `🎮 **Perf joueur** — ${playerName} (${teamName}) : ${kills} kills | Total : ${stat.totalKills} | Moy : ${avg} | Par : ${message.author.tag}`);
+      logStaffAction(client, `🎮 **Perf joueur** — ${playerName} (${team.name}) : ${kills} kills | Total : ${stat.totalKills} | Moy : ${avg} | Par : ${message.author.tag}`);
       return message.reply(
-        `✅ **${kills} kills** enregistrés pour **${playerName}** (${teamName}).\n` +
+        `✅ **${kills} kills** enregistrés pour **${playerName}** (${team.name}).\n` +
         `📊 Total : **${stat.totalKills}** kills en **${stat.totalMatches}** match(s) — moy. **${avg}** kills/match.`
       );
     }
