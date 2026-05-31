@@ -308,6 +308,7 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
       )}
