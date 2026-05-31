@@ -112,6 +112,7 @@ const PAGES = [
           '`!compare season <eq1> vs <eq2>` — Comparaison sur l\'historique des saisons',
           '`!h2h <eq1> vs <eq2>` — Face à face statistique (matchs)',
           '`!stats <nom>` — Statistiques détaillées',
+          '`!teaminfo <nom>` — Fiche complète (stats + roster + tournois)',
           '`!history <nom>` — Historique des matchs',
           '`!matchs` — Dernier match de chaque équipe',
           '`!mvp` — MVP du tournoi actif',
@@ -129,6 +130,7 @@ const PAGES = [
         value: [
           '`!newtournoi <nom>` — Lancer un tournoi *(staff)*',
           '`!endtournoi` — Clôturer le tournoi en cours *(staff)*',
+          '`!tournoi <nom>` — Détails et classement d\'un tournoi spécifique',
           '`!tournois` — Historique de tous les tournois',
           '`!deletetournoi <nom>` — Supprimer un tournoi *(staff)*',
           '`!bracket` — Bracket depuis les équipes enregistrées',

@@ -146,11 +146,13 @@ require('./commands/top')(client);
 require('./commands/matchs')(client);
 require('./commands/mvp')(client);
 require('./commands/stats_advanced')(client);
+require('./commands/teaminfo')(client);
 
 // --- Tournois ---
 require('./commands/newtournoi')(client);
 require('./commands/endtournoi')(client);
 require('./commands/tournois')(client);
+require('./commands/tournoidetail')(client);
 require('./commands/deletetournoi')(client);
 require('./commands/bracket')(client);
 
