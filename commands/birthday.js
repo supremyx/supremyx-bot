@@ -6,7 +6,8 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    const isStaff = message.member.permissions.has('Administrator');
+    if (!message.guild) return;
+    const isStaff = message.member?.permissions.has('Administrator') ?? false;
 
     // --- !setbirthday #channel ---
     if (content.startsWith('!setbirthday')) {

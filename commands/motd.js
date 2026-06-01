@@ -27,7 +27,7 @@ async function sendMotd(client) {
 
 module.exports = (client, sendOnStartup = false) => {
   if (sendOnStartup) {
-    client.once('ready', () => sendMotd(client));
+    client.once('clientReady', () => sendMotd(client));
   }
 
   client.on('messageCreate', async message => {
