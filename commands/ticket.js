@@ -204,7 +204,8 @@ module.exports = (client) => {
       if (existing) return message.reply(`Tu as déjà un ticket ouvert : <#${existing.channelId}>\nFerme-le d'abord avec \`!close\`.`);
 
       const cfg = await getConfig(message.guild.id);
-      const channelName = `${category}-${message.author.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15)}`;
+      const safeName = message.author.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || 'membre';
+      const channelName = `${category}-${safeName}`;
 
       const overwrites = await buildPermissionOverwrites(message.guild, message.author.id, cfg);
       const channelOptions = {

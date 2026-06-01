@@ -4,17 +4,21 @@ const CommandStat = require('../database/models/CommandStat');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content.trim() !== '!botstats') return;
+    if (!message.guild) return;
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
     try {
-      const total = await CommandStat.countDocuments();
+      const guildId = message.guild.id;
+      const total = await CommandStat.countDocuments({ guildId });
       const since = await CommandStat.countDocuments({
+        guildId,
         usedAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
       });
 
       // Top 10 commands
       const topCmds = await CommandStat.aggregate([
+        { $match: { guildId } },
         { $group: { _id: '$command', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 }
@@ -22,6 +26,7 @@ module.exports = (client) => {
 
       // Top 8 users
       const topUsers = await CommandStat.aggregate([
+        { $match: { guildId } },
         { $group: { _id: { userId: '$userId', username: '$username' }, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 8 }
@@ -29,14 +34,15 @@ module.exports = (client) => {
 
       // Top 5 channels
       const topChannels = await CommandStat.aggregate([
+        { $match: { guildId } },
         { $group: { _id: { channelId: '$channelId', channelName: '$channelName' }, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 5 }
       ]);
 
       // First and last usage
-      const first = await CommandStat.findOne().sort({ usedAt: 1 }).lean();
-      const last  = await CommandStat.findOne().sort({ usedAt: -1 }).lean();
+      const first = await CommandStat.findOne({ guildId }).sort({ usedAt: 1 }).lean();
+      const last  = await CommandStat.findOne({ guildId }).sort({ usedAt: -1 }).lean();
 
       const fmt = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
       const medal = ['🥇', '🥈', '🥉'];

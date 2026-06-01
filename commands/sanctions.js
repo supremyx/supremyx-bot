@@ -50,7 +50,9 @@ module.exports = (client) => {
       if (target.permissions.has('Administrator')) return message.reply('❌ Impossible de sanctionner un administrateur.');
 
       const rawRest = args.slice(2).join(' ');
-      const [beforePipe, afterPipe] = rawRest.split('|').map(s => s.trim());
+      const pipeIdx = rawRest.indexOf('|');
+      const beforePipe = (pipeIdx === -1 ? rawRest : rawRest.slice(0, pipeIdx)).trim();
+      const afterPipe  = (pipeIdx === -1 ? ''      : rawRest.slice(pipeIdx + 1)).trim();
       const tokens = beforePipe.split(' ');
       const type = tokens[0]?.toLowerCase();
       const durationArg = parseInt(tokens[1]);

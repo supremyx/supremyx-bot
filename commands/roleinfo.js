@@ -20,6 +20,7 @@ module.exports = (client) => {
     const role = message.mentions.roles.first();
     if (!role) return message.reply('Usage : `!roleinfo @role`');
 
+    await message.guild.members.fetch().catch(() => {});
     const memberCount = message.guild.members.cache.filter(m => m.roles.cache.has(role.id)).size;
     const createdAt = `<t:${Math.floor(role.createdAt.getTime() / 1000)}:R>`;
     const perms = KEY_PERMS.filter(([perm]) => role.permissions.has(PermissionsBitField.Flags[perm])).map(([, label]) => label);

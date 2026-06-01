@@ -36,8 +36,14 @@ module.exports = (client) => {
       const day = parseInt(parts[0]);
       const month = parseInt(parts[1]);
       const year = parts[2] ? parseInt(parts[2]) : null;
-      if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12)
-        return message.reply('❌ Format invalide. Utilise `DD/MM` ou `DD/MM/YYYY`.');
+      const testYear = year || 2000;
+      const testDate = new Date(testYear, month - 1, day);
+      const isValidDate = !isNaN(day) && !isNaN(month) &&
+        testDate.getFullYear() === testYear &&
+        testDate.getMonth() === month - 1 &&
+        testDate.getDate() === day;
+      if (!isValidDate || month < 1 || month > 12)
+        return message.reply('❌ Date invalide (ex : `29/02` n\'existe pas). Utilise `DD/MM` ou `DD/MM/YYYY`.');
 
       await Birthday.findOneAndUpdate(
         { guildId: message.guild.id, userId: message.author.id },

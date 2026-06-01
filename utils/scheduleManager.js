@@ -36,7 +36,11 @@ async function sendReminder(client, match, label, color) {
   }
 }
 
+let scheduleManagerStarted = false;
+
 function startScheduleManager(client) {
+  if (scheduleManagerStarted) return;
+  scheduleManagerStarted = true;
   // Check every minute
   setInterval(async () => {
     try {

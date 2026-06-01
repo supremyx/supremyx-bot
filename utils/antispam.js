@@ -41,6 +41,7 @@ async function startAntispam(client) {
       const lastReport = reported.get(userId) || 0;
       if (now - lastReport < REPORT_COOLDOWN) return;
       reported.set(userId, now);
+      setTimeout(() => reported.delete(userId), REPORT_COOLDOWN);
 
       // React on the message
       await message.react('⏱️').catch(() => {});

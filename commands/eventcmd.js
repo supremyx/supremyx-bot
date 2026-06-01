@@ -40,20 +40,27 @@ module.exports = (client) => {
     const emoji = reaction.emoji.name;
     if (emoji !== '✅' && emoji !== '❌') return;
 
-    // Remove from both lists first
-    ev.joined = ev.joined.filter(id => id !== user.id);
-    ev.declined = ev.declined.filter(id => id !== user.id);
+    // Use atomic MongoDB operators to avoid race conditions
+    const pull = { joined: user.id, declined: user.id };
+    const push = added
+      ? (emoji === '✅' ? { joined: user.id } : { declined: user.id })
+      : {};
 
+    await GuildEvent.updateOne(
+      { _id: ev._id },
+      { $pull: pull, ...(Object.keys(push).length ? {} : {}) }
+    );
     if (added) {
-      if (emoji === '✅') ev.joined.push(user.id);
-      else ev.declined.push(user.id);
+      await GuildEvent.updateOne({ _id: ev._id }, { $addToSet: push });
     }
 
-    await ev.save();
+    // Reload for embed update
+    const updated = await GuildEvent.findById(ev._id);
+    if (!updated) return;
 
     // Update embed
     const guild = reaction.message.guild;
-    const embed = buildEventEmbed(ev, guild);
+    const embed = buildEventEmbed(updated, guild);
     await reaction.message.edit({ embeds: [embed] }).catch(() => {});
   }
 
@@ -63,6 +70,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!event')) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');

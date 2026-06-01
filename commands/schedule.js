@@ -32,6 +32,7 @@ async function getConfig(guildId) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!schedule')) return;
+    if (!message.guild) return;
 
     const args    = message.content.split(' ').slice(1);
     const sub     = args[0]?.toLowerCase();
