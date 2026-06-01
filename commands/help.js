@@ -383,6 +383,7 @@ function buildEmbed(page) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!help') return;
+    if (!message.guild) return;
     if (!message.member?.permissions.has('Administrator'))
       return message.reply('⛔ La commande `!help` est réservée au staff. Contacte un administrateur.');
 

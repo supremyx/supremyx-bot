@@ -15,6 +15,7 @@ function xpForNextLevel(level) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
+    if (!message.guild) return;
     const isStaff = message.member?.permissions.has('Administrator');
 
     // --- !setlevelchannel #channel ---

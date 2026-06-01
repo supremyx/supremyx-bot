@@ -1,0 +1,7 @@
+- [DM Guard pattern](dm-guard-pattern.md) — every command file needs `if (!message.guild) return;` before any `message.member` access; all 53 files are now covered.
+- [API regex injection](api-regex-injection.md) — `req.params.*` must be escaped before use in `new RegExp()`; fixed in `/ranking/:team`, `/players/:name`, `/rosters/:team` in `api/server.js`.
+- [eventcmd race condition](eventcmd-race.md) — event join/decline must use `$pull` then `$addToSet` (atomic), reload doc after update; never mutate in-memory array + `.save()` under concurrent reactions.
+- [reactionrole channel scan](reactionrole-channel.md) — never scan all guild channels to find a message; require `#channel` mention in the command and fetch from that channel directly.
+- [birthday date validation](birthday-date.md) — `new Date(year, month-1, day)` and compare back is the correct way to reject invalid combos like 31/02.
+- [botstats per-guild](botstats-guild.md) — all CommandStat queries must filter by `guildId`; without it, stats bleed across guilds on multi-server bots.
+- [scheduleManager singleton](schedule-manager.md) — module-level `started` flag prevents duplicate intervals when the module is re-required or the function called twice.
