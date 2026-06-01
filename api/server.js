@@ -104,8 +104,9 @@ router.get('/ranking', async (req, res) => {
 // ── GET /ranking/:team ────────────────────────────────────────────────────────
 router.get('/ranking/:team', async (req, res) => {
   try {
+    const escapedTeam = req.params.team.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const team = await Team.findOne({
-      name: { $regex: new RegExp(`^${req.params.team}$`, 'i') }
+      name: { $regex: new RegExp(`^${escapedTeam}$`, 'i') }
     }).lean();
     if (!team) return res.status(404).json({ error: `Équipe introuvable : ${req.params.team}` });
 
@@ -250,8 +251,9 @@ router.get('/players', async (req, res) => {
 // ── GET /players/:name ────────────────────────────────────────────────────────
 router.get('/players/:name', async (req, res) => {
   try {
+    const escapedName = req.params.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const stats = await PlayerStat.find({
-      displayName: { $regex: new RegExp(`^${req.params.name}$`, 'i') }
+      displayName: { $regex: new RegExp(`^${escapedName}$`, 'i') }
     }).lean();
     if (!stats.length) return res.status(404).json({ error: `Joueur introuvable : ${req.params.name}` });
 
@@ -305,8 +307,9 @@ router.get('/rosters', async (req, res) => {
 // ── GET /rosters/:team ────────────────────────────────────────────────────────
 router.get('/rosters/:team', async (req, res) => {
   try {
+    const escapedRosterTeam = req.params.team.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const roster = await Roster.findOne({
-      teamName: { $regex: new RegExp(`^${req.params.team}$`, 'i') }
+      teamName: { $regex: new RegExp(`^${escapedRosterTeam}$`, 'i') }
     }).lean();
     if (!roster) return res.status(404).json({ error: `Roster introuvable : ${req.params.team}` });
 
