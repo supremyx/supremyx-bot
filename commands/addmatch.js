@@ -10,6 +10,7 @@ const eventBus = require('../utils/eventBus');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content.startsWith('!addmatch')) {
+      if (!message.guild) return;
 
       if (!message.member.permissions.has('Administrator'))
         return message.reply('Staff uniquement');

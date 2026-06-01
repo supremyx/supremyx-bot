@@ -29,6 +29,7 @@ async function getResultChannel(client, guild) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!result')) return;
+    if (!message.guild) return;
     if (message.author.bot) return;
 
     const content = message.content.trim();

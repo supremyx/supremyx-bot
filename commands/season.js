@@ -8,6 +8,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!newseason') && !content.startsWith('!endseason') && !content.startsWith('!saisons') && !content.startsWith('!leaderboard')) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');

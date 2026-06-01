@@ -4,6 +4,7 @@ const Blacklist = require('../database/models/Blacklist');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!register')) return;
+    if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');

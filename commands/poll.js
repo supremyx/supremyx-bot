@@ -5,6 +5,7 @@ const NUMBER_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!poll')) return;
+    if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');

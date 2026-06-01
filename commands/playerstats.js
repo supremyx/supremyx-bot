@@ -19,6 +19,7 @@ module.exports = (client) => {
       !content.startsWith('!playerboard') &&
       !content.startsWith('!playerreset')
     ) return;
+    if (!message.guild) return;
     if (message.author.bot) return;
 
     const args    = content.split(' ').slice(1);
