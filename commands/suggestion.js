@@ -6,6 +6,7 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
+    if (!message.guild) return;
 
     // --- !setsuggestion #channel ---
     if (content.startsWith('!setsuggestion')) {

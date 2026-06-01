@@ -6,6 +6,7 @@ const { addSanction, ACTION_LABELS } = require('../utils/sanctionManager');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!warn') && !message.content.startsWith('!warns') && !message.content.startsWith('!delwarn')) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = message.content.split(' ');

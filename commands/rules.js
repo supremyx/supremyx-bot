@@ -14,6 +14,7 @@ module.exports = (client) => {
       !content.startsWith('!moverule') &&
       !content.startsWith('!clearrules')
     ) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');

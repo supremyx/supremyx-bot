@@ -4,6 +4,7 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
+    if (!message.guild) return;
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();

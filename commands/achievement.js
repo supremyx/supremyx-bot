@@ -9,6 +9,7 @@ module.exports = (client) => {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
+    if (!message.guild) return;
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !achievement <icon> <equipe> <titre> | <description> ---
