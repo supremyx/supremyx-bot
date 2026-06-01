@@ -13,6 +13,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!reactionrole')) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     if (!isStaff) return message.reply('Staff uniquement');
@@ -20,31 +21,27 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !reactionrole add <messageId> <emoji> @role [label] ---
+    // --- !reactionrole add #channel <messageId> <emoji> @role [label] ---
     if (sub === 'add') {
-      const msgId = args[2];
-      const emoji = args[3];
+      const targetChannel = message.mentions.channels.first();
+      const msgId = targetChannel ? args[3] : args[2];
+      const emoji = targetChannel ? args[4] : args[3];
       const role = message.mentions.roles.first();
-      const label = args.slice(5).join(' ').trim();
+      const labelStart = targetChannel ? 6 : 5;
+      const label = args.slice(labelStart).join(' ').trim();
 
-      if (!msgId || !emoji || !role)
+      if (!msgId || !emoji || !role || !targetChannel)
         return message.reply(
-          'Usage : `!reactionrole add <messageId> <emoji> @role [label]`\n' +
-          'Exemple : `!reactionrole add 123456789 🎮 @Joueur Rôle joueur`\n\n' +
+          'Usage : `!reactionrole add #salon <messageId> <emoji> @role [label]`\n' +
+          'Exemple : `!reactionrole add #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
           'Astuce : active le mode développeur Discord pour copier l\'ID d\'un message.'
         );
 
-      // Verify message exists in this guild
-      let targetMsg = null;
-      for (const [, channel] of message.guild.channels.cache) {
-        if (channel.isTextBased()) {
-          targetMsg = await channel.messages.fetch(msgId).catch(() => null);
-          if (targetMsg) break;
-        }
-      }
+      // Fetch message from the specified channel only (avoids scanning all channels)
+      const targetMsg = await targetChannel.messages.fetch(msgId).catch(() => null);
 
       if (!targetMsg)
-        return message.reply('❌ Message introuvable. Vérifie l\'ID et que le bot a accès au salon.');
+        return message.reply('❌ Message introuvable dans ce salon. Vérifie l\'ID et que le bot a accès au salon.');
 
       const emojiStr = emojiKey(emoji);
 
