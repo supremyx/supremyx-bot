@@ -314,6 +314,7 @@ const PAGES = [
         name: '🎖️ Rôles de rang & Reaction Roles',
         value: [
           '`!setrankreward <rang> @role [label]` — Associer un rôle à un rang *(staff)*',
+          '`!delrankreward <rang>` — Supprimer un rôle de rang *(staff)*',
           '`!linkteam <équipe> @role` — Lier une équipe à son rôle *(staff)*',
           '`!rankrewards` — Voir la configuration',
           '`!syncranks` — Synchroniser manuellement *(staff)*',
@@ -334,7 +335,9 @@ const PAGES = [
       {
         name: '📋 Règlement serveur',
         value: [
-          '`!règlement` — Afficher le règlement serveur',
+          '`!règlement` — Afficher le règlement (`!reglement` / `!regl` aussi)',
+          '`!règlement titre <titre>` — Modifier le titre *(staff)*',
+          '`!règlement intro <texte>` — Définir l\'introduction *(staff)*',
           '`!règlement add <section> <règle>` — Ajouter une règle *(staff)*',
           '`!règlement edit <section> <num> <texte>` — Modifier une règle *(staff)*',
           '`!règlement del <section> <num>` — Supprimer une règle *(staff)*',

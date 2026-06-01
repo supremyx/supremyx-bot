@@ -44,7 +44,7 @@ mongoose.connect(process.env.MONGO_URI)
 client.setMaxListeners(100);
 setupErrorHandler(client);
 
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`🔥 SUPREMYX connecté en tant que ${client.user.tag}`);
   startReminder(client);
   console.log('⏰ Système de rappels activé');

@@ -4,10 +4,11 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    const isLock = content.startsWith('!lock');
-    const isUnlock = content.startsWith('!unlock');
+    const isLock = content === '!lock' || content.startsWith('!lock ');
+    const isUnlock = content === '!unlock' || content.startsWith('!unlock ');
     if (!isLock && !isUnlock) return;
-    if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
+    if (!message.guild) return;
+    if (!message.member?.permissions.has('Administrator')) return message.reply('Staff uniquement');
 
     const target = message.mentions.channels.first() || message.channel;
 
