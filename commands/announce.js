@@ -32,7 +32,7 @@ module.exports = (client) => {
     await message.delete().catch(() => {});
 
     await staffLog(client, {
-      action: 'addmatch',
+      action: 'announce',
       details: `**Annonce envoyée :**\n${text}`,
       author: message.author.tag
     });

@@ -123,7 +123,7 @@ async function processResults(client, message, teamArgs, scheduled) {
     const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${rawName}$`, 'i') } });
     if (blacklisted) { errors.push(`🚫 **${rawName}** est dans la blacklist.`); continue; }
 
-    const team = await Team.findOne({ name: rawName });
+    const team = await Team.findOne({ name: { $regex: new RegExp('^' + rawName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
     if (!team) { errors.push(`❌ Équipe inconnue : **${rawName}**`); continue; }
 
     const pts = await getPoints(placement, kills);
@@ -135,7 +135,7 @@ async function processResults(client, message, teamArgs, scheduled) {
     await team.save();
 
     await Match.create({
-      team: rawName,
+      team: team.name,
       placement,
       kills,
       points: pts,
@@ -144,7 +144,7 @@ async function processResults(client, message, teamArgs, scheduled) {
       addedBy: message.author.tag
     });
 
-    results.push({ name: rawName, placement, kills, pts });
+    results.push({ name: team.name, placement, kills, pts });
   }
 
   if (!results.length) {

@@ -30,7 +30,8 @@ function normalize(text) {
 function findMatches(text, words) {
   const normalized = normalize(text);
   return words.filter(w => {
-    const regex = new RegExp(`\\b${w}\\b`, 'i');
+    const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
     return regex.test(normalized);
   });
 }

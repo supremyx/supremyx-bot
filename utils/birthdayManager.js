@@ -2,6 +2,15 @@ const Birthday = require('../database/models/Birthday');
 const BirthdayConfig = require('../database/models/BirthdayConfig');
 const { EmbedBuilder } = require('discord.js');
 
+// Track announced birthdays per day: "userId-guildId-YYYY-MM-DD"
+const announcedToday = new Set();
+
+function getTodayKey(userId, guildId) {
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  return `${userId}-${guildId}-${dateStr}`;
+}
+
 async function checkBirthdays(client) {
   const now = new Date();
   const day = now.getDate();
@@ -10,6 +19,9 @@ async function checkBirthdays(client) {
   try {
     const birthdays = await Birthday.find({ day, month });
     for (const b of birthdays) {
+      const key = getTodayKey(b.userId, b.guildId);
+      if (announcedToday.has(key)) continue;
+
       const config = await BirthdayConfig.findOne({ guildId: b.guildId });
       if (!config) continue;
 
@@ -33,12 +45,12 @@ async function checkBirthdays(client) {
         .setTimestamp();
 
       await channel.send({ embeds: [embed] });
+      announcedToday.add(key);
     }
   } catch {}
 }
 
 function startBirthdayManager(client) {
-  // Check every hour
   checkBirthdays(client);
   setInterval(() => checkBirthdays(client), 60 * 60 * 1000);
 }

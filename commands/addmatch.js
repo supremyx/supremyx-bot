@@ -49,7 +49,7 @@ module.exports = (client) => {
       const activeTournoi = await Tournament.findOne({ active: true });
 
       await Match.create({
-        team: name,
+        team: team.name,
         placement,
         kills,
         points: pts,
@@ -59,10 +59,10 @@ module.exports = (client) => {
       });
 
       const tournamentInfo = activeTournoi ? ` *(${activeTournoi.name})*` : '';
-      message.reply(`🎯 **${name}** +${pts} pts (place #${placement}, ${kills} kills)${tournamentInfo}`);
+      message.reply(`🎯 **${team.name}** +${pts} pts (place #${placement}, ${kills} kills)${tournamentInfo}`);
 
       eventBus.emit('newMatch', {
-        team: name,
+        team: team.name,
         placement,
         kills,
         points: pts,
@@ -74,7 +74,7 @@ module.exports = (client) => {
 
       await staffLog(client, {
         action: 'addmatch',
-        details: `**Équipe :** ${name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
+        details: `**Équipe :** ${team.name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
         author: message.author.tag
       });
     }

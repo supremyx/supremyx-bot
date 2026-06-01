@@ -9,8 +9,8 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('Staff uniquement');
 
-      const name = message.content.split(' ')[1];
-      if (!name) return message.reply('Usage : `!unregister <nom>`');
+      const name = message.content.split(' ').slice(1).join(' ').trim();
+      if (!name) return message.reply('Usage : `!unregister <nom équipe>`');
 
       const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');

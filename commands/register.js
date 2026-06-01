@@ -16,8 +16,8 @@ module.exports = (client) => {
       return message.reply(`🚫 **${name}** est dans la blacklist et ne peut pas être inscrit.\nRaison : *${blacklisted.reason}*`);
     }
 
-    const exists = await Team.findOne({ name });
-    if (exists) return message.reply(`⚠️ L'équipe **${name}** est déjà inscrite.`);
+    const exists = await Team.findOne({ name: { $regex: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') } });
+    if (exists) return message.reply(`⚠️ L'équipe **${exists.name}** est déjà inscrite.`);
 
     await Team.create({ name });
     message.reply(`✅ Équipe **${name}** enregistrée avec succès.`);

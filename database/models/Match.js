@@ -34,4 +34,8 @@ const MatchSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Match', MatchSchema);
+MatchSchema.index({ team: 1 });
+MatchSchema.index({ createdAt: -1 });
+MatchSchema.index({ tournamentId: 1 });
+
+module.exports = mongoose.models.Match || mongoose.model('Match', MatchSchema);

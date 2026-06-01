@@ -81,6 +81,7 @@ client.on('messageCreate', async (message) => {
     return message.reply(`⏳ Cooldown IA : attends encore **${Math.ceil(remaining / 1000)}s** avant de réutiliser \`!ai\`.`);
   }
   aiCooldowns.set(message.author.id, now);
+  setTimeout(() => aiCooldowns.delete(message.author.id), AI_COOLDOWN_MS);
 
   const prompt = message.content.slice(3).trim();
 
