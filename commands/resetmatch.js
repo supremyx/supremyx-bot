@@ -4,6 +4,7 @@ const { staffLog } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content === '!resetmatch') {
+      if (!message.guild) return;
 
       if (!message.member.permissions.has('Administrator'))
         return message.reply('Staff uniquement');

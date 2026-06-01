@@ -6,6 +6,7 @@ const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!backup') return;
+    if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');

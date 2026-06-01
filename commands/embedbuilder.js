@@ -5,6 +5,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!embed')) return;
+    if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');

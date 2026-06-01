@@ -7,6 +7,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!blacklist')) return;
+    if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');
