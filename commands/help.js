@@ -369,7 +369,7 @@ function buildEmbed(page) {
   const p = PAGES[page];
   const embed = new EmbedBuilder()
     .setTitle(p.title)
-    .setColor(0x5865F2)
+    .setColor(0x87CEEB)
     .setDescription('*(staff)* = réservé aux administrateurs. Navigue avec les boutons ◀ ▶')
     .setFooter({ text: `SUPREMYX • Page ${page + 1} sur ${PAGES.length}` })
     .setTimestamp();
