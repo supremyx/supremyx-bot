@@ -26,13 +26,13 @@ module.exports = (client) => {
     const parts = rest.split('|').map(p => p.trim());
     const title = parts[0] || '';
     const description = parts[1] || '';
-    const colorRaw = parts[2] || 'bleu';
+    const colorRaw = parts[2] || 'bleuciel';
     const imageUrl = parts[3] || '';
     const footer = parts[4] || '';
 
     // Parse color
     const COLOR_MAP = {
-      rouge: 0xED4245, rougepur: 0xFF0000, vert: 0x57F287, bleu: 0x5865F2, bleucliel: 0x87CEEB,
+      rouge: 0xED4245, rougepur: 0xFF0000, vert: 0x57F287, bleu: 0x5865F2, bleuciel: 0x87CEEB,
       jaune: 0xFEE75C, orange: 0xE67E22, violet: 0x9B59B6,
       blanc: 0xFFFFFF, noir: 0x2C2F33, gris: 0x808080,
       or: 0xF1C40F, cyan: 0x1ABC9C
