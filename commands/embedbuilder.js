@@ -26,7 +26,7 @@ module.exports = (client) => {
     const parts = rest.split('|').map(p => p.trim());
     const title = parts[0] || '';
     const description = parts[1] || '';
-    const colorRaw = parts[2] || 'or';
+    const colorRaw = parts[2] || 'bleuciel';
     const imageUrl = parts[3] || '';
     const footer = parts[4] || '';
 
@@ -37,7 +37,7 @@ module.exports = (client) => {
       blanc: 0xFFFFFF, noir: 0x2C2F33, gris: 0x808080,
       or: 0xF1C40F, cyan: 0x1ABC9C
     };
-    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0x5865F2;
+    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0xFF0000;
     if (colorRaw.startsWith('#')) {
       const parsed = parseInt(colorRaw.slice(1), 16);
       if (!isNaN(parsed)) color = parsed;
