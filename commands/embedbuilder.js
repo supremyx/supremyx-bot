@@ -37,7 +37,7 @@ module.exports = (client) => {
       blanc: 0xFFFFFF, noir: 0x2C2F33, gris: 0x808080,
       or: 0xF1C40F, cyan: 0x1ABC9C
     };
-    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0xFF0000;
+    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0xFFFFFF;
     if (colorRaw.startsWith('#')) {
       const parsed = parseInt(colorRaw.slice(1), 16);
       if (!isNaN(parsed)) color = parsed;
