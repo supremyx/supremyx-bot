@@ -16,9 +16,9 @@ module.exports = (client) => {
       return message.reply(
         '**Usage :** `!embed <titre> | <description> | [couleur] | [image_url] | [footer]`\n\n' +
         '**Exemples :**\n' +
-        '`!embed Bienvenue | Rejoins notre serveur !`\n' +
+        '`!embed Bienvenue | Rejoins notre serveur ! `\n' +
         '`!embed Règles | Sois respectueux. | #FF0000`\n' +
-        '`!embed Annonce | Texte | #87CEEB | https://... | Pied de page`\n\n' +
+        '`!embed Annonce | Texte | #5865F2 | https://... | Pied de page`\n\n' +
         '**Couleurs prédéfinies :** `rouge`, `vert`, `bleu`, `jaune`, `orange`, `violet`, `blanc`, `noir`'
       );
     }
@@ -32,12 +32,12 @@ module.exports = (client) => {
 
     // Parse color
     const COLOR_MAP = {
-      rouge: 0xED4245, vert: 0x57F287, bleu: 0x5865F2,
+      rouge: 0xED4245, rougepur: 0xFF0000, vert: 0x57F287, bleu: 0x5865F2, bleucliel: 0x87CEEB,
       jaune: 0xFEE75C, orange: 0xE67E22, violet: 0x9B59B6,
       blanc: 0xFFFFFF, noir: 0x2C2F33, gris: 0x808080,
       or: 0xF1C40F, cyan: 0x1ABC9C
     };
-    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0x5865F2;
+    let color = COLOR_MAP[colorRaw.toLowerCase()] || 0xF1C40F;
     if (colorRaw.startsWith('#')) {
       const parsed = parseInt(colorRaw.slice(1), 16);
       if (!isNaN(parsed)) color = parsed;
