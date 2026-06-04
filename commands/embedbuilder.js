@@ -26,7 +26,7 @@ module.exports = (client) => {
     const parts = rest.split('|').map(p => p.trim());
     const title = parts[0] || '';
     const description = parts[1] || '';
-    const colorRaw = parts[2] || 'bleuciel';
+    const colorRaw = parts[2] || 'bleu';
     const imageUrl = parts[3] || '';
     const footer = parts[4] || '';
 
