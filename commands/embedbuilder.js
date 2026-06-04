@@ -18,7 +18,7 @@ module.exports = (client) => {
         '**Exemples :**\n' +
         '`!embed Bienvenue | Rejoins notre serveur !`\n' +
         '`!embed Règles | Sois respectueux. | #FF0000`\n' +
-        '`!embed Annonce | Texte | #5865F2 | https://... | Pied de page`\n\n' +
+        '`!embed Annonce | Texte | #87CEEB | https://... | Pied de page`\n\n' +
         '**Couleurs prédéfinies :** `rouge`, `vert`, `bleu`, `jaune`, `orange`, `violet`, `blanc`, `noir`'
       );
     }
