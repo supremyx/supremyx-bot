@@ -165,6 +165,10 @@ require('./commands/tournoidetail')(client);
 require('./commands/deletetournoi')(client);
 require('./commands/bracket')(client);
 
+// --- Inscriptions tournoi ---
+require('./commands/inscription')(client);
+require('./commands/inscrire')(client);
+
 // --- Saisons ---
 require('./commands/season')(client);
 require('./commands/mvpseason')(client);
