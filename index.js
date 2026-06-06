@@ -9,7 +9,7 @@ process.on('uncaughtException', (err) => {
 const OpenAI = require('openai');
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY || 'no-key',
   baseURL: "https://openrouter.ai/api/v1"
 });
 

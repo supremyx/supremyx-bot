@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "canvg": "^3.0.11",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8"
   },
