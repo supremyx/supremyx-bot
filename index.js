@@ -8,10 +8,13 @@ process.on('uncaughtException', (err) => {
 
 const OpenAI = require('openai');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1"
-});
+let openai = null;
+if (process.env.OPENROUTER_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1"
+  });
+}
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
@@ -73,6 +76,10 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (!message.content.startsWith('!ai')) return;
+
+  if (!openai) {
+    return message.reply("⚠️ La fonctionnalité IA n'est pas configurée sur ce serveur.");
+  }
 
   const now = Date.now();
   const lastUsed = aiCooldowns.get(message.author.id) || 0;
