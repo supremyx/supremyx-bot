@@ -208,6 +208,56 @@ const PAGES = [
       },
     ]
   },
+  {
+    title: '🛡️ Staff — Page 4 / 4 — Nouvelles Fonctionnalités',
+    fields: [
+      {
+        name: '🎯 Prédictions',
+        value: [
+          '`!prediction create <eq1> vs <eq2> [| description]` — Créer une prédiction interactive',
+          '`!prediction close <eq1> vs <eq2> [gagnant <équipe>]` — Fermer et déclarer le gagnant',
+          '`!prediction list` — Voir les prédictions ouvertes',
+          '`!prediction leaderboard` — Classement des pronostiqueurs',
+        ].join('\n')
+      },
+      {
+        name: '🎲 Draft serpent',
+        value: [
+          '`!draft create <team1,team2,...> | <j1,j2,...>` — Créer une draft (ordre serpent automatique)',
+          '`!draft pick <joueur>` — Choisir un joueur pour l\'équipe courante',
+          '`!draft status` — Voir l\'état de la draft en cours',
+          '`!draft cancel` — Annuler la draft active',
+        ].join('\n')
+      },
+      {
+        name: '🔴 Score en direct (LiveScore)',
+        value: [
+          '`!livescore create <titre> | <eq1,eq2,...> [#salon]` — Démarrer un match live',
+          '`!livescore addround <eq:place:kills:pts> <eq:place:kills:pts> ...` — Ajouter les résultats d\'un round',
+          '`!livescore end` — Terminer le live (met à jour le message automatiquement)',
+          '`!livescore status` — Voir le live actif',
+        ].join('\n')
+      },
+      {
+        name: '🔄 Transferts & Analyse',
+        value: [
+          '`!transfert <joueur> de <eq1> vers <eq2> [| raison]` — Transférer + déplacer dans le roster',
+          '`!transfert history [joueur]` — Voir l\'historique complet des transferts',
+          '`!forma <équipe>` — Forme des 5 derniers matchs avec analyse',
+          '`!matchup <eq1> vs <eq2>` — Comparaison H2H complète avec statistiques',
+        ].join('\n')
+      },
+      {
+        name: '🏅 Succès automatiques',
+        value: [
+          'Déclenchés automatiquement après `!addmatch` — annoncés dans le salon configuré.',
+          'Variable d\'env : `ACHIEVEMENT_CHANNEL_ID` (par défaut utilise `LOG_CHANNEL_ID`)',
+          'Liste : Première Victoire · Hat-Trick · Inarrêtable · Sniper · Machine à kills',
+          '         Vétéran · Champion · Régularité · Comeback King · Machine à points',
+        ].join('\n')
+      },
+    ]
+  },
 ];
 
 function buildEmbed(page) {

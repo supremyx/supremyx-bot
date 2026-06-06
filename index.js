@@ -273,4 +273,12 @@ require('./commands/report')(client);
 // --- Roster équipes ---
 require('./commands/roster')(client);
 
+// --- Nouvelles fonctionnalités ---
+require('./commands/forma')(client);
+require('./commands/matchup')(client);
+require('./commands/transfert')(client);
+require('./commands/prediction')(client);
+require('./commands/draft')(client);
+require('./commands/livescore')(client);
+
 client.login(process.env.TOKEN);

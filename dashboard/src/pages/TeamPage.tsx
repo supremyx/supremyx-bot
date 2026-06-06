@@ -64,18 +64,33 @@ const tooltipStyle = {
   labelStyle: { color: "var(--muted-foreground)" },
 };
 
+interface FormaData {
+  forma: string[];
+  avgKills: string | null;
+  avgPts: string | null;
+  last5: { placement: number; kills: number; points: number; date: string }[];
+}
+
+const FORMA_ICON: Record<string, string> = { win: '🥇', top3: '🟢', top5: '🟡', loss: '🔴' };
+const FORMA_LABEL: Record<string, string> = { win: 'Victoire', top3: 'Top 3', top5: 'Top 5', loss: 'Défaite' };
+
 export default function TeamPage({ teamName, onBack, onCompare }: { teamName: string; onBack: () => void; onCompare?: (name: string) => void }) {
   const [detail, setDetail] = useState<TeamDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [histPage, setHistPage] = useState(1);
+  const [forma, setForma] = useState<FormaData | null>(null);
 
   useEffect(() => {
-    setLoading(true); setError(null); setHistPage(1);
+    setLoading(true); setError(null); setHistPage(1); setForma(null);
     fetch(apiUrl(`/api/ranking/${encodeURIComponent(teamName)}`))
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(d => { setDetail(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
+    fetch(apiUrl(`/api/forma/${encodeURIComponent(teamName)}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d?.success && setForma(d))
+      .catch(() => {});
   }, [teamName]);
 
   if (loading) return <div className="max-w-4xl mx-auto px-4 py-16 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement du profil…</div>;
@@ -140,6 +155,31 @@ export default function TeamPage({ teamName, onBack, onCompare }: { teamName: st
           </div>
         ))}
       </div>
+
+      {/* Forma récente */}
+      {forma && forma.forma.length > 0 && (
+        <div className="rounded-xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <h2 className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: "var(--muted-foreground)" }}>📈 Forme récente</h2>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            {forma.forma.map((f, i) => {
+              const match = forma.last5[i];
+              return (
+                <div key={i} className="flex flex-col items-center gap-1" title={match ? `Pl. ${match.placement} · ${match.kills} kills · ${match.points} pts` : ''}>
+                  <span className="text-2xl">{FORMA_ICON[f] ?? '⬜'}</span>
+                  <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{FORMA_LABEL[f]}</span>
+                </div>
+              );
+            })}
+            <div className="ml-auto flex flex-col gap-1 text-right text-xs" style={{ color: "var(--muted-foreground)" }}>
+              {forma.avgKills && <span>Moy. kills : <span className="font-bold text-red-400">{forma.avgKills}</span></span>}
+              {forma.avgPts  && <span>Moy. pts : <span className="font-bold" style={{ color: "var(--primary)" }}>{forma.avgPts}</span></span>}
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+            🥇 Victoire &nbsp;·&nbsp; 🟢 Top 3 &nbsp;·&nbsp; 🟡 Top 5 &nbsp;·&nbsp; 🔴 Hors top 5
+          </p>
+        </div>
+      )}
 
       {detail.timeline.length > 1 && (
         <div className="rounded-xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>

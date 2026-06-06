@@ -15,11 +15,13 @@ import ComparisonPage from "./pages/ComparisonPage";
 import SaisonsPage from "./pages/SaisonsPage";
 import ModerationPage from "./pages/ModerationPage";
 import BotStatsPage from "./pages/BotStatsPage";
+import TransfertsPage from "./pages/TransfertsPage";
+import HeatmapPage from "./pages/HeatmapPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "transferts" | "heatmap";
 
 interface Team {
   rank: number;
@@ -42,6 +44,8 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "stats",       label: "Stats",        icon: "📊" },
   { key: "moderation",  label: "Modération",   icon: "🛡️" },
   { key: "botstats",    label: "Bot Stats",    icon: "🤖" },
+  { key: "transferts",  label: "Transferts",   icon: "🔄" },
+  { key: "heatmap",     label: "Heatmap",      icon: "🗓️" },
   { key: "logs",        label: "Logs",         icon: "📋" },
 ];
 
@@ -288,6 +292,8 @@ export default function App() {
       {page === "saisons"    && <SaisonsPage />}
       {page === "moderation" && <ModerationPage />}
       {page === "botstats"   && <BotStatsPage />}
+      {page === "transferts" && <TransfertsPage />}
+      {page === "heatmap"    && <HeatmapPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>
