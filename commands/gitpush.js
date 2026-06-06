@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
 
 const REPO_DIR = '/home/runner/workspace';
-const REMOTE = `https://supremyx:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
+const REMOTE = `https://x-access-token:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
 
 function run(cmd, cwd) {
   return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ module.exports = (client) => {
           { name: '📤 Commits poussés', value: `${ahead}`, inline: true },
           { name: '📝 Dernier message', value: commitMsg || '—', inline: false },
           { name: '🌿 Branche', value: '`main`', inline: true },
-          { name: '🔗 Dépôt', value: '[hulksilver1-eng/moseto-bot](https://github.com/hulksilver1-eng/moseto-bot)', inline: true }
+          { name: '🔗 Dépôt', value: '[supremyx/supremyx-bot](https://github.com/supremyx/supremyx-bot)', inline: true }
         )
         .setFooter({ text: `Poussé par ${message.author.tag}` })
         .setTimestamp();
