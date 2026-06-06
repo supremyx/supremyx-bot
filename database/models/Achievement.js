@@ -5,7 +5,11 @@ const achievementSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   icon: { type: String, default: '🏅' },
-  awardedBy: { type: String, required: true }
+  awardedBy: { type: String, required: true },
+  autoId: { type: String, default: null }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Achievement', achievementSchema);
+achievementSchema.index({ target: 1 });
+achievementSchema.index({ target: 1, autoId: 1 });
+
+module.exports = mongoose.models.Achievement || mongoose.model('Achievement', achievementSchema);
