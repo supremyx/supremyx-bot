@@ -12,6 +12,7 @@ async function getOrCreateConfig() {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
@@ -76,6 +77,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `⚙️ **Config mise à jour** — ${ptRows} | Kill: ${killBonus}pt | Par : ${message.author.tag}`);
       message.reply(`✅ Système de points mis à jour : ${ptRows}\n💀 Bonus kill : **${killBonus}** pt(s)`);
+    }
+    } catch (err) {
+      console.error('[configbot] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

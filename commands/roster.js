@@ -61,6 +61,7 @@ function buildRosterEmbed(roster, teamName) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!roster')) return;
     if (!message.guild) return;
@@ -266,6 +267,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `👥 **Roster vidé** — **${team.name}** (${count} membres supprimés) | Par : ${message.author.tag}`);
       return message.reply(`✅ Roster de **${team.name}** vidé (${count} membre(s) supprimé(s)).`);
+    }
+    } catch (err) {
+      console.error('[roster] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

@@ -4,6 +4,7 @@ const { staffLog } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (!message.content.startsWith('!deletetournoi')) return;
     if (!message.guild) return;
 
@@ -31,5 +32,9 @@ module.exports = (client) => {
       details: `**Tournoi supprimé :** ${tournament.name}\n**Matchs supprimés :** ${matchCount}`,
       author: message.author.tag
     });
+    } catch (err) {
+      console.error('[deletetournoi] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

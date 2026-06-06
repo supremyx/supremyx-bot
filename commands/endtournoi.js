@@ -8,6 +8,7 @@ const medals = ['🥇', '🥈', '🥉'];
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (message.content !== '!endtournoi') return;
     if (!message.guild) return;
 
@@ -67,5 +68,9 @@ module.exports = (client) => {
       details: `**Tournoi terminé :** ${tournament.name}\n**Vainqueur :** ${winnerName ?? 'Aucun'}\n**Matchs :** ${matchCount}`,
       author: message.author.tag
     });
+    } catch (err) {
+      console.error('[endtournoi] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

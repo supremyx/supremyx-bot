@@ -6,6 +6,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
@@ -103,6 +104,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `🗑️ **Rank reward supprimé** — Rang ${rank} | Par : ${message.author.tag}`);
       return message.reply(`✅ Récompense du rang **#${rank}** supprimée.`);
+    }
+    } catch (err) {
+      console.error('[rankroles] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

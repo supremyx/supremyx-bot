@@ -12,6 +12,7 @@ const ROLE_EMOJI = {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (
       !content.startsWith('!playermatch') &&
@@ -194,6 +195,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `🗑️ **Stats joueur réinitialisées** — ${playerName} (${teamName}) | Par : ${message.author.tag}`);
       return message.reply(`✅ Stats de **${playerName}** (${teamName}) réinitialisées.`);
+    }
+    } catch (err) {
+      console.error('[playerstats] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

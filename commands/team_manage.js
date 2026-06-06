@@ -6,6 +6,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
@@ -110,6 +111,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `📋 **Lineup** — \`${teamName}\` : ${players.join(', ')} | Par : ${message.author.tag}`);
       return message.reply(`✅ Composition de **${teamName}** enregistrée : ${players.join(', ')}`);
+    }
+    } catch (err) {
+      console.error('[team_manage] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

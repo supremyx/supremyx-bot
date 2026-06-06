@@ -31,6 +31,7 @@ function roundName(index, total) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!bracket')) return;
 
@@ -70,5 +71,9 @@ module.exports = (client) => {
     });
 
     return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[bracket] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

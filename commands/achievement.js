@@ -6,6 +6,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
@@ -99,6 +100,10 @@ module.exports = (client) => {
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
+    }
+    } catch (err) {
+      console.error('[achievement] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

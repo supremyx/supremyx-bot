@@ -6,6 +6,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!newseason') && !content.startsWith('!endseason') && !content.startsWith('!saisons') && !content.startsWith('!leaderboard')) return;
     if (!message.guild) return;
@@ -148,6 +149,10 @@ module.exports = (client) => {
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
+    }
+    } catch (err) {
+      console.error('[season] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

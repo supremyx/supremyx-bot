@@ -10,6 +10,7 @@ async function getOrCreateConfig() {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!antispam')) return;
     if (!message.guild) return;
@@ -83,5 +84,9 @@ module.exports = (client) => {
       '`!antispam off` — Désactiver\n' +
       '`!antispam set <messages> <secondes>` — Configurer le seuil'
     );
+    } catch (err) {
+      console.error('[antispam] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

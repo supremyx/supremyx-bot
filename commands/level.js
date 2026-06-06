@@ -14,6 +14,7 @@ function xpForNextLevel(level) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!message.guild) return;
     const isStaff = message.member?.permissions.has('Administrator');
@@ -79,6 +80,10 @@ module.exports = (client) => {
         )
         .setTimestamp();
       return message.channel.send({ embeds: [embed] });
+    }
+    } catch (err) {
+      console.error('[level] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

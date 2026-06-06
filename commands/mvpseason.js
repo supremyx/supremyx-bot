@@ -3,6 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (content !== '!mvpseason' && !content.startsWith('!mvpseason ')) return;
 
@@ -87,5 +88,9 @@ module.exports = (client) => {
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[mvpseason] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

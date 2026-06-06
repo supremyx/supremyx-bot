@@ -4,6 +4,7 @@ const { staffLog } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (!message.content.startsWith('!newtournoi')) return;
     if (!message.guild) return;
 
@@ -36,5 +37,9 @@ module.exports = (client) => {
       details: `**Nouveau tournoi :** ${name}\n**ID :** ${tournament._id}`,
       author: message.author.tag
     });
+    } catch (err) {
+      console.error('[newtournoi] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

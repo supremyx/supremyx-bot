@@ -3,6 +3,7 @@ const Blacklist = require('../database/models/Blacklist');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (!message.content.startsWith('!register')) return;
     if (!message.guild) return;
 
@@ -22,5 +23,9 @@ module.exports = (client) => {
 
     await Team.create({ name });
     message.reply(`✅ Équipe **${name}** enregistrée avec succès.`);
+    } catch (err) {
+      console.error('[register] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

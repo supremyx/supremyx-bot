@@ -4,6 +4,7 @@ const { staffLog } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (message.content.startsWith('!unregister')) {
       if (!message.guild) return;
 
@@ -26,6 +27,10 @@ module.exports = (client) => {
         details: `**Équipe supprimée :** ${team.name}\n**Matchs supprimés :** ${matchCount}`,
         author: message.author.tag
       });
+    }
+    } catch (err) {
+      console.error('[unregister] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

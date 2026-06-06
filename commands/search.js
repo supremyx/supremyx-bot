@@ -5,6 +5,7 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (!message.content.startsWith('!search')) return;
     const cd = checkCooldown(message.author.id, 'search', 5);
     if (cd) return replyCooldown(message, cd, 'search');
@@ -55,5 +56,9 @@ module.exports = (client) => {
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[search] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

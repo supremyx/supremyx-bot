@@ -12,6 +12,7 @@ function shuffle(arr) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
 
     // --- !coinflip ---
@@ -67,6 +68,10 @@ module.exports = (client) => {
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
+    }
+    } catch (err) {
+      console.error('[random] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

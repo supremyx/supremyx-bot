@@ -5,6 +5,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!message.guild) return;
     const isStaff = message.member?.permissions.has('Administrator') ?? false;
@@ -96,5 +97,9 @@ module.exports = (client) => {
       '`!birthday del` — Supprimer ton anniversaire\n' +
       '`!setbirthday #salon` — Configurer le salon d\'annonce *(staff)*'
     );
+    } catch (err) {
+      console.error('[birthday] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

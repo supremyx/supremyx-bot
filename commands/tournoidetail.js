@@ -7,6 +7,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (message.author.bot) return;
 
     const content = message.content.trim();
@@ -74,5 +75,9 @@ module.exports = (client) => {
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[tournoidetail] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

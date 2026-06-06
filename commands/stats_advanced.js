@@ -11,6 +11,7 @@ function stdDev(values) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
@@ -150,6 +151,10 @@ module.exports = (client) => {
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
+    }
+    } catch (err) {
+      console.error('[stats_advanced] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

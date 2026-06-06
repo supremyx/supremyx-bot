@@ -5,6 +5,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!blacklist')) return;
     if (!message.guild) return;
@@ -108,5 +109,9 @@ module.exports = (client) => {
       '`!blacklist list` — Voir toute la blacklist\n' +
       '`!blacklist check <cible>` — Vérifier une cible'
     );
+    } catch (err) {
+      console.error('[blacklist] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };

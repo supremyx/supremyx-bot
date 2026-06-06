@@ -15,6 +15,7 @@ const DEFAULTS = {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (!content.startsWith('!setcooldown') && !content.startsWith('!cooldowns') && !content.startsWith('!delcooldown')) return;
     if (!message.guild) return;
@@ -87,6 +88,10 @@ module.exports = (client) => {
       const def = DEFAULTS[commandName] ?? '?';
       logStaffAction(client, `🔄 **Cooldown réinitialisé** — \`!${commandName}\` → défaut (${def}s) | Par : ${message.author.tag}`);
       return message.reply(`✅ Cooldown de \`!${commandName}\` réinitialisé à la valeur par défaut (**${def}s**).`);
+    }
+    } catch (err) {
+      console.error('[cooldowncmd] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

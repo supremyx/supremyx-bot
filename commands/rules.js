@@ -4,6 +4,7 @@ const { logStaffAction } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     const content = message.content.trim();
     if (
       !content.startsWith('!rules') &&
@@ -170,6 +171,10 @@ module.exports = (client) => {
 
       logStaffAction(client, `🗑️ **Toutes les règles effacées** — ${count} règle(s) | Par : ${message.author.tag}`);
       return message.reply(`✅ **${count}** règle(s) supprimée(s). Utilise \`!setrules\` pour en redéfinir.`);
+    }
+    } catch (err) {
+      console.error('[rules] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };

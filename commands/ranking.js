@@ -8,6 +8,7 @@ const medals = ['🥇', '🥈', '🥉'];
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    try {
     if (!message.content.startsWith('!ranking')) return;
     const cd = checkCooldown(message.author.id, 'ranking', 10);
     if (cd) return replyCooldown(message, cd, 'ranking');
@@ -82,5 +83,9 @@ module.exports = (client) => {
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[ranking] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
+    }
   });
 };
