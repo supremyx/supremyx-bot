@@ -2,7 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentTyp
 
 const PAGES = [
   {
-    title: '🛡️ Staff — Page 1 / 3 — Équipes, Matchs & Tournois',
+    title: '🛡️ Staff — Page 1 / 4 — Équipes, Matchs & Tournois',
     fields: [
       {
         name: '🤖 Bot',
@@ -23,6 +23,13 @@ const PAGES = [
           '`!merge <équipe1> | <équipe2>` — Fusionner',
           '`!lineup <équipe> <j1,j2,...>` — Définir la composition',
           '`!roster add/del/role/note/clear <équipe>` — Gérer le roster',
+        ].join('\n')
+      },
+      {
+        name: '🔄 Transferts',
+        value: [
+          '`!transfert <joueur> de <eq1> vers <eq2> [| raison]` — Transférer un joueur (déplace aussi le roster)',
+          '`!transfert history [joueur]` — Historique de tous les transferts',
         ].join('\n')
       },
       {
@@ -85,7 +92,7 @@ const PAGES = [
     ]
   },
   {
-    title: '🛡️ Staff — Page 2 / 3 — Modération & Sanctions',
+    title: '🛡️ Staff — Page 2 / 4 — Modération & Sanctions',
     fields: [
       {
         name: '🛡️ Modération',
@@ -139,7 +146,7 @@ const PAGES = [
     ]
   },
   {
-    title: '🛡️ Staff — Page 3 / 3 — Communauté & Serveur',
+    title: '🛡️ Staff — Page 3 / 4 — Communauté & Serveur',
     fields: [
       {
         name: '🎫 Tickets',

@@ -82,6 +82,13 @@ const PAGES = [
         ].join('\n')
       },
       {
+        name: '🔄 Transferts joueurs',
+        value: [
+          '`!transfert <joueur> de <eq1> vers <eq2> [| raison]` — Transférer un joueur *(staff)*',
+          '`!transfert history [joueur]` — Voir l\'historique des transferts',
+        ].join('\n')
+      },
+      {
         name: '🎮 Matchs',
         value: [
           '`!addmatch <nom> <placement> <kills>` — Ajouter un résultat *(staff)*',
@@ -111,6 +118,8 @@ const PAGES = [
           '`!compare <eq1> vs <eq2>` — Comparer deux équipes',
           '`!compare season <eq1> vs <eq2>` — Comparaison sur les saisons',
           '`!h2h <eq1> vs <eq2>` — Face à face statistique',
+          '`!matchup <eq1> vs <eq2>` — Analyse H2H complète avec historique',
+          '`!forma <équipe>` — Forme récente (5 derniers matchs)',
           '`!stats <nom>` — Statistiques détaillées',
           '`!teaminfo <nom>` — Fiche complète (stats + roster + tournois)',
           '`!history <nom>` — Historique des matchs',
@@ -359,6 +368,60 @@ const PAGES = [
           '`!cooldowns` — Voir tous les cooldowns actifs *(staff)*',
           '`!setcooldown <cmd> <secondes>` — Modifier un cooldown *(staff)*',
           '`!delcooldown <cmd>` — Réinitialiser un cooldown *(staff)*',
+        ].join('\n')
+      },
+    ]
+  },
+  {
+    title: '📖 Aide SUPREMYX — Page 7 / 7 — Nouvelles Fonctionnalités',
+    fields: [
+      {
+        name: '🎯 Prédictions',
+        value: [
+          '`!prediction` / `!prediction list` — Voir les prédictions ouvertes',
+          '`!prediction create <eq1> vs <eq2> [| desc]` — Créer une prédiction *(staff)*',
+          '`!prediction close <eq1> vs <eq2> [gagnant <équipe>]` — Fermer une prédiction *(staff)*',
+          '`!prediction leaderboard` — Classement des meilleurs pronostiqueurs',
+        ].join('\n')
+      },
+      {
+        name: '🎲 Draft serpent',
+        value: [
+          '`!draft` / `!draft status` — Voir la draft en cours',
+          '`!draft create <team1,team2,...> | <joueur1,joueur2,...>` — Créer une draft *(staff)*',
+          '`!draft pick <joueur>` — Choisir un joueur',
+          '`!draft cancel` — Annuler la draft *(staff)*',
+        ].join('\n')
+      },
+      {
+        name: '🔴 Score en direct',
+        value: [
+          '`!livescore` / `!livescore status` — Voir le live en cours',
+          '`!livescore create <titre> | <eq1,eq2,...> [#salon]` — Démarrer un live *(staff)*',
+          '`!livescore addround <eq:place:kills:pts> ...` — Ajouter un round *(staff)*',
+          '`!livescore end` — Terminer le live *(staff)*',
+        ].join('\n')
+      },
+      {
+        name: '🔄 Transferts & Forme',
+        value: [
+          '`!transfert <joueur> de <eq1> vers <eq2> [| raison]` — Transférer un joueur *(staff)*',
+          '`!transfert history [joueur]` — Historique des transferts',
+          '`!forma <équipe>` — Forme récente (5 derniers matchs)',
+          '`!matchup <eq1> vs <eq2>` — Face à face détaillé avec stats comparées',
+        ].join('\n')
+      },
+      {
+        name: '🏅 Succès automatiques',
+        value: [
+          'Le bot attribue automatiquement des trophées après chaque `!addmatch` :',
+          '• 🥇 Première Victoire · 🎩 Hat-Trick (3 victoires consécutives)',
+          '• 🔥 Inarrêtable (5 victoires consécutives) · 🎯 Sniper (15 kills en 1 match)',
+          '• 💀 Machine à kills (100 kills total) · 🎖️ Vétéran (20 matchs joués)',
+          '• 🏆 Champion (10 victoires) · 📊 Régularité d\'acier (Top 3 sur 5 matchs)',
+          '• ⚡ Comeback King · ⭐ Machine à points (500 pts)',
+          '`!achievement [emoji] <équipe> <titre> | [desc]` — Trophée manuel *(staff)*',
+          '`!achievements <équipe>` — Voir tous les trophées',
         ].join('\n')
       },
     ]
