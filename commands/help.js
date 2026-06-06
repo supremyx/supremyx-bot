@@ -2,7 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentTyp
 
 const PAGES = [
   {
-    title: '📖 Aide SUPREMYX — Page 1 / 6 — Bot & Annonces',
+    title: '📖 Aide SUPREMYX — Page 1 / 7 — Bot & Annonces',
     fields: [
       {
         name: '🤖 Bot',
@@ -55,7 +55,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide SUPREMYX — Page 2 / 6 — Équipes & Matchs',
+    title: '📖 Aide SUPREMYX — Page 2 / 7 — Équipes & Matchs',
     fields: [
       {
         name: '👥 Équipes',
@@ -98,7 +98,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide SUPREMYX — Page 3 / 6 — Statistiques & Tournois',
+    title: '📖 Aide SUPREMYX — Page 3 / 7 — Statistiques & Tournois',
     fields: [
       {
         name: '📊 Statistiques — Équipes',
@@ -167,7 +167,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide SUPREMYX — Page 4 / 6 — Modération & Sanctions',
+    title: '📖 Aide SUPREMYX — Page 4 / 7 — Modération & Sanctions',
     fields: [
       {
         name: '🛡️ Modération',
@@ -220,7 +220,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide SUPREMYX — Page 5 / 6 — Tickets & Communauté',
+    title: '📖 Aide SUPREMYX — Page 5 / 7 — Tickets & Communauté',
     fields: [
       {
         name: '🎫 Tickets',
@@ -271,7 +271,7 @@ const PAGES = [
     ]
   },
   {
-    title: '📖 Aide SUPREMYX — Page 6 / 6 — Infos & Divers',
+    title: '📖 Aide SUPREMYX — Page 6 / 7 — Infos & Divers',
     fields: [
       {
         name: '🔍 Informations',
