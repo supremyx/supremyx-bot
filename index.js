@@ -124,6 +124,7 @@ client.on('messageCreate', async (message) => {
 
 // --- Utilitaires ---
 require('./commands/help')(client);
+require('./commands/helpadmin')(client);
 require('./commands/helpstaff')(client);
 require('./commands/ping')(client);
 require('./commands/status')(client);
