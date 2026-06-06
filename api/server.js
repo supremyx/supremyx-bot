@@ -665,6 +665,104 @@ router.get('/botstats', async (req, res) => {
   }
 });
 
+// ── GET /forma/:team ──────────────────────────────────────────────────────────
+router.get('/forma/:team', async (req, res) => {
+  try {
+    const escapedTeam = req.params.team.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapedTeam}$`, 'i') } }).lean();
+    if (!team) return res.status(404).json({ error: `Équipe introuvable : ${req.params.team}` });
+
+    const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 }).limit(10).lean();
+    const last5 = matches.slice(0, 5);
+    const forma = last5.map(m => m.placement === 1 ? 'win' : m.placement <= 3 ? 'top3' : m.placement <= 5 ? 'top5' : 'loss');
+    const avgKills = last5.length ? (last5.reduce((s, m) => s + m.kills, 0) / last5.length).toFixed(1) : null;
+    const avgPts = last5.length ? (last5.reduce((s, m) => s + m.points, 0) / last5.length).toFixed(1) : null;
+    return res.json({ success: true, team: team.name, forma, avgKills, avgPts, last5: last5.map(m => ({ placement: m.placement, kills: m.kills, points: m.points, date: m.createdAt })) });
+  } catch (err) {
+    console.error('[API /forma/:team]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /h2h/:teamA/:teamB ────────────────────────────────────────────────────
+router.get('/h2h/:teamA/:teamB', async (req, res) => {
+  try {
+    const [teamA, teamB] = await Promise.all([
+      Team.findOne({ name: { $regex: new RegExp(`^${req.params.teamA.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }).lean(),
+      Team.findOne({ name: { $regex: new RegExp(`^${req.params.teamB.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }).lean(),
+    ]);
+    if (!teamA) return res.status(404).json({ error: `Équipe introuvable : ${req.params.teamA}` });
+    if (!teamB) return res.status(404).json({ error: `Équipe introuvable : ${req.params.teamB}` });
+
+    const [mA, mB] = await Promise.all([
+      Match.find({ team: teamA.name }).sort({ createdAt: -1 }).lean(),
+      Match.find({ team: teamB.name }).sort({ createdAt: -1 }).lean(),
+    ]);
+
+    const stats = (team, matches) => {
+      if (!matches.length) return null;
+      return {
+        team: team.name, totalPoints: team.points, totalKills: team.kills,
+        wins: matches.filter(m => m.placement === 1).length,
+        top3: matches.filter(m => m.placement <= 3).length,
+        matchCount: matches.length,
+        avgKills: (matches.reduce((s, m) => s + m.kills, 0) / matches.length).toFixed(2),
+        avgPts: (matches.reduce((s, m) => s + m.points, 0) / matches.length).toFixed(2),
+        avgPlacement: (matches.filter(m => m.placement > 0).reduce((s, m) => s + m.placement, 0) / (matches.filter(m => m.placement > 0).length || 1)).toFixed(2),
+        forma: matches.slice(0, 5).map(m => m.placement === 1 ? 'win' : m.placement <= 3 ? 'top3' : m.placement <= 5 ? 'top5' : 'loss'),
+      };
+    };
+    return res.json({ success: true, teamA: stats(teamA, mA), teamB: stats(teamB, mB) });
+  } catch (err) {
+    console.error('[API /h2h]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /transfers ────────────────────────────────────────────────────────────
+router.get('/transfers', async (req, res) => {
+  try {
+    const Transfer = require('../database/models/Transfer');
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const transfers = await Transfer.find().sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({ success: true, total: transfers.length, transfers });
+  } catch (err) {
+    console.error('[API /transfers]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /predictions ──────────────────────────────────────────────────────────
+router.get('/predictions', async (req, res) => {
+  try {
+    const Prediction = require('../database/models/Prediction');
+    const filter = req.query.open === 'true' ? { closed: false } : {};
+    const preds = await Prediction.find(filter).sort({ createdAt: -1 }).limit(50).lean();
+    return res.json({ success: true, total: preds.length, predictions: preds.map(p => ({
+      _id: p._id, teamA: p.teamA, teamB: p.teamB, description: p.description,
+      votesA: p.votes.filter(v => v.choice === p.teamA).length,
+      votesB: p.votes.filter(v => v.choice === p.teamB).length,
+      total: p.votes.length, closed: p.closed, result: p.result, createdAt: p.createdAt,
+    })) });
+  } catch (err) {
+    console.error('[API /predictions]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /livescore ────────────────────────────────────────────────────────────
+router.get('/livescore', async (req, res) => {
+  try {
+    const LiveScore = require('../database/models/LiveScore');
+    const live = await LiveScore.findOne({ active: true }).lean();
+    if (!live) return res.json({ success: true, active: false, livescore: null });
+    return res.json({ success: true, active: true, livescore: live });
+  } catch (err) {
+    console.error('[API /livescore]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ── GET /events (SSE) ─────────────────────────────────────────────────────────
 router.get('/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');

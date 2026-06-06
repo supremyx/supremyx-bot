@@ -73,6 +73,12 @@ module.exports = (client) => {
       // Auto-sync rank roles if configured
       syncRanks(message.guild).catch(() => {});
 
+      // Check and announce auto-achievements
+      const { checkAutoAchievements, announceAchievements } = require('../utils/autoAchievement');
+      checkAutoAchievements(client, team.name)
+        .then(unlocked => announceAchievements(client, team.name, unlocked))
+        .catch(() => {});
+
       await staffLog(client, {
         action: 'addmatch',
         details: `**Équipe :** ${team.name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
