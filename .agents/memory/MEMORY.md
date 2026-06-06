@@ -5,3 +5,6 @@
 - [birthday date validation](birthday-date.md) — `new Date(year, month-1, day)` and compare back is the correct way to reject invalid combos like 31/02.
 - [botstats per-guild](botstats-guild.md) — all CommandStat queries must filter by `guildId`; without it, stats bleed across guilds on multi-server bots.
 - [scheduleManager singleton](schedule-manager.md) — module-level `started` flag prevents duplicate intervals when the module is re-required or the function called twice.
+- [auto-achievements hook](auto-achievements.md) — checkAutoAchievements must be called after team.save() in addmatch (not before); uses Achievement.autoId field to prevent duplicate unlocks; announce channel = ACHIEVEMENT_CHANNEL_ID || LOG_CHANNEL_ID.
+- [dashboard state routing](dashboard-routing.md) — adding a new page requires 4 edits to App.tsx: import, Page type union, NAV_ITEMS array, conditional render block. Never use react-router — state-based only.
+- [button interactions cross-command](button-interactions.md) — prediction/draft button handlers live in the same command file as the message handler; use client.on('interactionCreate') with customId prefix filtering to avoid conflicts across files.
