@@ -25,6 +25,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content.trim() !== '!gitpush') return;
     if (!message.guild) return;
+    if (!message.member) return;
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
@@ -36,17 +37,19 @@ module.exports = (client) => {
       const commitHash = await git(['rev-parse', '--short', 'HEAD']).catch(() => '?');
       const commitMsg  = await git(['log', '-1', '--pretty=%s']).catch(() => '?');
 
-      // Step 1: pull remote changes to sync
-      let pullNote = '';
+      // Step 1: fetch remote into proper tracking ref (updates origin/main)
+      let syncNote = '';
       try {
-        await waiting.edit('⏳ Synchronisation avec GitHub (pull)...');
-        await git(['pull', REMOTE, 'main', '--no-edit']);
-        pullNote = '✅ Pull réussi';
+        await waiting.edit('⏳ Fetch du remote...');
+        await git(['fetch', REMOTE, 'main:refs/remotes/origin/main']);
+        // Merge fetched changes
+        await git(['merge', 'origin/main', '--no-edit', '--allow-unrelated-histories']);
+        syncNote = '✅ Sync réussi (fetch + merge)';
       } catch (e) {
-        pullNote = `⚠️ Pull ignoré : ${sanitize(e).slice(0, 150)}`;
+        syncNote = `⚠️ Sync ignoré : ${sanitize(e).slice(0, 150)}`;
       }
 
-      // Step 2: push — normal, then force-with-lease fallback
+      // Step 2: push — normal first, then --force fallback
       await waiting.edit('⏳ Push vers GitHub...');
       let pushed = false;
       let pushNote = '';
@@ -56,10 +59,11 @@ module.exports = (client) => {
         await git(['push', REMOTE, 'main']);
         pushed = true;
       } catch (e1) {
+        // Force push as last resort (we own the repo, local is authoritative)
         try {
-          await git(['push', REMOTE, 'main', '--force-with-lease']);
+          await git(['push', REMOTE, 'main', '--force']);
           pushed = true;
-          pushNote = 'force-with-lease utilisé';
+          pushNote = '⚠️ Force push utilisé';
         } catch (e2) {
           pushErrText = sanitize(e2).slice(0, 500);
         }
@@ -70,7 +74,7 @@ module.exports = (client) => {
           .setTitle('❌ Push GitHub échoué')
           .setColor(0xED4245)
           .addFields(
-            { name: '🔄 Pull', value: pullNote || '—' },
+            { name: '🔄 Sync', value: syncNote || '—' },
             { name: '❌ Erreur push', value: `\`\`\`\n${pushErrText || 'inconnue'}\n\`\`\`` }
           )
           .setFooter({ text: `Par ${message.author.tag}` })
@@ -78,17 +82,13 @@ module.exports = (client) => {
         return waiting.edit({ content: '', embeds: [embed] });
       }
 
-      // Count commits ahead of remote (after push, should be 0)
-      const ahead = await git(['rev-list', 'origin/main..HEAD', '--count']).catch(() => '0');
-
       const embed = new EmbedBuilder()
         .setTitle('✅ Push GitHub réussi')
         .setColor(0x57F287)
         .addFields(
           { name: '🔖 Commit', value: `\`${commitHash}\``, inline: true },
-          { name: '📤 En avance', value: `${ahead} commit(s)`, inline: true },
           { name: '📝 Dernier message', value: commitMsg || '—', inline: false },
-          { name: '🔄 Sync', value: pullNote || '—', inline: false },
+          { name: '🔄 Sync', value: syncNote || '—', inline: false },
           { name: '🌿 Branche', value: '`main`', inline: true },
           { name: '🔗 Dépôt', value: '[supremyx/supremyx-bot](https://github.com/supremyx/supremyx-bot)', inline: true }
         )
