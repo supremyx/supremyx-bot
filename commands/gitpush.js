@@ -1,21 +1,24 @@
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
 
 const REPO_DIR = '/home/runner/workspace';
-const REMOTE = `https://x-access-token:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
 
-function run(cmd, cwd, timeout = 90000) {
+function getRemote() {
+  return `https://x-access-token:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
+}
+
+function git(args, cwd = REPO_DIR, timeout = 90000) {
   return new Promise((resolve, reject) => {
-    exec(cmd, { cwd, timeout }, (err, stdout, stderr) => {
-      if (err) return reject(stderr || err.message);
+    execFile('git', args, { cwd, timeout }, (err, stdout, stderr) => {
+      if (err) return reject((stderr || stdout || err.message || '').trim());
       resolve((stdout + stderr).trim());
     });
   });
 }
 
 function sanitize(str) {
-  return String(str).replace(/https:\/\/[^@]+@/g, 'https://***@');
+  return String(str).replace(/x-access-token:[^@]+@/g, 'x-access-token:***@');
 }
 
 module.exports = (client) => {
@@ -28,34 +31,37 @@ module.exports = (client) => {
     const waiting = await message.reply('⏳ Push en cours vers GitHub...');
 
     try {
-      const commitHash = await run('git rev-parse --short HEAD', REPO_DIR).catch(() => '?');
-      const commitMsg  = await run('git log -1 --pretty=%s', REPO_DIR).catch(() => '?');
+      const REMOTE = getRemote();
 
-      // Step 1: pull remote changes to sync (90s timeout)
+      const commitHash = await git(['rev-parse', '--short', 'HEAD']).catch(() => '?');
+      const commitMsg  = await git(['log', '-1', '--pretty=%s']).catch(() => '?');
+
+      // Step 1: pull remote changes to sync
       let pullNote = '';
       try {
-        await waiting.edit('⏳ Synchronisation avec le remote (pull)...');
-        await run(`git pull ${REMOTE} main --no-edit`, REPO_DIR);
+        await waiting.edit('⏳ Synchronisation avec GitHub (pull)...');
+        await git(['pull', REMOTE, 'main', '--no-edit']);
         pullNote = '✅ Pull réussi';
-      } catch (pullErr) {
-        pullNote = `⚠️ Pull ignoré : ${sanitize(pullErr).slice(0, 200)}`;
+      } catch (e) {
+        pullNote = `⚠️ Pull ignoré : ${sanitize(e).slice(0, 150)}`;
       }
 
-      // Step 2: push (with --force-with-lease as fallback)
+      // Step 2: push — normal, then force-with-lease fallback
       await waiting.edit('⏳ Push vers GitHub...');
       let pushed = false;
-      let pushErr = '';
+      let pushNote = '';
+      let pushErrText = '';
 
       try {
-        await run(`git push ${REMOTE} main`, REPO_DIR);
+        await git(['push', REMOTE, 'main']);
         pushed = true;
       } catch (e1) {
         try {
-          await run(`git push ${REMOTE} main --force-with-lease`, REPO_DIR);
+          await git(['push', REMOTE, 'main', '--force-with-lease']);
           pushed = true;
-          pushErr = '(force-with-lease utilisé)';
+          pushNote = 'force-with-lease utilisé';
         } catch (e2) {
-          pushErr = sanitize(e2).slice(0, 400);
+          pushErrText = sanitize(e2).slice(0, 500);
         }
       }
 
@@ -64,28 +70,29 @@ module.exports = (client) => {
           .setTitle('❌ Push GitHub échoué')
           .setColor(0xED4245)
           .addFields(
-            { name: '🔄 Pull', value: pullNote },
-            { name: '❌ Push erreur', value: `\`\`\`\n${pushErr}\n\`\`\`` }
+            { name: '🔄 Pull', value: pullNote || '—' },
+            { name: '❌ Erreur push', value: `\`\`\`\n${pushErrText || 'inconnue'}\n\`\`\`` }
           )
           .setFooter({ text: `Par ${message.author.tag}` })
           .setTimestamp();
         return waiting.edit({ content: '', embeds: [embed] });
       }
 
-      const ahead = await run('git rev-list @{u}..HEAD --count', REPO_DIR).catch(() => '?');
+      // Count commits ahead of remote (after push, should be 0)
+      const ahead = await git(['rev-list', 'origin/main..HEAD', '--count']).catch(() => '0');
 
       const embed = new EmbedBuilder()
         .setTitle('✅ Push GitHub réussi')
         .setColor(0x57F287)
         .addFields(
           { name: '🔖 Commit', value: `\`${commitHash}\``, inline: true },
-          { name: '📤 Commits poussés', value: `${ahead}`, inline: true },
+          { name: '📤 En avance', value: `${ahead} commit(s)`, inline: true },
           { name: '📝 Dernier message', value: commitMsg || '—', inline: false },
-          { name: '🔄 Sync', value: pullNote, inline: false },
+          { name: '🔄 Sync', value: pullNote || '—', inline: false },
           { name: '🌿 Branche', value: '`main`', inline: true },
           { name: '🔗 Dépôt', value: '[supremyx/supremyx-bot](https://github.com/supremyx/supremyx-bot)', inline: true }
         )
-        .setFooter({ text: `Poussé par ${message.author.tag}${pushErr ? ' • ' + pushErr : ''}` })
+        .setFooter({ text: `Poussé par ${message.author.tag}${pushNote ? ' • ' + pushNote : ''}` })
         .setTimestamp();
 
       await waiting.edit({ content: '', embeds: [embed] });
