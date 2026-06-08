@@ -29,15 +29,8 @@ module.exports = (client) => {
       const commitMsg  = await run('git log -1 --pretty=%s', REPO_DIR).catch(() => '?');
       const ahead      = await run('git rev-list @{u}..HEAD --count', REPO_DIR).catch(() => '?');
 
-      // Sync with remote first (pull + merge) to avoid rejection
-      await run(`git fetch ${REMOTE} main:refs/remotes/origin/main`, REPO_DIR).catch(() => {});
-      await run('git merge --no-edit origin/main', REPO_DIR).catch(() => {});
-
-      // Recount after potential merge
-      const aheadFinal = await run('git rev-list @{u}..HEAD --count', REPO_DIR).catch(() => ahead);
-      if (aheadFinal === '0' && ahead === '0') {
-        return waiting.edit('✅ Déjà à jour — aucun nouveau commit à pousser.');
-      }
+      // Pull remote changes first (authenticated URL) to avoid "fetch first" rejection
+      await run(`git pull ${REMOTE} main --no-edit`, REPO_DIR);
 
       // Push
       await run(`git push ${REMOTE} main`, REPO_DIR);
