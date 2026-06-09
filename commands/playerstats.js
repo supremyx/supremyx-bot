@@ -4,15 +4,12 @@ const Team       = require('../database/models/Team');
 const Match      = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { escapeRegex } = require('../utils/lib');
 
 const ROLE_EMOJI = {
   IGL: '🎯', Fragger: '💥', Support: '🛡️', Sniper: '🔭',
   Entry: '🚪', Flex: '⚡', Coach: '📋', 'Remplaçant': '🔄'
 };
-
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {

@@ -5,7 +5,7 @@ const { logStaffAction } = require('../utils/staffLog');
 const REPO_DIR = '/home/runner/workspace';
 
 function getRemote() {
-  return `https://x-access-token:${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/supremyx/supremyx-bot.git`;
+  return `https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/supremyx/supremyx-bot.git`;
 }
 
 function git(args, cwd = REPO_DIR, timeout = 90000) {

@@ -129,11 +129,17 @@ async function processResults(client, message, teamArgs, scheduled) {
 
     const pts = await getPoints(placement, kills);
 
-    team.points += pts;
-    team.kills  += kills;
-    if (placement === 1) team.wins   += 1;
-    else                 team.losses += 1;
-    await team.save();
+    await Team.findOneAndUpdate(
+      { name: team.name },
+      {
+        $inc: {
+          points: pts,
+          kills,
+          wins:   placement === 1 ? 1 : 0,
+          losses: placement !== 1 ? 1 : 0,
+        }
+      }
+    );
 
     await Match.create({
       team: team.name,

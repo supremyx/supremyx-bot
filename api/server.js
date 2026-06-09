@@ -15,12 +15,9 @@ const Blacklist     = require('../database/models/Blacklist');
 const CommandStat   = require('../database/models/CommandStat');
 
 const mongoose = require('mongoose');
+const { escapeRegex } = require('../utils/lib');
 const app  = express();
 const PORT = 3000;
-
-function escapeRegex(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -453,12 +450,14 @@ router.post('/addpoints', requireApiKey, async (req, res) => {
     return res.status(400).json({ error: '`points` et `kills` doivent être des nombres' });
 
   try {
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
-    if (!team) return res.status(404).json({ error: `Équipe introuvable : ${teamName}` });
+    const found = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
+    if (!found) return res.status(404).json({ error: `Équipe introuvable : ${teamName}` });
 
-    team.points += points;
-    team.kills  += kills;
-    await team.save();
+    const team = await Team.findOneAndUpdate(
+      { name: found.name },
+      { $inc: { points, kills } },
+      { new: true }
+    );
     await Match.create({ team: team.name, placement: 0, kills, points, addedBy: 'API' });
 
     return res.json({
@@ -491,13 +490,23 @@ router.post('/removematch', requireApiKey, async (req, res) => {
       if (!match) return res.status(404).json({ error: `Aucun match trouvé pour : ${teamName}` });
     }
 
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(match.team)}$`, 'i') } });
-    if (!team) return res.status(404).json({ error: `Équipe introuvable : ${match.team}` });
+    const found = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(match.team)}$`, 'i') } });
+    if (!found) return res.status(404).json({ error: `Équipe introuvable : ${match.team}` });
 
-    team.points = Math.max(0, team.points - match.points);
-    team.kills  = Math.max(0, team.kills  - match.kills);
-    await team.save();
     await Match.findByIdAndDelete(match._id);
+
+    // Recalculate totals from remaining matches to ensure accuracy
+    const remaining = await Match.find({ team: found.name });
+    const totalPoints = remaining.reduce((s, m) => s + m.points, 0);
+    const totalKills  = remaining.reduce((s, m) => s + m.kills,  0);
+    const wins        = remaining.filter(m => m.placement === 1).length;
+    const losses      = remaining.filter(m => m.placement !== 1 && m.placement > 0).length;
+
+    const team = await Team.findOneAndUpdate(
+      { name: found.name },
+      { $set: { points: totalPoints, kills: totalKills, wins, losses } },
+      { new: true }
+    );
 
     return res.json({
       success: true,

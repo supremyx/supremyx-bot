@@ -40,6 +40,22 @@ function setupErrorHandler(client) {
     console.error('❌ Exception non capturée:', error);
     sendErrorLog('Exception non capturée', error);
   });
+
+  // Arrêt propre — ferme la connexion MongoDB avant de quitter
+  async function gracefulShutdown(signal) {
+    console.log(`⚠️ Signal ${signal} reçu — arrêt propre en cours...`);
+    try {
+      const mongoose = require('mongoose');
+      await mongoose.connection.close();
+      console.log('✅ MongoDB déconnecté proprement.');
+    } catch (e) {
+      console.error('❌ Erreur lors de la déconnexion MongoDB:', e);
+    }
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
 }
 
 module.exports = { setupErrorHandler };

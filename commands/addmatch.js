@@ -6,10 +6,7 @@ const Blacklist = require('../database/models/Blacklist');
 const { staffLog } = require('../utils/staffLog');
 const { syncRanks } = require('../utils/syncRanks');
 const eventBus = require('../utils/eventBus');
-
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -40,8 +37,8 @@ module.exports = (client) => {
         return message.reply(`🚫 **${name}** est dans la blacklist.\nRaison : *${blacklisted.reason}*`);
       }
 
-      let team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
-      if (!team) return message.reply('Équipe inconnue');
+      const foundTeam = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
+      if (!foundTeam) return message.reply('Équipe inconnue');
 
       const config = await Config.findOne();
       const ptMap = config?.pointSystem instanceof Map
@@ -52,11 +49,18 @@ module.exports = (client) => {
       const placementPts = ptMap.get(String(placement)) ?? 0;
       const pts = placementPts + (kills * killBonus);
 
-      team.points += pts;
-      team.kills  += kills;
-      if (placement === 1) team.wins   += 1;
-      else                 team.losses += 1;
-      await team.save();
+      const team = await Team.findOneAndUpdate(
+        { name: foundTeam.name },
+        {
+          $inc: {
+            points: pts,
+            kills,
+            wins:   placement === 1 ? 1 : 0,
+            losses: placement !== 1 ? 1 : 0,
+          }
+        },
+        { new: true }
+      );
 
       const activeTournoi = await Tournament.findOne({ active: true });
 
