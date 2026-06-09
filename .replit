@@ -58,3 +58,7 @@ deploymentTarget = "vm"
 build = ["bash", "-c", "cd dashboard && pnpm install && pnpm run build"]
 publicDir = "dashboard/dist/public"
 run = ["node", "index.js"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
