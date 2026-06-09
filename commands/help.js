@@ -11,7 +11,8 @@ const PAGES = [
           '`!status` — Tableau de bord (stats, uptime, ping)',
           '`!help` — Cette aide',
           '`!dashboard web` — Lien vers le dashboard classement en ligne',
-          '`!ia <texte>` — Poser une question à l\'intelligence artificielle',
+          '`!ia <texte>` — Poser une question à l\'IA (mémorise la conversation)',
+          '`!ia reset` — Effacer la mémoire de ta conversation IA',
           '`!motd` — Message du jour',
         ].join('\n')
       },
