@@ -1,9 +1,6 @@
 const Schedule = require('../database/models/Schedule');
 const { EmbedBuilder } = require('discord.js');
 
-// Track which schedule IDs have already been reminded
-const reminded = new Set();
-
 function startReminder(client) {
   // Check every minute
   setInterval(async () => {
@@ -12,21 +9,26 @@ function startReminder(client) {
       if (!announceChannel) return;
 
       const now = new Date();
-      const in30 = new Date(now.getTime() + 30 * 60 * 1000);
-      const in31 = new Date(now.getTime() + 31 * 60 * 1000);
 
       // Find matches starting between 29m30s and 30m30s from now (±30s window)
+      // that have NOT already been reminded (persisted flag survives restarts)
       const windowStart = new Date(now.getTime() + 29.5 * 60 * 1000);
       const windowEnd = new Date(now.getTime() + 30.5 * 60 * 1000);
 
       const upcoming = await Schedule.find({
-        date: { $gte: windowStart, $lte: windowEnd }
+        date: { $gte: windowStart, $lte: windowEnd },
+        reminded30m: { $ne: true }
       });
 
       for (const match of upcoming) {
-        const id = match._id.toString();
-        if (reminded.has(id)) continue;
-        reminded.add(id);
+        // Atomically mark as reminded so a concurrent process or rapid restart cannot double-send
+        const updated = await Schedule.findOneAndUpdate(
+          { _id: match._id, reminded30m: { $ne: true } },
+          { $set: { reminded30m: true } },
+          { new: false }
+        );
+        // If another process already set the flag, updated will be null — skip
+        if (!updated) continue;
 
         const teamsStr = match.teams.length ? match.teams.join(' vs ') : 'Équipes à confirmer';
         const timeStr = match.date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });

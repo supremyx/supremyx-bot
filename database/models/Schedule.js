@@ -8,6 +8,7 @@ const scheduleSchema = new mongoose.Schema({
   createdBy:      { type: String },
   reminded24h:    { type: Boolean, default: false },
   reminded1h:     { type: Boolean, default: false },
+  reminded30m:    { type: Boolean, default: false },
   reminded15m:    { type: Boolean, default: false },
   completed:      { type: Boolean, default: false },
   resultPostedAt: { type: Date, default: null },
