@@ -19,6 +19,7 @@ async function startLevelManager(client) {
     if (message.author.bot) return;
     if (!message.guild) return;
 
+    try {
     const userId = message.author.id;
     const guildId = message.guild.id;
     const now = Date.now();
@@ -66,6 +67,9 @@ async function startLevelManager(client) {
         .setTimestamp();
 
       await announceChannel.send({ embeds: [embed] }).catch(() => {});
+    }
+    } catch (err) {
+      console.error('[levelManager] Erreur:', err);
     }
   });
 }

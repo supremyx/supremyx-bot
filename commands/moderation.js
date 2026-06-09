@@ -18,7 +18,8 @@ module.exports = (client) => {
         return message.reply('Usage : `!clear <1-100>`');
       await message.delete().catch(() => {});
       const deleted = await message.channel.bulkDelete(n, true).catch(() => null);
-      if (!deleted) return message.channel.send('❌ Impossible de supprimer (messages trop anciens ou permission manquante).');
+      if (!deleted) return message.channel.send('❌ Impossible de supprimer (permission manquante).');
+      if (deleted.size === 0) return message.channel.send('⚠️ Aucun message supprimé — les messages de plus de 14 jours ne peuvent pas être supprimés en masse.');
       const confirm = await message.channel.send(`🗑️ **${deleted.size}** message(s) supprimé(s).`);
       setTimeout(() => confirm.delete().catch(() => {}), 4000);
       logStaffAction(client, `🗑️ **Clear** — ${deleted.size} messages supprimés dans <#${message.channel.id}> | Par : ${message.author.tag}`);

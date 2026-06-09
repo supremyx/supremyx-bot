@@ -1,6 +1,6 @@
 const Ticket = require('../database/models/Ticket');
 const TicketConfig = require('../database/models/TicketConfig');
-const { EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { EmbedBuilder, PermissionFlagsBits, ChannelType, AttachmentBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
 
 const CATEGORIES = {
@@ -90,12 +90,13 @@ async function saveTranscript(client, ticket, channel, cfg, closedBy) {
       )
       .setTimestamp();
 
-    const transcriptText = lines.join('\n').slice(0, 3900);
-    if (transcriptText) {
-      embed.addFields({ name: '📝 Historique', value: `\`\`\`\n${transcriptText}\n\`\`\`` });
-    }
+    const transcriptText = lines.join('\n');
+    const attachment = new AttachmentBuilder(
+      Buffer.from(transcriptText, 'utf-8'),
+      { name: `ticket-${ticket._id}-transcript.txt` }
+    );
 
-    await transcriptChannel.send({ embeds: [embed] });
+    await transcriptChannel.send({ embeds: [embed], files: [attachment] });
   } catch {}
 }
 

@@ -69,8 +69,8 @@ async function startAntispam(client) {
 
       // Reset tracker for this user after report
       tracker.set(userId, []);
-    } catch {
-      // Silent fail
+    } catch (err) {
+      console.error('[antispam] Erreur:', err);
     }
   });
 }

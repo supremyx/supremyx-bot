@@ -14,8 +14,13 @@ const Sanction      = require('../database/models/Sanction');
 const Blacklist     = require('../database/models/Blacklist');
 const CommandStat   = require('../database/models/CommandStat');
 
+const mongoose = require('mongoose');
 const app  = express();
 const PORT = 3000;
+
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -221,7 +226,7 @@ router.get('/players', async (req, res) => {
     const limit     = Math.min(parseInt(req.query.limit) || 50, 100);
     const teamFilter = req.query.team;
     const query     = { totalMatches: { $gt: 0 } };
-    if (teamFilter) query.teamName = { $regex: new RegExp(teamFilter, 'i') };
+    if (teamFilter) query.teamName = { $regex: new RegExp(escapeRegex(teamFilter), 'i') };
 
     const players = await PlayerStat.find(query)
       .sort({ totalKills: -1 }).limit(limit).lean();
@@ -359,6 +364,8 @@ router.get('/logs', async (req, res) => {
 // ── GET /tournaments ──────────────────────────────────────────────────────────
 router.get('/tournaments/:id', async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).json({ error: `ID de tournoi invalide : ${req.params.id}` });
     const t = await Tournament.findById(req.params.id).lean();
     if (!t) return res.status(404).json({ error: 'Tournoi introuvable' });
 
@@ -446,7 +453,7 @@ router.post('/addpoints', requireApiKey, async (req, res) => {
     return res.status(400).json({ error: '`points` et `kills` doivent être des nombres' });
 
   try {
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
     if (!team) return res.status(404).json({ error: `Équipe introuvable : ${teamName}` });
 
     team.points += points;
@@ -474,15 +481,17 @@ router.post('/removematch', requireApiKey, async (req, res) => {
   try {
     let match;
     if (matchId) {
+      if (!mongoose.isValidObjectId(matchId))
+        return res.status(400).json({ error: `matchId invalide : ${matchId}` });
       match = await Match.findById(matchId);
       if (!match) return res.status(404).json({ error: `Match introuvable : ${matchId}` });
     } else {
-      match = await Match.findOne({ team: { $regex: new RegExp(`^${teamName}$`, 'i') } })
+      match = await Match.findOne({ team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } })
         .sort({ createdAt: -1 });
       if (!match) return res.status(404).json({ error: `Aucun match trouvé pour : ${teamName}` });
     }
 
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${match.team}$`, 'i') } });
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(match.team)}$`, 'i') } });
     if (!team) return res.status(404).json({ error: `Équipe introuvable : ${match.team}` });
 
     team.points = Math.max(0, team.points - match.points);

@@ -10,6 +10,10 @@ const ROLE_EMOJI = {
   Entry: '🚪', Flex: '⚡', Coach: '📋', 'Remplaçant': '🔄'
 };
 
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
@@ -21,6 +25,7 @@ module.exports = (client) => {
       !content.startsWith('!playerreset')
     ) return;
     if (!message.guild) return;
+    if (!message.member) return;
     if (message.author.bot) return;
 
     const args    = content.split(' ').slice(1);
@@ -28,7 +33,6 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // ─── !playermatch <équipe> <joueur> <kills> ───────────────────
-    // Log kills for a player in their last/current match
     if (cmd === '!playermatch') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
@@ -42,17 +46,26 @@ module.exports = (client) => {
           '**Exemple :** `!playermatch TeamA Pseudo 12`'
         );
 
-      // Verify team exists (case-insensitive)
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe inconnue : **${teamName}**`);
 
-      // Get team's last match to link placement/tournament
+      // Verify the player is in the team's roster
+      const roster = await Roster.findOne({ teamName: team.name });
+      const inRoster = roster?.members?.some(m =>
+        m.displayName.toLowerCase() === playerName.toLowerCase()
+      );
+      if (!inRoster) {
+        return message.reply(
+          `❌ **${playerName}** n'est pas dans le roster de **${team.name}**.\n` +
+          `Vérifie avec \`!roster ${team.name}\` ou ajoute-le d'abord avec \`!addplayer\`.`
+        );
+      }
+
       const lastMatch = await Match.findOne({ team: team.name }).sort({ createdAt: -1 });
       const placement      = lastMatch?.placement      ?? 0;
       const tournamentName = lastMatch?.tournamentName ?? '';
       const matchId        = lastMatch?._id?.toString() ?? '';
 
-      // Upsert player stat
       const stat = await PlayerStat.findOneAndUpdate(
         { guildId: message.guild.id, teamName: team.name, displayName: playerName },
         {
@@ -63,7 +76,6 @@ module.exports = (client) => {
         { upsert: true, new: true }
       );
 
-      // Update bestKills
       if (kills > stat.bestKills) {
         stat.bestKills = kills;
         await stat.save();
@@ -85,10 +97,9 @@ module.exports = (client) => {
       if (mention) {
         stats = await PlayerStat.find({ guildId: message.guild.id, userId: mention.id });
         if (!stats.length) {
-          // Try by display name
           stats = await PlayerStat.find({
             guildId: message.guild.id,
-            displayName: { $regex: new RegExp(mention.displayName, 'i') }
+            displayName: { $regex: new RegExp(escapeRegex(mention.displayName), 'i') }
           });
         }
       } else {
@@ -96,14 +107,13 @@ module.exports = (client) => {
         if (!name) return message.reply('Usage : `!playerstats <pseudo>` ou `!playerstats @mention`');
         stats = await PlayerStat.find({
           guildId: message.guild.id,
-          displayName: { $regex: new RegExp(name, 'i') }
+          displayName: { $regex: new RegExp(escapeRegex(name), 'i') }
         });
       }
 
       if (!stats.length)
         return message.reply('❌ Aucune statistique trouvée pour ce joueur. Utilise `!playermatch` pour en enregistrer.');
 
-      // Merge all entries (player may be in multiple teams)
       const totalKills   = stats.reduce((s, p) => s + p.totalKills,   0);
       const totalMatches = stats.reduce((s, p) => s + p.totalMatches, 0);
       const bestKills    = Math.max(...stats.map(p => p.bestKills));
@@ -111,14 +121,12 @@ module.exports = (client) => {
 
       const primaryStat = stats.sort((a, b) => b.totalKills - a.totalKills)[0];
 
-      // Get roster info for role
       const roster = await Roster.findOne({ guildId: message.guild.id, teamName: primaryStat.teamName });
       const member = roster?.members.find(m =>
         m.displayName.toLowerCase() === primaryStat.displayName.toLowerCase()
       );
       const roleLabel = member ? `${ROLE_EMOJI[member.role] ?? '🎮'} ${member.role}` : '';
 
-      // Recent form: last 5 matches
       const allHistory = stats.flatMap(p => p.history)
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 5);
@@ -153,7 +161,7 @@ module.exports = (client) => {
     if (cmd === '!playerboard') {
       const teamFilter = args[0] ? args.join(' ') : null;
       const query      = { guildId: message.guild.id, totalMatches: { $gt: 0 } };
-      if (teamFilter) query.teamName = { $regex: new RegExp(teamFilter, 'i') };
+      if (teamFilter) query.teamName = { $regex: new RegExp(escapeRegex(teamFilter), 'i') };
 
       const players = await PlayerStat.find(query).sort({ totalKills: -1 }).limit(15);
 
@@ -188,7 +196,7 @@ module.exports = (client) => {
       const deleted = await PlayerStat.findOneAndDelete({
         guildId: message.guild.id,
         teamName,
-        displayName: { $regex: new RegExp(`^${playerName}$`, 'i') }
+        displayName: { $regex: new RegExp(`^${escapeRegex(playerName)}$`, 'i') }
       });
 
       if (!deleted) return message.reply('❌ Joueur introuvable.');

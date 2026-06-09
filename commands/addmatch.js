@@ -7,11 +7,17 @@ const { staffLog } = require('../utils/staffLog');
 const { syncRanks } = require('../utils/syncRanks');
 const eventBus = require('../utils/eventBus');
 
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content.startsWith('!addmatch')) {
-      if (!message.guild) return;
+    if (!message.content.startsWith('!addmatch')) return;
+    if (!message.guild) return;
+    if (!message.member) return;
 
+    try {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('Staff uniquement');
 
@@ -23,15 +29,20 @@ module.exports = (client) => {
       if (!name || isNaN(placement) || isNaN(kills))
         return message.reply('Usage : `!addmatch <nom> <placement> <kills>`');
 
-      const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${name}$`, 'i') } });
+      if (placement < 1 || placement > 100)
+        return message.reply('❌ Le placement doit être entre **1** et **100**.');
+
+      if (kills < 0)
+        return message.reply('❌ Le nombre de kills ne peut pas être négatif.');
+
+      const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
       if (blacklisted) {
         return message.reply(`🚫 **${name}** est dans la blacklist.\nRaison : *${blacklisted.reason}*`);
       }
 
-      let team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      let team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');
 
-      // Use config point system or fallback defaults
       const config = await Config.findOne();
       const ptMap = config?.pointSystem instanceof Map
         ? config.pointSystem
@@ -70,7 +81,6 @@ module.exports = (client) => {
         tournamentName: activeTournoi ? activeTournoi.name : null,
       });
 
-      // Auto-sync rank roles if configured
       syncRanks(message.guild).catch(() => {});
 
       await staffLog(client, {
@@ -78,6 +88,9 @@ module.exports = (client) => {
         details: `**Équipe :** ${team.name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
         author: message.author.tag
       });
+    } catch (err) {
+      console.error('[addmatch] Erreur:', err);
+      message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});
     }
   });
 };
