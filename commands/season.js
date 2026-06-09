@@ -45,8 +45,8 @@ module.exports = (client) => {
     if (cmd === '!endseason') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const season = await Season.findOne({ active: true });
-      if (!season) return message.reply('❌ Aucune saison active en ce moment.');
+      const activeSeason = await Season.findOne({ active: true });
+      if (!activeSeason) return message.reply('❌ Aucune saison active en ce moment.');
 
       // Snapshot current rankings
       const teams = await Team.find().sort({ points: -1 });
@@ -59,11 +59,13 @@ module.exports = (client) => {
         losses: t.losses
       }));
 
-      season.active = false;
-      season.snapshot = snapshot;
-      season.endedBy = message.author.tag;
-      season.endedAt = new Date();
-      await season.save();
+      const endedAt = new Date();
+      const season = await Season.findOneAndUpdate(
+        { _id: activeSeason._id, active: true },
+        { $set: { active: false, snapshot, endedBy: message.author.tag, endedAt } },
+        { new: true }
+      );
+      if (!season) return message.reply('❌ La saison vient d\'être clôturée par un autre membre du staff.');
 
       const podium = snapshot.slice(0, 3).map((t, i) => {
         const medals = ['🥇', '🥈', '🥉'];

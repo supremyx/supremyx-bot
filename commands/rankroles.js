@@ -3,6 +3,7 @@ const Team = require('../database/models/Team');
 const { EmbedBuilder } = require('discord.js');
 const { syncRanks } = require('../utils/syncRanks');
 const { logStaffAction } = require('../utils/staffLog');
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -46,11 +47,12 @@ module.exports = (client) => {
       if (!teamName || !role)
         return message.reply('Usage : `!linkteam <nom équipe> @role`\nExemple : `!linkteam TeamA @TeamA`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOneAndUpdate(
+        { name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } },
+        { $set: { roleId: role.id } },
+        { new: true }
+      );
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable. Utilise \`!register\` d'abord.`);
-
-      team.roleId = role.id;
-      await team.save();
 
       logStaffAction(client, `🔗 **Team liée** — \`${team.name}\` → @${role.name} | Par : ${message.author.tag}`);
       return message.reply(`✅ **${team.name}** est maintenant liée au rôle **${role.name}**.\nLes membres portant ce rôle recevront les récompenses de rang automatiquement.`);
