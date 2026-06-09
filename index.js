@@ -75,7 +75,7 @@ const AI_COOLDOWN_MS = 15000; // 15s par utilisateur
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  if (!message.content.startsWith('!ai') && !message.content.startsWith('!ia')) return;
+  if (!message.content.startsWith('!ia')) return;
 
   if (!openai) {
     return message.reply("⚠️ La fonctionnalité IA n'est pas configurée sur ce serveur.");
@@ -85,7 +85,7 @@ client.on('messageCreate', async (message) => {
   const lastUsed = aiCooldowns.get(message.author.id) || 0;
   const remaining = AI_COOLDOWN_MS - (now - lastUsed);
   if (remaining > 0) {
-    return message.reply(`⏳ Cooldown IA : attends encore **${Math.ceil(remaining / 1000)}s** avant de réutiliser \`!ai\` / \`!ia\`.`);
+    return message.reply(`⏳ Cooldown IA : attends encore **${Math.ceil(remaining / 1000)}s** avant de réutiliser \`!ia\`.`);
   }
   aiCooldowns.set(message.author.id, now);
   setTimeout(() => aiCooldowns.delete(message.author.id), AI_COOLDOWN_MS);
@@ -93,7 +93,7 @@ client.on('messageCreate', async (message) => {
   const prompt = message.content.slice(3).trim();
 
   if (!prompt) {
-    return message.reply("❗ Mets un texte après `!ai` ou `!ia`");
+    return message.reply("❗ Mets un texte après `!ia`");
   }
 
   try {
