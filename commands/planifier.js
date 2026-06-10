@@ -82,6 +82,7 @@ const AIDE = [
   '`!planifier liste` — Voir tous les messages programmés',
   '`!planifier voir <ID>` — Détails d\'un message',
   '`!planifier modifier <ID> | #salon | Contenu | type | horaire` — Modifier sans supprimer',
+  '`!planifier dupliquer <ID> [| #autre-salon]` — Cloner un message (copie en pause pour ajustement)',
   '`!planifier pause <ID>` — Mettre en pause / reprendre',
   '`!planifier supprimer <ID>` — Supprimer définitivement',
   '`!planifier test <ID>` — Envoyer maintenant (test)',
@@ -330,6 +331,70 @@ module.exports = (client) => {
       await staffLog(client, {
         action: 'planifier-modifier',
         details: `**ID :** \`${doc._id}\`\n**Salon :** <#${target.id}>\n**Fréquence :** ${describeSchedule(doc)}\n**Prochaine :** ${formatNextRun(doc.nextRun)}`,
+        author: message.author.tag
+      });
+      return;
+    }
+
+    // ── Dupliquer ──────────────────────────────────────────────────
+    if (sub === 'dupliquer' || sub === 'clone') {
+      const parts = rest.slice(sub.length).trim().split('|').map(p => p.trim());
+      const id    = parts[0];
+      if (!id) return message.reply('Usage : `!planifier dupliquer <ID> [| #autre-salon]`');
+
+      const original = await AutoMessage.findOne({ _id: id, guildId: message.guild.id }).catch(() => null);
+      if (!original) return message.reply('❌ Message introuvable avec cet ID.');
+
+      // Salon optionnel : si précisé, on change le salon de la copie
+      const channelArg = parts[1];
+      let targetChannelId = original.channelId;
+      if (channelArg) {
+        const ch = message.mentions.channels.first()
+          || message.guild.channels.cache.get(channelArg.replace(/\D/g, '')) || null;
+        if (!ch) return message.reply('❌ Salon introuvable.');
+        targetChannelId = ch.id;
+      }
+
+      const copy = new AutoMessage({
+        guildId:    original.guildId,
+        channelId:  targetChannelId,
+        title:      original.title,
+        content:    original.content,
+        color:      original.color,
+        type:       original.type,
+        hour:       original.hour,
+        minute:     original.minute,
+        dayOfWeek:  original.dayOfWeek,
+        dayOfMonth: original.dayOfMonth,
+        month:      original.month,
+        day:        original.day,
+        runAt:      original.runAt,
+        active:     false,          // pausé par défaut pour ajustement avant activation
+        createdBy:  message.author.tag,
+      });
+      copy.nextRun = computeNextRun(copy);
+      await copy.save();
+
+      const { resolveColor } = require('../utils/autoMessageManager');
+      const confirmEmbed = new EmbedBuilder()
+        .setTitle('📋 Message dupliqué')
+        .setColor(resolveColor(copy.color))
+        .setDescription('Le message est **en pause** — utilise `!planifier pause` pour l\'activer, ou `!planifier modifier` pour l\'ajuster avant.')
+        .addFields(
+          { name: 'Nouvel ID',   value: `\`${copy._id}\``,                       inline: false },
+          { name: 'Salon',       value: `<#${targetChannelId}>`,                   inline: true  },
+          { name: 'Fréquence',   value: describeSchedule(copy),                    inline: false },
+          { name: 'Prochaine',   value: formatNextRun(copy.nextRun),               inline: false },
+          { name: 'Contenu',     value: (copy.title ? `**${copy.title}**\n` : '') + copy.content.slice(0, 300), inline: false },
+        )
+        .setFooter({ text: `Dupliqué depuis ${original._id} · par ${message.author.tag}` })
+        .setTimestamp();
+
+      message.reply({ embeds: [confirmEmbed] });
+
+      await staffLog(client, {
+        action: 'planifier-dupliquer',
+        details: `**Copie de :** \`${original._id}\`\n**Nouvel ID :** \`${copy._id}\`\n**Salon :** <#${targetChannelId}>`,
         author: message.author.tag
       });
       return;
