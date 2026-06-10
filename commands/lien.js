@@ -17,7 +17,6 @@ function parseColor(raw = '') {
   return 0x5865F2;
 }
 
-// Parse boutons depuis une chaîne : "Texte 1 >> https://... | Texte 2 >> https://..."
 function parseButtons(raw = '') {
   return raw.split('|').map(s => s.trim()).filter(Boolean).map(part => {
     const sep = part.indexOf('>>');
@@ -26,13 +25,51 @@ function parseButtons(raw = '') {
     const url   = part.slice(sep + 2).trim();
     if (!label || !url.startsWith('http')) return null;
     return { label, url };
-  }).filter(Boolean).slice(0, 5); // max 5 boutons (limite Discord)
+  }).filter(Boolean).slice(0, 5);
+}
+
+function resolveTarget(message, channelArg) {
+  if (channelArg.toLowerCase() === 'ici') return message.channel;
+  return message.mentions.channels.first() || message.guild.channels.cache.get(channelArg) || null;
+}
+
+// Affiche un embed en prévisualisation avec ✅ / ❌, attend la réaction du staff
+async function awaitConfirmation(message, previewEmbed, components = null) {
+  const payload = { embeds: [previewEmbed] };
+  if (components) payload.components = components;
+
+  const preview = await message.channel.send(payload);
+  await preview.react('✅').catch(() => {});
+  await preview.react('❌').catch(() => {});
+
+  const notice = await message.channel.send(
+    `📋 **Prévisualisation** — Réagis ✅ pour publier ou ❌ pour annuler *(60s)*`
+  );
+
+  let confirmed = false;
+  try {
+    const collected = await preview.awaitReactions({
+      filter: (r, u) => ['✅', '❌'].includes(r.emoji.name) && u.id === message.author.id,
+      max: 1,
+      time: 60_000,
+      errors: ['time'],
+    });
+    confirmed = collected.first()?.emoji?.name === '✅';
+  } catch {
+    confirmed = false;
+  }
+
+  await preview.delete().catch(() => {});
+  await notice.delete().catch(() => {});
+  return confirmed;
 }
 
 module.exports = (client) => {
+
+  // ── !lien ─────────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!lien')) return;
+    if (!content.startsWith('!lien') || content.startsWith('!lienbutton')) return;
     if (!message.guild) return;
     if (!message.member) return;
 
@@ -41,40 +78,35 @@ module.exports = (client) => {
 
     const rest = content.slice('!lien'.length).trim();
 
-    // ── Aide ───────────────────────────────────────────────────────────────
     if (!rest) {
       return message.reply([
         '**Commandes `!lien` :**',
         '',
-        '**Embed avec liens cliquables (dans le texte) :**',
-        '`!lien #salon | Titre | Texte avec [lien](https://url.com) ici | couleur`',
-        '`!lien ici | Titre | Rejoins [notre Discord](https://discord.gg/...) ! | bleu`',
+        '**Publier directement :**',
+        '`!lien #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
+        '`!lien ici | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
-        '**Embed avec boutons cliquables :**',
-        '`!lienbutton #salon | Titre | Description | Bouton 1 >> https://... | Bouton 2 >> https://...`',
+        '**Prévisualiser avant de publier :**',
+        '`!lien preview | #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
-        '**Couleurs :** `rouge`, `vert`, `bleu`, `jaune`, `orange`, `violet`, `rose`, `or`, `cyan`, `gris` ou `#HEX`',
-        '**`ici`** = poste dans le salon actuel',
+        '**Avec boutons cliquables :**',
+        '`!lienbutton #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!lienbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
-        '**Exemple complet :**',
-        '`!lien #annonces | 🏆 Tournoi | Inscris-toi sur [notre site](https://supremyx.xyz) avant le 20 juin ! | or`',
+        '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
       ].join('\n'));
     }
 
     const parts = rest.split('|').map(p => p.trim());
+    const isPreview = parts[0].toLowerCase() === 'preview';
+    const channelArg = isPreview ? parts[1] : parts[0];
+    const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
+    const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
+    const colorRaw   = isPreview ? (parts[4] || 'bleu') : (parts[3] || 'bleu');
 
-    // ── !lien ──────────────────────────────────────────────────────────────
-    const channelArg = parts[0];
-    const title      = parts[1] || '';
-    const desc       = parts[2] || '';
-    const colorRaw   = parts[3] || 'bleu';
+    if (!desc) return message.reply('❌ La description est requise.');
 
-    if (!desc) return message.reply('❌ La description est requise. Usage : `!lien #salon | Titre | Description | couleur`');
-
-    const target = channelArg.toLowerCase() === 'ici'
-      ? message.channel
-      : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg));
-
+    const target = resolveTarget(message, channelArg);
     if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
 
     const embed = new EmbedBuilder()
@@ -82,26 +114,27 @@ module.exports = (client) => {
       .setDescription(desc)
       .setFooter({ text: `Posté par ${message.author.tag}` })
       .setTimestamp();
-
     if (title) embed.setTitle(title);
 
+    if (isPreview) {
+      const confirmed = await awaitConfirmation(message, embed);
+      if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+    }
+
     await target.send({ embeds: [embed] });
+    await message.delete().catch(() => {});
 
     if (target.id !== message.channel.id)
-      message.reply(`✅ Message envoyé dans <#${target.id}>.`);
-    else
-      message.reply('✅ Message envoyé.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
-
-    await message.delete().catch(() => {});
+      message.channel.send(`✅ Message publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
 
     await staffLog(client, {
       action: 'lien',
-      details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Contenu :** ${desc.slice(0, 200)}`,
+      details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Contenu :** ${desc.slice(0, 200)}${isPreview ? '\n*(prévisualisé avant publication)*' : ''}`,
       author: message.author.tag
     });
   });
 
-  // ── !lienbutton — embed + boutons cliquables ───────────────────────────
+  // ── !lienbutton ───────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!content.startsWith('!lienbutton')) return;
@@ -116,66 +149,64 @@ module.exports = (client) => {
     if (!rest) {
       return message.reply([
         '**Usage `!lienbutton` :**',
-        '`!lienbutton #salon | Titre | Description | Bouton 1 >> https://... | Bouton 2 >> https://...`',
+        '`!lienbutton #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!lienbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
         '**Exemple :**',
-        '`!lienbutton #annonces | 📋 Inscription | Clique sur le bouton pour t\'inscrire au tournoi. | S\'inscrire >> https://supremyx.xyz | Règlement >> https://supremyx.xyz/regles`',
+        '`!lienbutton #annonces | 📋 Inscription | Clique pour t\'inscrire. | S\'inscrire >> https://supremyx.xyz | or`',
         '',
-        'Maximum **5 boutons**. Les URLs doivent commencer par `https://`.',
+        'Maximum **5 boutons**. URLs commençant par `https://`.',
       ].join('\n'));
     }
 
     const parts = rest.split('|').map(p => p.trim());
+    const isPreview  = parts[0].toLowerCase() === 'preview';
+    const channelArg = isPreview ? parts[1] : parts[0];
+    const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
+    const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
 
-    const channelArg  = parts[0];
-    const title       = parts[1] || '';
-    const desc        = parts[2] || '';
-    const buttonsRaw  = parts.slice(3).join('|');
-    const buttons     = parseButtons(buttonsRaw);
+    // Boutons = tout ce qui contient >>; couleur = mot-clé couleur sans >>
+    const extras = isPreview ? parts.slice(4) : parts.slice(3);
+    const colorRaw = extras.find(p => {
+      const k = p.trim().toLowerCase();
+      return (COLOR_MAP[k] !== undefined || k.startsWith('#')) && !p.includes('>>');
+    }) || 'bleu';
+    const buttonsRaw = extras.filter(p => p.includes('>>')).join('|');
+    const buttons    = parseButtons(buttonsRaw);
 
-    if (!desc) return message.reply('❌ La description est requise.');
-    if (!buttons.length) return message.reply('❌ Aucun bouton valide trouvé. Format : `Texte >> https://url.com`');
+    if (!desc)         return message.reply('❌ La description est requise.');
+    if (!buttons.length) return message.reply('❌ Aucun bouton valide. Format : `Texte >> https://url.com`');
 
-    const target = channelArg.toLowerCase() === 'ici'
-      ? message.channel
-      : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg));
-
+    const target = resolveTarget(message, channelArg);
     if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
 
-    const colorRawBtn = parts.find(p => {
-      const k = p.trim().toLowerCase();
-      return COLOR_MAP[k] || k.startsWith('#');
-    }) || 'bleu';
-
     const embed = new EmbedBuilder()
-      .setColor(parseColor(colorRawBtn))
+      .setColor(parseColor(colorRaw))
       .setDescription(desc)
       .setFooter({ text: `Posté par ${message.author.tag}` })
       .setTimestamp();
-
     if (title) embed.setTitle(title);
 
     const row = new ActionRowBuilder().addComponents(
       buttons.map(b =>
-        new ButtonBuilder()
-          .setLabel(b.label)
-          .setURL(b.url)
-          .setStyle(ButtonStyle.Link)
+        new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link)
       )
     );
 
+    if (isPreview) {
+      const confirmed = await awaitConfirmation(message, embed, [row]);
+      if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+    }
+
     await target.send({ embeds: [embed], components: [row] });
+    await message.delete().catch(() => {});
 
     if (target.id !== message.channel.id)
-      message.reply(`✅ Message avec boutons envoyé dans <#${target.id}>.`);
-    else
-      message.reply('✅ Message avec boutons envoyé.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
-
-    await message.delete().catch(() => {});
+      message.channel.send(`✅ Message avec boutons publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
 
     await staffLog(client, {
       action: 'lienbutton',
-      details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}`,
+      details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}${isPreview ? '\n*(prévisualisé avant publication)*' : ''}`,
       author: message.author.tag
     });
   });
