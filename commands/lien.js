@@ -264,6 +264,55 @@ module.exports = (client) => {
     });
   });
 
+  // ── !lienlist ─────────────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    const content = message.content.trim();
+    if (!content.startsWith('!lienlist')) return;
+    if (!message.guild) return;
+    if (!message.member) return;
+
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('⛔ Staff uniquement.');
+
+    const channelArg = content.slice('!lienlist'.length).trim();
+    const target = !channelArg
+      ? message.channel
+      : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg.replace(/\D/g, '')) || null);
+
+    if (!target) return message.reply('❌ Salon introuvable.');
+
+    let fetched;
+    try {
+      fetched = await target.messages.fetch({ limit: 100 });
+    } catch {
+      return message.reply('❌ Impossible de lire les messages de ce salon (permissions manquantes ?).');
+    }
+
+    const botEmbeds = fetched
+      .filter(m => m.author.id === client.user.id && m.embeds.length > 0)
+      .first(10); // max 10 résultats
+
+    if (!botEmbeds.length)
+      return message.reply(`❌ Aucun embed du bot trouvé dans <#${target.id}> (sur les 100 derniers messages).`);
+
+    const lines = botEmbeds.map(m => {
+      const emb   = m.embeds[0];
+      const title = emb.title ? `**${emb.title}**` : '*(sans titre)*';
+      const desc  = emb.description ? emb.description.slice(0, 80).replace(/\n/g, ' ') + (emb.description.length > 80 ? '…' : '') : '*(vide)*';
+      const hasButtons = m.components.length > 0 ? ' 🔘' : '';
+      return `\`${m.id}\` — ${title}${hasButtons}\n↳ ${desc}\n↳ [Aller au message](${m.url})`;
+    });
+
+    const list = new EmbedBuilder()
+      .setTitle(`📋 Embeds du bot dans #${target.name}`)
+      .setDescription(lines.join('\n\n'))
+      .setColor(0x5865F2)
+      .setFooter({ text: `${botEmbeds.length} embed(s) trouvé(s) · Utilise !lienedit pour modifier` })
+      .setTimestamp();
+
+    await message.reply({ embeds: [list] });
+  });
+
   // ── !lienedit ─────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();

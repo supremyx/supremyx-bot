@@ -25,6 +25,7 @@ const PAGES = [
           '`!lien #salon | Titre | Texte avec [lien](url) | couleur` — Embed avec liens cliquables',
           '`!lienbutton #salon | Titre | Desc | Texte >> url | couleur` — Embed avec boutons cliquables',
           '`!lienedit #salon | ID_message | Titre | Nouvelle desc | couleur` — Modifier un embed existant',
+          '`!lienlist [#salon]` — Lister les embeds récents du bot (avec IDs)',
           '`!announce <message>` — Annonce en embed',
           '`!say [#salon] <texte>` — Envoyer du texte simple (+ médias joints)',
           '`!embed <titre> | <desc> | [couleur] | [image] | [footer]` — Embed personnalisé',
