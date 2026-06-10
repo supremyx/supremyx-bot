@@ -64,6 +64,59 @@ async function awaitConfirmation(message, previewEmbed, components = null) {
   return confirmed;
 }
 
+// ── !lienedit ─────────────────────────────────────────────────────────────
+async function editLienMessage(message, parts) {
+  // parts: [#salon, messageID, titre, description, couleur?]
+  const channelArg = parts[0];
+  const msgId      = parts[1]?.replace(/\D/g, '');
+  const title      = parts[2] || '';
+  const desc       = parts[3] || '';
+  const colorRaw   = parts[4] || 'bleu';
+
+  if (!msgId)  return message.reply('❌ ID de message invalide.');
+  if (!desc)   return message.reply('❌ La nouvelle description est requise.');
+
+  const target = channelArg.toLowerCase() === 'ici'
+    ? message.channel
+    : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg) || null);
+
+  if (!target) return message.reply('❌ Salon introuvable.');
+
+  let targetMsg;
+  try {
+    targetMsg = await target.messages.fetch(msgId);
+  } catch {
+    return message.reply('❌ Message introuvable. Vérifie l\'ID et le salon.');
+  }
+
+  if (targetMsg.author.id !== message.client.user.id)
+    return message.reply('❌ Je ne peux modifier que mes propres messages.');
+
+  if (!targetMsg.embeds.length)
+    return message.reply('❌ Ce message ne contient pas d\'embed à modifier.');
+
+  const original = targetMsg.embeds[0];
+
+  const updated = new EmbedBuilder()
+    .setColor(parseColor(colorRaw))
+    .setDescription(desc)
+    .setFooter({ text: `Modifié par ${message.author.tag}` })
+    .setTimestamp();
+  if (title) updated.setTitle(title);
+
+  // Conserver les composants (boutons) du message original
+  await targetMsg.edit({
+    embeds: [updated],
+    components: targetMsg.components,
+  });
+
+  await message.delete().catch(() => {});
+  message.channel.send(`✅ Embed modifié dans <#${target.id}>.`)
+    .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+  return { target, title, desc };
+}
+
 module.exports = (client) => {
 
   // ── !lien ─────────────────────────────────────────────────────────────────
@@ -209,5 +262,46 @@ module.exports = (client) => {
       details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}${isPreview ? '\n*(prévisualisé avant publication)*' : ''}`,
       author: message.author.tag
     });
+  });
+
+  // ── !lienedit ─────────────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    const content = message.content.trim();
+    if (!content.startsWith('!lienedit')) return;
+    if (!message.guild) return;
+    if (!message.member) return;
+
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('⛔ Staff uniquement.');
+
+    const rest = content.slice('!lienedit'.length).trim();
+
+    if (!rest) {
+      return message.reply([
+        '**Usage `!lienedit` :**',
+        '`!lienedit #salon | ID_message | Nouveau titre | Nouvelle description | couleur`',
+        '`!lienedit ici | ID_message | Nouveau titre | Nouvelle description | couleur`',
+        '',
+        '**Comment obtenir l\'ID du message :**',
+        'Active le mode développeur Discord *(Paramètres → Apparence → Mode développeur)*',
+        'puis fais clic droit sur le message → **Copier l\'identifiant**.',
+        '',
+        '**Exemple :**',
+        '`!lienedit #annonces | 1234567890123456789 | 🏆 Tournoi MAJ | Inscriptions closes. | rouge`',
+        '',
+        '⚠️ Je ne peux modifier que mes propres messages.',
+      ].join('\n'));
+    }
+
+    const parts = rest.split('|').map(p => p.trim());
+    const result = await editLienMessage(message, parts);
+
+    if (result?.target) {
+      await staffLog(client, {
+        action: 'lienedit',
+        details: `**Salon :** <#${result.target.id}>\n**Titre :** ${result.title || '—'}\n**Nouveau contenu :** ${result.desc.slice(0, 200)}`,
+        author: message.author.tag
+      });
+    }
   });
 };
