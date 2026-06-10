@@ -81,6 +81,7 @@ const AIDE = [
   '**Gérer les messages :**',
   '`!planifier liste` — Voir tous les messages programmés',
   '`!planifier voir <ID>` — Détails d\'un message',
+  '`!planifier modifier <ID> | #salon | Contenu | type | horaire` — Modifier sans supprimer',
   '`!planifier pause <ID>` — Mettre en pause / reprendre',
   '`!planifier supprimer <ID>` — Supprimer définitivement',
   '`!planifier test <ID>` — Envoyer maintenant (test)',
@@ -204,6 +205,131 @@ module.exports = (client) => {
       await staffLog(client, {
         action: 'planifier-supprimer',
         details: `**ID :** \`${doc._id}\` — ${describeSchedule(doc)}`,
+        author: message.author.tag
+      });
+      return;
+    }
+
+    // ── Modifier ───────────────────────────────────────────────────
+    if (sub === 'modifier' || sub === 'edit') {
+      const bodyRaw = rest.slice(sub.length).trim();
+      const parts   = bodyRaw.split('|').map(p => p.trim());
+
+      // parts[0] = ID, parts[1] = #salon, parts[2] = contenu, parts[3] = type, parts[4..] = horaire + couleur
+      const id = parts[0];
+      if (!id || parts.length < 4) {
+        return message.reply([
+          '**Usage `!planifier modifier` :**',
+          '`!planifier modifier <ID> | #salon | [Titre >> ]Contenu | type | horaire [| couleur]`',
+          '',
+          '**Exemples :**',
+          '`!planifier modifier 6648... | #général | 🌅 Bon matin ! | quotidien | 08:00`',
+          '`!planifier modifier 6648... | ici | Recap >> Résumé hebdo. | hebdo | lundi | 18:00 | violet`',
+          '',
+          'Reprend exactement la même syntaxe que `!planifier créer`, mais commence par l\'ID.',
+        ].join('\n'));
+      }
+
+      const doc = await AutoMessage.findOne({ _id: id, guildId: message.guild.id }).catch(() => null);
+      if (!doc) return message.reply('❌ Message introuvable avec cet ID. Utilise `!planifier liste` pour voir les IDs.');
+
+      const channelArg = parts[1];
+      const rawContent = parts[2];
+      const typeRaw    = parts[3]?.toLowerCase();
+
+      const target = channelArg.toLowerCase() === 'ici'
+        ? message.channel
+        : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg.replace(/\D/g,'')) || null);
+      if (!target) return message.reply('❌ Salon introuvable.');
+
+      let title = '', msgContent = rawContent;
+      if (rawContent.includes(' >> ')) {
+        const sep = rawContent.indexOf(' >> ');
+        title      = rawContent.slice(0, sep).trim();
+        msgContent = rawContent.slice(sep + 4).trim();
+      }
+      if (!msgContent) return message.reply('❌ Le contenu est requis.');
+
+      const TYPES = ['unique', 'quotidien', 'hebdo', 'mensuel', 'annuel'];
+      if (!TYPES.includes(typeRaw)) return message.reply(`❌ Type invalide. Utilise : ${TYPES.join(', ')}`);
+
+      // Couleur = dernier argument si mot-clé ou #HEX
+      const COLOR_KEYS = ['rouge','vert','bleu','jaune','orange','violet','blanc','noir','or','cyan','rose','gris'];
+      let extraParts = parts.slice(4);
+      const lastPart = extraParts[extraParts.length - 1]?.toLowerCase();
+      let couleur = doc.color || 'bleu';
+      if (lastPart && (COLOR_KEYS.includes(lastPart) || lastPart.startsWith('#'))) {
+        couleur = extraParts.pop();
+      }
+
+      // Réinitialise les champs de schedule
+      doc.set({
+        channelId: target.id, title, content: msgContent,
+        type: typeRaw, color: couleur,
+        dayOfWeek: null, dayOfMonth: null, month: null, day: null, runAt: null,
+        hour: 0, minute: 0,
+      });
+
+      if (typeRaw === 'quotidien') {
+        if (!extraParts[0]) return message.reply('❌ Précise l\'heure : `| HH:MM`');
+        const hm = parseHHMM(extraParts[0]);
+        if (!hm) return message.reply('❌ Heure invalide. Format : `HH:MM`');
+        doc.hour = hm.hour; doc.minute = hm.minute;
+      } else if (typeRaw === 'hebdo') {
+        if (extraParts.length < 2) return message.reply('❌ Précise le jour et l\'heure : `| lundi | HH:MM`');
+        const dow = JOURS_FR[extraParts[0].toLowerCase()];
+        if (dow === undefined) return message.reply(`❌ Jour invalide. Utilise : ${JOURS_LABEL.join(', ')}`);
+        const hm = parseHHMM(extraParts[1]);
+        if (!hm) return message.reply('❌ Heure invalide. Format : `HH:MM`');
+        doc.dayOfWeek = dow; doc.hour = hm.hour; doc.minute = hm.minute;
+      } else if (typeRaw === 'mensuel') {
+        if (extraParts.length < 2) return message.reply('❌ Précise le jour du mois et l\'heure : `| 15 | HH:MM`');
+        const dom = parseInt(extraParts[0]);
+        if (isNaN(dom) || dom < 1 || dom > 31) return message.reply('❌ Jour du mois invalide (1-31).');
+        const hm = parseHHMM(extraParts[1]);
+        if (!hm) return message.reply('❌ Heure invalide. Format : `HH:MM`');
+        doc.dayOfMonth = dom; doc.hour = hm.hour; doc.minute = hm.minute;
+      } else if (typeRaw === 'annuel') {
+        if (extraParts.length < 2) return message.reply('❌ Précise la date et l\'heure : `| 01/06 | HH:MM`');
+        const dm = parseDDMM(extraParts[0]);
+        if (!dm) return message.reply('❌ Date invalide. Format : `DD/MM`');
+        const hm = parseHHMM(extraParts[1]);
+        if (!hm) return message.reply('❌ Heure invalide. Format : `HH:MM`');
+        doc.day = dm.day; doc.month = dm.month; doc.hour = hm.hour; doc.minute = hm.minute;
+      } else if (typeRaw === 'unique') {
+        if (extraParts.length < 2) return message.reply('❌ Précise la date et l\'heure : `| 20/06/2026 | HH:MM`');
+        const dmy = parseDDMMYYYY(extraParts[0]);
+        if (!dmy) return message.reply('❌ Date invalide. Format : `DD/MM/YYYY`');
+        const hm = parseHHMM(extraParts[1]);
+        if (!hm) return message.reply('❌ Heure invalide. Format : `HH:MM`');
+        const runAt = new Date(Date.UTC(dmy.year, dmy.month - 1, dmy.day, hm.hour, hm.minute));
+        if (runAt <= new Date()) return message.reply('❌ Cette date est déjà passée.');
+        doc.runAt = runAt; doc.hour = hm.hour; doc.minute = hm.minute;
+      }
+
+      doc.nextRun = computeNextRun(doc);
+      doc.active  = true;
+      await doc.save();
+
+      const { resolveColor } = require('../utils/autoMessageManager');
+      const confirmEmbed = new EmbedBuilder()
+        .setTitle('✅ Message automatique modifié')
+        .setColor(resolveColor(couleur))
+        .addFields(
+          { name: 'ID',        value: `\`${doc._id}\``,         inline: false },
+          { name: 'Salon',     value: `<#${target.id}>`,          inline: true  },
+          { name: 'Fréquence', value: describeSchedule(doc),      inline: false },
+          { name: 'Prochaine', value: formatNextRun(doc.nextRun), inline: false },
+          { name: 'Contenu',   value: (title ? `**${title}**\n` : '') + msgContent.slice(0, 300), inline: false },
+        )
+        .setFooter({ text: `Modifié par ${message.author.tag}` })
+        .setTimestamp();
+
+      message.reply({ embeds: [confirmEmbed] });
+
+      await staffLog(client, {
+        action: 'planifier-modifier',
+        details: `**ID :** \`${doc._id}\`\n**Salon :** <#${target.id}>\n**Fréquence :** ${describeSchedule(doc)}\n**Prochaine :** ${formatNextRun(doc.nextRun)}`,
         author: message.author.tag
       });
       return;
