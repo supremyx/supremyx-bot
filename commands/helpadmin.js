@@ -22,6 +22,8 @@ const PAGES = [
       {
         name: '📢 Annonces & Embeds',
         value: [
+          '`!planifier créer #salon | Contenu | quotidien/hebdo/mensuel/annuel/unique | HH:MM` — Message automatique programmé',
+          '`!planifier liste` · `!planifier pause <ID>` · `!planifier supprimer <ID>` · `!planifier test <ID>`',
           '`!lien #salon | Titre | Texte avec [lien](url) | couleur` — Embed avec liens cliquables',
           '`!lienbutton #salon | Titre | Desc | Texte >> url | couleur` — Embed avec boutons cliquables',
           '`!lienedit #salon | ID_message | Titre | Nouvelle desc | couleur` — Modifier un embed existant',
