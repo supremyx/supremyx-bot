@@ -142,8 +142,13 @@ module.exports = (client) => {
 
     if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
 
+    const colorRawBtn = parts.find(p => {
+      const k = p.trim().toLowerCase();
+      return COLOR_MAP[k] || k.startsWith('#');
+    }) || 'bleu';
+
     const embed = new EmbedBuilder()
-      .setColor(parseColor('bleu'))
+      .setColor(parseColor(colorRawBtn))
       .setDescription(desc)
       .setFooter({ text: `Posté par ${message.author.tag}` })
       .setTimestamp();
