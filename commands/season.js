@@ -28,7 +28,17 @@ module.exports = (client) => {
       const current = await Season.findOne({ active: true });
       if (current) return message.reply(`❌ La saison **${current.name}** est encore active. Ferme-la d'abord avec \`!endseason\`.`);
 
-      await Season.create({ name, startedBy: message.author.tag });
+      try {
+        await Season.create({ name, startedBy: message.author.tag });
+      } catch (err) {
+        if (err.code === 11000) {
+          if (err.keyPattern && err.keyPattern.active) {
+            return message.reply('❌ Une saison vient d\'être créée simultanément par un autre membre du staff. Vérifie avec `!saisons`.');
+          }
+          return message.reply(`❌ Une saison nommée **${name}** existe déjà.`);
+        }
+        throw err;
+      }
 
       const embed = new EmbedBuilder()
         .setTitle('🏁 Nouvelle saison lancée !')

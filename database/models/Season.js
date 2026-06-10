@@ -18,4 +18,9 @@ const seasonSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
+seasonSchema.index(
+  { active: 1 },
+  { unique: true, partialFilterExpression: { active: true } }
+);
+
 module.exports = mongoose.model('Season', seasonSchema);
