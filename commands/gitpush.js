@@ -42,8 +42,9 @@ module.exports = (client) => {
       try {
         await waiting.edit('⏳ Fetch du remote...');
         await git(['fetch', REMOTE, 'main:refs/remotes/origin/main']);
-        // Merge fetched changes
-        await git(['merge', 'origin/main', '--no-edit', '--allow-unrelated-histories']);
+        // Merge fetched changes (inline identity so merge commits always work)
+        await git(['-c', 'user.name=SUPREMYX Bot', '-c', 'user.email=bot@supremyx.gg',
+          'merge', 'origin/main', '--no-edit', '--allow-unrelated-histories']);
         syncNote = '✅ Sync réussi (fetch + merge)';
       } catch (e) {
         syncNote = `⚠️ Sync ignoré : ${sanitize(e).slice(0, 150)}`;
