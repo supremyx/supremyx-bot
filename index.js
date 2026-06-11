@@ -63,6 +63,7 @@ client.once('clientReady', () => {
 require('./commands/ping')(client);
 require('./commands/status')(client);
 require('./commands/gitpush')(client);
+require('./commands/gitstatus')(client);
 const { startApiServer } = require('./api/server');
 startApiServer();
 require('./commands/changelog')(client);
