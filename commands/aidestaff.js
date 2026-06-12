@@ -121,6 +121,14 @@ module.exports = (client) => {
           inline: false,
         },
         {
+          name: '🤖 Intelligence Artificielle (Staff)',
+          value: [
+            '`!ia modele <nom>` — Changer le modèle IA actif du serveur',
+            '> Modèles : `gpt-4o-mini` `gpt-4o` `claude-haiku` `claude-sonnet` `gemini-flash` `mistral` `llama`',
+          ].join('\n'),
+          inline: false,
+        },
+        {
           name: '🔧 Système & Logs',
           value: [
             '`!statsbot` — Statistiques d\'utilisation du bot par commande',
