@@ -16,21 +16,41 @@ module.exports = (client) => {
     const embed1 = new EmbedBuilder()
       .setColor(color)
       .setAuthor({ name: 'SUPREMYX — Aide générale', iconURL: client.user.displayAvatarURL() })
-      .setDescription('Voici toutes les commandes disponibles pour la communauté.\n> 💡 Les paramètres entre `< >` sont **obligatoires**, entre `[ ]` sont **optionnels**.')
+      .setDescription('Toutes les commandes disponibles pour la communauté.\n> 💡 Paramètres `< >` **obligatoires**, `[ ]` **optionnels**.')
       .addFields(
         {
           name: '📊 Stats & Équipes',
           value: [
             '`!stats <équipe>` — Résumé des performances d\'une équipe',
-            '`!equipe <nom>` — Fiche détaillée d\'une équipe',
+            '`!infoequipe <équipe>` — Fiche détaillée d\'une équipe',
             '`!classement` — Classement général des équipes',
             '`!top [N]` — Top N équipes (défaut : 10)',
-            '`!comparer <T1> vs <T2>` — Comparer deux équipes',
-            '`!historique <équipe>` — Historique de tous les matchs',
-            '`!matchs` — Statistiques globales des matchs',
-            '`!roster <équipe>` — Roster / composition d\'une équipe',
+            '`!comparer <T1> vs <T2>` — Comparer deux équipes face à face',
+            '`!historique <équipe>` — Historique complet des matchs',
+            '`!matchs` — Statistiques globales de tous les matchs',
+            '`!liste <équipe>` — Roster / composition d\'une équipe',
+            '`!composition <équipe>` — Voir la composition détaillée',
             '`!recherche <nom>` — Rechercher une équipe ou un joueur',
-            '`!statsjoueur <nom>` — Stats d\'un joueur spécifique',
+          ].join('\n'),
+          inline: false,
+        },
+        {
+          name: '👤 Stats Joueurs',
+          value: [
+            '`!statsjoueur <nom>` — Stats complètes d\'un joueur',
+            '`!matchjoueur <nom>` — Historique des matchs d\'un joueur',
+            '`!classjoueurs` — Classement général des joueurs',
+            '`!classniveau` — Classement par niveau XP',
+          ].join('\n'),
+          inline: false,
+        },
+        {
+          name: '📈 Stats Avancées',
+          value: [
+            '`!serie <équipe>` — Série de victoires/défaites en cours',
+            '`!calculer <équipe>` — Calcul avancé des performances',
+            '`!regularite <équipe>` — Indice de régularité sur les derniers matchs',
+            '`!faceatface <T1> <T2>` — Bilan historique entre deux équipes',
           ].join('\n'),
           inline: false,
         },
@@ -43,18 +63,9 @@ module.exports = (client) => {
             '`!mvp` — MVP actuel (meilleur ratio kills)',
             '`!mvpsaison` — MVP des saisons passées',
             '`!saisons` — Historique et vainqueurs des saisons',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📈 Niveau & Profil',
-          value: [
-            '`!niveau` / `!rank` — Ton niveau XP et ta progression',
-            '`!infouser [@user]` — Infos, niveau et avertissements d\'un membre',
-            '`!serveur` — Informations sur le serveur Discord',
-            '`!inforole @role` — Détails techniques d\'un rôle',
-            '`!ping` — Latence du bot et de l\'API Discord',
-            '`!status` — Statut du bot et aperçu des tournois',
+            '`!palmares` — Palmarès complet du serveur',
+            '`!trophees` — Tous les trophées décernés',
+            '`!recompenses` — Voir les rôles attribués par rang',
           ].join('\n'),
           inline: false,
         }
@@ -64,41 +75,59 @@ module.exports = (client) => {
       .setColor(color)
       .addFields(
         {
+          name: '📊 Niveau & Profil',
+          value: [
+            '`!niveau` — Ton niveau XP et ta progression',
+            '`!infouser [@user]` — Infos, niveau et avertissements d\'un membre',
+            '`!infoserveur` — Informations sur le serveur Discord',
+            '`!inforole @role` — Détails techniques d\'un rôle',
+            '`!ping` — Latence du bot et de l\'API Discord',
+            '`!statut` — Statut du bot et aperçu des tournois actifs',
+          ].join('\n'),
+          inline: false,
+        },
+        {
           name: '🤖 Intelligence Artificielle',
           value: [
             '`!ia <question>` — Poser une question à l\'IA SUPREMYX',
-            '`!ia reset` — Effacer son historique de conversation IA',
+            '`!ia réinitialiser` — Effacer son historique de conversation IA',
             '`!ia modeles` — Voir les modèles IA disponibles et l\'actuel',
-            '`!ia stats` — Statistiques d\'utilisation de l\'IA (utilisateurs, modèles)',
+            '`!ia statistiques` — Statistiques d\'utilisation de l\'IA',
           ].join('\n'),
           inline: false,
         },
         {
           name: '🛠️ Outils & Utilitaires',
           value: [
-            '`!rappel <durée> <texte>` — Se créer un rappel (ex: `!rappel 2h match ce soir`)',
-            '`!afk [message]` — Passer en mode AFK (les mentions notifient l\'auteur)',
-            '`!anniversaire <JJ/MM/AAAA>` — Enregistrer sa date d\'anniversaire',
+            '`!rappel <durée> <texte>` — Créer un rappel (ex : `!rappel 2h match ce soir`)',
+            '`!absent [message]` — Passer en mode AFK (les mentions notifient l\'auteur)',
+            '`!anniversaire définir JJ/MM[/AAAA]` — Enregistrer sa date d\'anniversaire',
+            '`!anniversaire liste` — Voir les anniversaires du serveur',
+            '`!anniversaire vérifier [@user]` — Vérifier l\'anniversaire d\'un membre',
             '`!pileface` — Lancer une pièce (pile ou face)',
-            '`!dés` — Lancer un dé à 6 faces',
+            '`!tirageteam <@u1> <@u2> ...` — Tirer des équipes aléatoires',
+            '`!messagejour` — Voir le message du jour posté par le bot',
           ].join('\n'),
           inline: false,
         },
         {
-          name: '📬 Communauté & Signalements',
+          name: '📬 Communauté & Tickets',
           value: [
             '`!suggestion <texte>` — Envoyer une suggestion au staff',
             '`!signaler <problème>` — Signaler un problème anonymement',
-            '`!ticket` — Ouvrir un ticket de support',
-            '`!sanctions [@user]` — Voir ses propres sanctions (ou celles d\'un membre)',
+            '`!ticket [support|signalement|candidature]` — Ouvrir un ticket',
+            '`!fermer` — Fermer son ticket en cours',
+            '`!vote <question> | <opt1> | <opt2>` — Participer / créer un vote',
+            '`!sanctions [@user]` — Voir ses sanctions (ou celles d\'un membre)',
             '`!avertissements [@user]` — Voir l\'historique des avertissements',
           ].join('\n'),
           inline: false,
         },
         {
-          name: '📋 Règles & Infos Serveur',
+          name: '📋 Règles du serveur',
           value: [
             '`!regles` — Afficher les règles du serveur',
+            '`!règlement` — Afficher le règlement interactif complet',
           ].join('\n'),
           inline: false,
         }
