@@ -13,6 +13,7 @@ const Warning       = require('../database/models/Warning');
 const Sanction      = require('../database/models/Sanction');
 const Blacklist     = require('../database/models/Blacklist');
 const CommandStat   = require('../database/models/CommandStat');
+const IaConfig      = require('../database/models/IaConfig');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -669,6 +670,22 @@ router.get('/botstats', async (req, res) => {
       dailyActivity.push({ date: d, count: dayMap.get(d) || 0 });
     }
 
+    const MODELS = {
+      'gpt-4o-mini':   { label: 'GPT-4o Mini',       emoji: '🟢' },
+      'gpt-4o':        { label: 'GPT-4o',             emoji: '🔵' },
+      'claude-haiku':  { label: 'Claude 3.5 Haiku',  emoji: '🟣' },
+      'claude-sonnet': { label: 'Claude 3.5 Sonnet', emoji: '🟤' },
+      'gemini-flash':  { label: 'Gemini 2.0 Flash',  emoji: '🔴' },
+      'mistral':       { label: 'Mistral 7B',         emoji: '⚪' },
+      'llama':         { label: 'LLaMA 3.1 8B',      emoji: '🟡' },
+    };
+    const iaConfigs = await IaConfig.find().lean();
+    const iaModels = iaConfigs.map(c => {
+      const alias = c.model || 'gpt-4o-mini';
+      const m = MODELS[alias] || { label: alias, emoji: '🤖' };
+      return { guildId: c.guildId, alias, label: m.label, emoji: m.emoji };
+    });
+
     return res.json({
       success: true,
       totalUsage: all.length,
@@ -676,6 +693,7 @@ router.get('/botstats', async (req, res) => {
       commands,
       topUsers,
       dailyActivity,
+      iaModels,
     });
   } catch (err) {
     console.error('[API /botstats]', err);

@@ -8,12 +8,20 @@ interface CommandStat {
   topUsers: { username: string; count: number }[];
 }
 
+interface IaModel {
+  guildId: string;
+  alias: string;
+  label: string;
+  emoji: string;
+}
+
 interface BotStatsData {
   totalUsage: number;
   uniqueCommands: number;
   commands: CommandStat[];
   topUsers: { username: string; count: number }[];
   dailyActivity: { date: string; count: number }[];
+  iaModels: IaModel[];
 }
 
 function fmtDate(d: string) {
@@ -77,6 +85,26 @@ export default function BotStatsPage() {
               </div>
             ))}
           </div>
+
+          {/* IA Model banner */}
+          {data.iaModels && data.iaModels.length > 0 && (
+            <div className="rounded-xl overflow-hidden mb-6" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                <h3 className="font-bold text-sm">🤖 Modèle IA actif (par serveur)</h3>
+              </div>
+              <div className="flex flex-wrap gap-3 px-5 py-4">
+                {data.iaModels.map((m) => (
+                  <div key={m.guildId} className="flex items-center gap-2 rounded-lg px-4 py-2" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                    <span className="text-base">{m.emoji}</span>
+                    <div>
+                      <p className="text-xs font-bold leading-tight">{m.label}</p>
+                      <p className="text-[10px] leading-tight" style={{ color: "var(--muted-foreground)" }}>!ia modele {m.alias}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* Top Users */}
