@@ -34,7 +34,7 @@ module.exports = (client) => {
     const file = new AttachmentBuilder(buffer, { name: `backup_moseto_${now}.json` });
 
     const embed = new EmbedBuilder()
-      .setTitle('💾 Backup — Base de données')
+      .setTitle('💾 Sauvegarde — Base de données')
       .setColor(0xEB459E)
       .addFields(
         { name: '👥 Équipes', value: `${teams.length}`, inline: true },

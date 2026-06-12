@@ -40,7 +40,7 @@ module.exports = (client) => {
         ' le ' + endsAt.toLocaleDateString('fr-FR');
 
       const embed = new EmbedBuilder()
-        .setTitle('🎉 GIVEAWAY !')
+        .setTitle('🎉 CONCOURS !')
         .setColor(0xEB459E)
         .setDescription(`**${prize}**\n\nRéagis avec 🎉 pour participer !`)
         .addFields({ name: '⏱️ Fin', value: endsStr, inline: true })

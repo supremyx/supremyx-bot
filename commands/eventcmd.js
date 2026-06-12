@@ -76,8 +76,8 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !event create <titre> | <description> | <date> ---
-    if (sub === 'create' || sub === 'new') {
+    // --- !event creer <titre> | <description> | <date> ---
+    if (sub === 'creer' || sub === 'nouveau') {
       if (!isStaff) return message.reply('Staff uniquement');
       const rest = content.slice(args[0].length + args[1].length + 2).trim();
       const parts = rest.split('|').map(p => p.trim());
@@ -85,7 +85,7 @@ module.exports = (client) => {
       const description = parts[1] || '';
       const date = parts[2] || '';
 
-      if (!title) return message.reply('Usage : `!event create <titre> | [description] | [date]`\nEx : `!event create Scrim vendredi | Scrim custom interne | 10/05 20h00`');
+      if (!title) return message.reply('Usage : `!event creer <titre> | [description] | [date]`\nEx : `!event creer Scrim vendredi | Scrim custom interne | 10/05 20h00`');
 
       const num = await nextEventNumber(message.guild.id);
       const ev = await GuildEvent.create({

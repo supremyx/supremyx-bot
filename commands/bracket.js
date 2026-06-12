@@ -5,7 +5,7 @@ function buildBracket(teams) {
   // Pad to nearest power of 2
   const size = Math.pow(2, Math.ceil(Math.log2(teams.length)));
   const padded = [...teams];
-  while (padded.length < size) padded.push('BYE');
+  while (padded.length < size) padded.push('EXEMPTÉ');
 
   const rounds = [];
   let current = padded;

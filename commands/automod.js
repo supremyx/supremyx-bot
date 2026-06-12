@@ -51,26 +51,26 @@ module.exports = (client) => {
       return message.reply(`Automod est actuellement **${config.enabled ? 'activé ✅' : 'désactivé ⛔'}**.\nUtilise \`!automod on\` ou \`!automod off\`.`);
     }
 
-    // --- !words --- list all words
+    // --- !mots --- list all words
     if (cmd === '!mots') {
       const words = await BadWord.find().sort({ word: 1 });
       if (!words.length)
-        return message.reply('Aucun mot interdit défini. Utilise `!mot add <mot>` pour en ajouter.');
+        return message.reply('Aucun mot interdit défini. Utilise `!mot ajouter <mot>` pour en ajouter.');
 
       const embed = new EmbedBuilder()
         .setTitle(`🚫 Mots interdits — ${words.length} entrée(s)`)
         .setColor(0xED4245)
         .setDescription(words.map(w => `\`${w.word}\``).join(', '))
-        .setFooter({ text: 'Utilise !word add / !word del pour gérer la liste' })
+        .setFooter({ text: 'Utilise !mot ajouter / !mot retirer pour gérer la liste' })
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !word add <mot> ---
-    if (cmd === '!mot' && sub === 'add') {
+    // --- !mot ajouter <mot> ---
+    if (cmd === '!mot' && sub === 'ajouter') {
       const word = args.slice(2).join(' ').toLowerCase().trim();
-      if (!word) return message.reply('Usage : `!mot add <mot>`');
+      if (!word) return message.reply('Usage : `!mot ajouter <mot>`');
 
       const exists = await BadWord.findOne({ word });
       if (exists) return message.reply(`\`${word}\` est déjà dans la liste.`);
@@ -82,10 +82,10 @@ module.exports = (client) => {
       return message.reply(`✅ \`${word}\` ajouté à la liste des mots interdits.`);
     }
 
-    // --- !word del <mot> ---
-    if (cmd === '!mot' && (sub === 'del' || sub === 'remove')) {
+    // --- !mot retirer <mot> ---
+    if (cmd === '!mot' && (sub === 'retirer' || sub === 'supprimer')) {
       const word = args.slice(2).join(' ').toLowerCase().trim();
-      if (!word) return message.reply('Usage : `!mot del <mot>`');
+      if (!word) return message.reply('Usage : `!mot retirer <mot>`');
 
       const deleted = await BadWord.findOneAndDelete({ word });
       if (!deleted) return message.reply(`❌ \`${word}\` n'est pas dans la liste.`);
@@ -95,8 +95,8 @@ module.exports = (client) => {
       return message.reply(`✅ \`${word}\` retiré de la liste.`);
     }
 
-    // --- !word setup — load default list ---
-    if (cmd === '!mot' && sub === 'setup') {
+    // --- !mot defaut — load default list ---
+    if (cmd === '!mot' && sub === 'defaut') {
       let added = 0;
       for (const w of DEFAULT_WORDS) {
         const exists = await BadWord.findOne({ word: w });
@@ -110,8 +110,8 @@ module.exports = (client) => {
       return message.reply(`✅ **${added}** mot(s) ajouté(s) depuis la liste par défaut (${DEFAULT_WORDS.length} mots au total).`);
     }
 
-    // --- !word clear — wipe list ---
-    if (cmd === '!mot' && sub === 'clear') {
+    // --- !mot vider — wipe list ---
+    if (cmd === '!mot' && sub === 'vider') {
       const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
       await message.reply('⚠️ Cela effacera **tous** les mots interdits. Réponds `CONFIRMER` dans les 20 secondes.');
       try {
@@ -130,10 +130,10 @@ module.exports = (client) => {
       '`!automod` — Voir le statut\n' +
       '`!automod on / off` — Activer / désactiver\n' +
       '`!mots` — Voir la liste des mots interdits\n' +
-      '`!mot add <mot>` — Ajouter un mot\n' +
-      '`!mot del <mot>` — Supprimer un mot\n' +
-      '`!mot setup` — Charger la liste par défaut\n' +
-      '`!mot clear` — Vider toute la liste'
+      '`!mot ajouter <mot>` — Ajouter un mot\n' +
+      '`!mot retirer <mot>` — Supprimer un mot\n' +
+      '`!mot defaut` — Charger la liste par défaut\n' +
+      '`!mot vider` — Vider toute la liste'
     );
   });
 };
