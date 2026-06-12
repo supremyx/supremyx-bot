@@ -19,23 +19,23 @@ module.exports = (client) => {
     const args = content.split(/\s+/);
     const cmd = args[0].toLowerCase();
 
-    if (cmd !== '!setannonce' && cmd !== '!setlogs') return;
+    if (cmd !== '!salonannonce' && cmd !== '!salonjournaux') return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Cette commande est réservée au staff Administrateur.');
 
     const mention = message.mentions.channels.first();
     if (!mention) {
-      const usage = cmd === '!setannonce'
-        ? '`!setannonce #salon` — Définit le salon d\'annonces'
-        : '`!setlogs #salon` — Définit le salon de logs staff';
+      const usage = cmd === '!salonannonce'
+        ? '`!salonannonce #salon` — Définit le salon d\'annonces'
+        : '`!salonjournaux #salon` — Définit le salon de journaux staff';
       return message.reply(`❌ Mentionne un salon.\nUsage : ${usage}`);
     }
 
     try {
       const config = await getOrCreateConfig();
 
-      if (cmd === '!setannonce') {
+      if (cmd === '!salonannonce') {
         config.announceChannelId = mention.id;
         await config.save();
         await invalidateChannelCache();
@@ -51,21 +51,21 @@ module.exports = (client) => {
         await message.channel.send({ embeds: [embed] });
         logStaffAction(client, `📢 **Salon annonces** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
 
-      } else if (cmd === '!setlogs') {
+      } else if (cmd === '!salonjournaux') {
         config.logChannelId = mention.id;
         await config.save();
         await invalidateChannelCache();
 
         const embed = new EmbedBuilder()
           .setColor(0x5865F2)
-          .setTitle('🔒 Salon de logs configuré')
-          .setDescription(`Le salon de logs staff a été défini sur ${mention}.`)
+          .setTitle('🔒 Salon de journaux configuré')
+          .setDescription(`Le salon de journaux staff a été défini sur ${mention}.`)
           .addFields({ name: '📍 Salon', value: `${mention} (\`${mention.id}\`)` })
           .setFooter({ text: `Configuré par ${message.author.tag}` })
           .setTimestamp();
 
         await message.channel.send({ embeds: [embed] });
-        logStaffAction(client, `🔒 **Salon logs** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
+        logStaffAction(client, `🔒 **Salon journaux** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
       }
 
     } catch (err) {
