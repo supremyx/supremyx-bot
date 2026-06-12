@@ -52,7 +52,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node index.js"
+args = "bash scripts/autopush.sh & node index.js"
 
 [deployment]
 deploymentTarget = "vm"
