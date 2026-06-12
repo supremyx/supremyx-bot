@@ -62,6 +62,10 @@ client.once('clientReady', () => {
 // --- Intelligence Artificielle ---
 require('./commands/ia')(client);
 
+// --- Aide ---
+require('./commands/aide')(client);
+require('./commands/aidestaff')(client);
+
 // --- Utilitaires ---
 require('./commands/ping')(client);
 require('./commands/status')(client);
