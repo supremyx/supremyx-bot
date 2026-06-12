@@ -19,15 +19,20 @@
     "cors": "^2.8.6",
     "discord.js": "^14.26.4",
     "dotenv": "^16.6.1",
+    "drizzle-zod": "^0.8.3",
     "express": "^5.2.1",
     "mongoose": "^8.24.0",
     "openai": "^4.104.0",
+    "p-limit": "^7.3.0",
+    "p-retry": "^7.1.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^3.8.1",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "zod": "^4.4.3",
+    "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "husky": "^9.1.7"
