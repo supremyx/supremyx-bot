@@ -14,6 +14,7 @@ const Sanction      = require('../database/models/Sanction');
 const Blacklist     = require('../database/models/Blacklist');
 const CommandStat   = require('../database/models/CommandStat');
 const IaConfig      = require('../database/models/IaConfig');
+const IaUsage       = require('../database/models/IaUsage');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -679,12 +680,50 @@ router.get('/botstats', async (req, res) => {
       'mistral':       { label: 'Mistral 7B',         emoji: '⚪' },
       'llama':         { label: 'LLaMA 3.1 8B',      emoji: '🟡' },
     };
+
+    // ── IA models config per guild ──────────────────────────────────────────
     const iaConfigs = await IaConfig.find().lean();
     const iaModels = iaConfigs.map(c => {
       const alias = c.model || 'gpt-4o-mini';
       const m = MODELS[alias] || { label: alias, emoji: '🤖' };
       return { guildId: c.guildId, alias, label: m.label, emoji: m.emoji };
     });
+
+    // ── IA usage stats ──────────────────────────────────────────────────────
+    const iaAll = await IaUsage.find().lean();
+    const iaUserMap = new Map();
+    const iaModelMap = new Map();
+    const iaDayMap = new Map();
+
+    for (const u of iaAll) {
+      iaUserMap.set(u.username, (iaUserMap.get(u.username) || 0) + 1);
+      iaModelMap.set(u.modelAlias, (iaModelMap.get(u.modelAlias) || 0) + 1);
+      const usedAt = new Date(u.usedAt);
+      if (usedAt >= sevenDaysAgo) {
+        const day = usedAt.toISOString().slice(0, 10);
+        iaDayMap.set(day, (iaDayMap.get(day) || 0) + 1);
+      }
+    }
+
+    const iaTopUsers = [...iaUserMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([username, count]) => ({ username, count }));
+
+    const iaByModel = [...iaModelMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([alias, count]) => {
+        const m = MODELS[alias] || { label: alias, emoji: '🤖' };
+        return { alias, label: m.label, emoji: m.emoji, count, pct: iaAll.length ? Math.round((count / iaAll.length) * 100) : 0 };
+      });
+
+    const iaDailyActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      iaDailyActivity.push({ date: d, count: iaDayMap.get(d) || 0 });
+    }
+
+    const iaRecent = iaAll.filter(u => new Date(u.usedAt) >= sevenDaysAgo).length;
 
     return res.json({
       success: true,
@@ -694,6 +733,13 @@ router.get('/botstats', async (req, res) => {
       topUsers,
       dailyActivity,
       iaModels,
+      iaStats: {
+        total: iaAll.length,
+        recent: iaRecent,
+        topUsers: iaTopUsers,
+        byModel: iaByModel,
+        dailyActivity: iaDailyActivity,
+      },
     });
   } catch (err) {
     console.error('[API /botstats]', err);

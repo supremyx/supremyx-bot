@@ -15,6 +15,14 @@ interface IaModel {
   emoji: string;
 }
 
+interface IaStats {
+  total: number;
+  recent: number;
+  topUsers: { username: string; count: number }[];
+  byModel: { alias: string; label: string; emoji: string; count: number; pct: number }[];
+  dailyActivity: { date: string; count: number }[];
+}
+
 interface BotStatsData {
   totalUsage: number;
   uniqueCommands: number;
@@ -22,6 +30,7 @@ interface BotStatsData {
   topUsers: { username: string; count: number }[];
   dailyActivity: { date: string; count: number }[];
   iaModels: IaModel[];
+  iaStats: IaStats;
 }
 
 function fmtDate(d: string) {
@@ -85,6 +94,97 @@ export default function BotStatsPage() {
               </div>
             ))}
           </div>
+
+          {/* IA Stats section */}
+          {data.iaStats && (data.iaStats.total > 0 || data.iaModels?.length > 0) && (
+            <div className="mb-6">
+              <h3 className="font-bold text-sm mb-3" style={{ color: "var(--muted-foreground)" }}>🤖 INTELLIGENCE ARTIFICIELLE</h3>
+
+              {/* IA summary cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {[
+                  { label: "Questions posées",    value: data.iaStats.total.toLocaleString("fr-FR"), color: "#FF8C00", icon: "💬" },
+                  { label: "7 derniers jours",    value: data.iaStats.recent.toLocaleString("fr-FR"), color: "#6366f1", icon: "📅" },
+                  { label: "Utilisateurs IA",     value: data.iaStats.topUsers.length,               color: "#14b8a6", icon: "👥" },
+                  { label: "Modèles utilisés",    value: data.iaStats.byModel.length,                color: "#ec4899", icon: "🧠" },
+                ].map(({ label, value, color, icon }) => (
+                  <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-center" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                    <span className="text-lg">{icon}</span>
+                    <span className="text-lg font-bold" style={{ color }}>{value}</span>
+                    <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                {/* Top IA users */}
+                <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                  <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <h4 className="font-bold text-sm">👑 Top utilisateurs IA</h4>
+                  </div>
+                  {data.iaStats.topUsers.length === 0 ? (
+                    <p className="text-xs text-center py-6" style={{ color: "var(--muted-foreground)" }}>Aucune donnée.</p>
+                  ) : data.iaStats.topUsers.slice(0, 8).map((u, i) => (
+                    <div key={u.username} className="px-5 py-2 flex items-center justify-between" style={{ borderBottom: i < Math.min(data.iaStats.topUsers.length, 8) - 1 ? "1px solid var(--border)" : "none" }}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold w-5 text-center" style={{ color: i < 3 ? "#facc15" : "var(--muted-foreground)" }}>
+                          {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+                        </span>
+                        <span className="text-sm font-medium">{u.username}</span>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: "#FF8C00" }}>{u.count}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Model breakdown */}
+                <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                  <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <h4 className="font-bold text-sm">🧠 Répartition par modèle</h4>
+                  </div>
+                  {data.iaStats.byModel.length === 0 ? (
+                    <p className="text-xs text-center py-6" style={{ color: "var(--muted-foreground)" }}>Aucune donnée.</p>
+                  ) : (
+                    <div className="px-5 py-3 flex flex-col gap-3">
+                      {data.iaStats.byModel.map((m) => (
+                        <div key={m.alias}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium">{m.emoji} {m.label}</span>
+                            <span className="text-xs font-bold" style={{ color: "#FF8C00" }}>{m.count} ({m.pct}%)</span>
+                          </div>
+                          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--muted)" }}>
+                            <div className="h-full rounded-full" style={{ width: `${Math.max(m.pct, 2)}%`, background: "rgba(255,140,0,0.7)" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* IA daily activity */}
+                <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                  <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <h4 className="font-bold text-sm">📈 Questions IA (7 jours)</h4>
+                  </div>
+                  <div className="px-5 py-4">
+                    <div className="flex items-end gap-1.5 h-24">
+                      {data.iaStats.dailyActivity.map(d => {
+                        const maxDay = Math.max(...data.iaStats.dailyActivity.map(x => x.count), 1);
+                        const pct = Math.max((d.count / maxDay) * 100, 4);
+                        return (
+                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                            <span className="text-[9px]" style={{ color: "var(--muted-foreground)" }}>{d.count || ""}</span>
+                            <div className="w-full rounded-t-sm" style={{ height: `${pct}%`, background: "rgba(255,140,0,0.55)", minHeight: 4 }} title={`${d.count} questions`} />
+                            <span className="text-[9px]" style={{ color: "var(--muted-foreground)" }}>{fmtDate(d.date)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* IA Model banner */}
           {data.iaModels && data.iaModels.length > 0 && (
