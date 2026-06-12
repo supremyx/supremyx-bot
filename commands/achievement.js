@@ -15,10 +15,10 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !achievement <icon> <equipe> <titre> | <description> ---
-    if (cmd === '!achievement') {
+    if (cmd === '!trophee') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const raw = content.slice('!achievement'.length).trim();
+      const raw = content.slice('!trophee'.length).trim();
       const pipeIdx = raw.indexOf('|');
       const mainPart = pipeIdx >= 0 ? raw.slice(0, pipeIdx).trim() : raw;
       const description = pipeIdx >= 0 ? raw.slice(pipeIdx + 1).trim() : '';
@@ -34,7 +34,7 @@ module.exports = (client) => {
       }
 
       if (rest.length < 2)
-        return message.reply('Usage : `!achievement [emoji] <équipe> <titre> | <description>`\nExemple : `!achievement 🔥 TeamA Sniper d\'élite | 10 kills en un match`');
+        return message.reply('Usage : `!trophee [emoji] <équipe> <titre> | <description>`\nExemple : `!trophee 🔥 TeamA Sniper d\'élite | 10 kills en un match`');
 
       const target = rest[0];
       const title = rest.slice(1).join(' ');
@@ -58,9 +58,9 @@ module.exports = (client) => {
     }
 
     // --- !achievements <equipe> ---
-    if (cmd === '!achievements') {
+    if (cmd === '!trophees') {
       const target = args.slice(1).join(' ').trim();
-      if (!target) return message.reply('Usage : `!achievements <équipe>`');
+      if (!target) return message.reply('Usage : `!trophees <équipe>`');
 
       const achs = await Achievement.find({
         target: { $regex: new RegExp(`^${target}$`, 'i') }
@@ -86,7 +86,7 @@ module.exports = (client) => {
     }
 
     // --- !mvpseason ---
-    if (cmd === '!mvpseason') {
+    if (cmd === '!mvpsaison') {
       const teams = await Team.find().sort({ kills: -1 }).limit(5);
       if (!teams.length) return message.reply('Aucune équipe enregistrée.');
 

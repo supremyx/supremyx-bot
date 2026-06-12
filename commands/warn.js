@@ -5,7 +5,7 @@ const { addSanction, ACTION_LABELS } = require('../utils/sanctionManager');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!warn') && !message.content.startsWith('!warns') && !message.content.startsWith('!delwarn')) return;
+    if (!message.content.startsWith('!avertir') && !message.content.startsWith('!avertissements') && !message.content.startsWith('!supprimerwarn')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
@@ -13,7 +13,7 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // --- !warn @user <raison> ---
-    if (cmd === '!warn') {
+    if (cmd === '!avertir') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const mention = message.mentions.users.first();
@@ -23,8 +23,8 @@ module.exports = (client) => {
       if (!rawTarget || !reason) {
         return message.reply(
           '**Usage :**\n' +
-          '`!warn @utilisateur <raison>` — Avertir un joueur\n' +
-          '`!warn <nom_équipe> <raison>` — Avertir une équipe'
+          '`!avertir @utilisateur <raison>` — Avertir un joueur\n' +
+          '`!avertir <nom_équipe> <raison>` — Avertir une équipe'
         );
       }
 
@@ -96,10 +96,10 @@ module.exports = (client) => {
     }
 
     // --- !warns @user ---
-    if (cmd === '!warns') {
+    if (cmd === '!avertissements') {
       const mention = message.mentions.users.first();
       const rawTarget = args[1];
-      if (!rawTarget) return message.reply('Usage : `!warns @utilisateur` ou `!warns <nom_équipe>`');
+      if (!rawTarget) return message.reply('Usage : `!avertissements @utilisateur` ou `!avertissements <nom_équipe>`');
 
       const target = mention ? mention.tag : rawTarget;
       const query = mention ? { targetId: mention.id } : { target: { $regex: new RegExp(`^${rawTarget}$`, 'i') } };
@@ -123,10 +123,10 @@ module.exports = (client) => {
     }
 
     // --- !delwarn <id> ---
-    if (cmd === '!delwarn') {
+    if (cmd === '!supprimerwarn') {
       if (!isStaff) return message.reply('Staff uniquement');
       const id = args[1];
-      if (!id) return message.reply('Usage : `!delwarn <id>`');
+      if (!id) return message.reply('Usage : `!supprimerwarn <id>`');
 
       let deleted = null;
       if (id.length === 24) {

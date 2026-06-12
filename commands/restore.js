@@ -17,7 +17,7 @@ function fetchUrl(url) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content !== '!restore') return;
+    if (message.content !== '!restaurer') return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))

@@ -42,7 +42,7 @@ module.exports = (client) => {
     const tournaments = await Tournament.find().sort({ startedAt: -1 });
 
     if (!tournaments.length)
-      return message.channel.send('Aucun tournoi enregistré. Lance-en un avec `!newtournoi <nom>`.');
+      return message.channel.send('Aucun tournoi enregistré. Lance-en un avec `!nouveautournoi <nom>`.');
 
     const totalPages = Math.ceil(tournaments.length / PAGE_SIZE);
     let page = 0;

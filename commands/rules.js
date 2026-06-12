@@ -7,13 +7,13 @@ module.exports = (client) => {
     try {
     const content = message.content.trim();
     if (
-      !content.startsWith('!rules') &&
-      !content.startsWith('!setrules') &&
-      !content.startsWith('!addrule') &&
-      !content.startsWith('!delrule') &&
-      !content.startsWith('!editrule') &&
-      !content.startsWith('!moverule') &&
-      !content.startsWith('!clearrules')
+      !content.startsWith('!regles') &&
+      !content.startsWith('!setregles') &&
+      !content.startsWith('!ajouterregle') &&
+      !content.startsWith('!supprimerregle') &&
+      !content.startsWith('!modifierregle') &&
+      !content.startsWith('!deplacerregle') &&
+      !content.startsWith('!effacerregles')
     ) return;
     if (!message.guild) return;
 
@@ -22,7 +22,7 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // ─── !rules — afficher ────────────────────────────────────────
-    if (cmd === '!rules') {
+    if (cmd === '!regles') {
       const doc = await Rules.findOne();
       if (!doc || !doc.rules.length)
         return message.reply('Aucune règle de tournoi définie. Un staff peut en ajouter avec `!setrules`.');
@@ -41,14 +41,14 @@ module.exports = (client) => {
     }
 
     // ─── !setrules <titre> | règle1 | règle2 | ... ────────────────
-    if (cmd === '!setrules') {
+    if (cmd === '!setregles') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
-      const raw = content.slice('!setrules'.length).trim();
+      const raw = content.slice('!setregles'.length).trim();
       if (!raw)
         return message.reply(
-          '**Usage :** `!setrules <titre> | <règle1> | <règle2> | ...`\n' +
-          '**Exemple :** `!setrules Règles S2 | Pas de cheating | Respect obligatoire`'
+          '**Usage :** `!setregles <titre> | <règle1> | <règle2> | ...`\n' +
+          '**Exemple :** `!setregles Règles S2 | Pas de cheating | Respect obligatoire`'
         );
 
       const parts = raw.split('|').map(p => p.trim()).filter(Boolean);
@@ -76,11 +76,11 @@ module.exports = (client) => {
     }
 
     // ─── !addrule <règle> ─────────────────────────────────────────
-    if (cmd === '!addrule') {
+    if (cmd === '!ajouterregle') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
-      const rule = content.slice('!addrule'.length).trim();
-      if (!rule) return message.reply('Usage : `!addrule <texte de la règle>`');
+      const rule = content.slice('!ajouterregle'.length).trim();
+      if (!rule) return message.reply('Usage : `!ajouterregle <texte de la règle>`');
 
       let doc = await Rules.findOne();
       if (!doc) return message.reply('❌ Aucune règle définie. Utilise d\'abord `!setrules` pour créer la liste.');
@@ -94,7 +94,7 @@ module.exports = (client) => {
     }
 
     // ─── !editrule <numéro> <nouveau texte> ───────────────────────
-    if (cmd === '!editrule') {
+    if (cmd === '!modifierregle') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const num = parseInt(args[1]);
@@ -104,7 +104,7 @@ module.exports = (client) => {
       if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle définie.');
       if (isNaN(num) || num < 1 || num > doc.rules.length)
         return message.reply(`❌ Numéro invalide. Les règles vont de **1** à **${doc.rules.length}**.`);
-      if (!newText) return message.reply('Usage : `!editrule <numéro> <nouveau texte>`');
+      if (!newText) return message.reply('Usage : `!modifierregle <numéro> <nouveau texte>`');
 
       const old = doc.rules[num - 1];
       doc.rules[num - 1] = newText;
@@ -116,7 +116,7 @@ module.exports = (client) => {
     }
 
     // ─── !moverule <numéro> <nouvelle position> ───────────────────
-    if (cmd === '!moverule') {
+    if (cmd === '!deplacerregle') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const from = parseInt(args[1]);
@@ -126,7 +126,7 @@ module.exports = (client) => {
       if (!doc || !doc.rules.length) return message.reply('❌ Aucune règle définie.');
       if (isNaN(from) || from < 1 || from > doc.rules.length ||
           isNaN(to)   || to   < 1 || to   > doc.rules.length)
-        return message.reply(`❌ Numéros invalides. Les règles vont de **1** à **${doc.rules.length}**.\nUsage : \`!moverule <de> <vers>\``);
+        return message.reply(`❌ Numéros invalides. Les règles vont de **1** à **${doc.rules.length}**.\nUsage : \`!deplacerregle <de> <vers>\``);
       if (from === to) return message.reply('⚠️ La règle est déjà à cette position.');
 
       const [moved] = doc.rules.splice(from - 1, 1);
@@ -139,7 +139,7 @@ module.exports = (client) => {
     }
 
     // ─── !delrule <numéro> ────────────────────────────────────────
-    if (cmd === '!delrule') {
+    if (cmd === '!supprimerregle') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const num = parseInt(args[1]);
@@ -158,7 +158,7 @@ module.exports = (client) => {
     }
 
     // ─── !clearrules — tout effacer ───────────────────────────────
-    if (cmd === '!clearrules') {
+    if (cmd === '!effacerregles') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const doc = await Rules.findOne();

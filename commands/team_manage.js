@@ -15,13 +15,13 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !rename <ancien> | <nouveau> ---
-    if (cmd === '!rename') {
+    if (cmd === '!renommer') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const raw = content.slice('!rename'.length).trim();
+      const raw = content.slice('!renommer'.length).trim();
       const parts = raw.split('|').map(p => p.trim());
       if (parts.length < 2 || !parts[0] || !parts[1])
-        return message.reply('Usage : `!rename <ancien nom> | <nouveau nom>`');
+        return message.reply('Usage : `!renommer <ancien nom> | <nouveau nom>`');
 
       const [oldName, newName] = parts;
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${oldName}$`, 'i') } });
@@ -42,14 +42,14 @@ module.exports = (client) => {
       return message.reply(`✅ Équipe renommée : **${previousName}** → **${newName}** (historique mis à jour).`);
     }
 
-    // --- !merge <equipe1> | <equipe2> ---
-    if (cmd === '!merge') {
+    // --- !fusionner <equipe1> | <equipe2> ---
+    if (cmd === '!fusionner') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const raw = content.slice('!merge'.length).trim();
+      const raw = content.slice('!fusionner'.length).trim();
       const parts = raw.split('|').map(p => p.trim());
       if (parts.length < 2 || !parts[0] || !parts[1])
-        return message.reply('Usage : `!merge <équipe à absorber> | <équipe principale>`\nLes stats de la 1ère sont ajoutées à la 2ème, puis elle est supprimée.');
+        return message.reply('Usage : `!fusionner <équipe à absorber> | <équipe principale>`\nLes stats de la 1ère sont ajoutées à la 2ème, puis elle est supprimée.');
 
       const [srcName, dstName] = parts;
       const [src, dst] = await Promise.all([
@@ -73,10 +73,10 @@ module.exports = (client) => {
       return message.reply(`✅ **${src.name}** fusionnée dans **${dst.name}**.\nPoints : +${src.points} | Kills : +${src.kills}`);
     }
 
-    // --- !lineup <equipe> <joueur1,joueur2,...> ---
-    if (cmd === '!lineup') {
-      const raw = content.slice('!lineup'.length).trim();
-      if (!raw) return message.reply('Usage : `!lineup <équipe> <joueur1,joueur2,...>` ou `!lineup <équipe>` pour voir');
+    // --- !composition <equipe> <joueur1,joueur2,...> ---
+    if (cmd === '!composition') {
+      const raw = content.slice('!composition'.length).trim();
+      if (!raw) return message.reply('Usage : `!composition <équipe> <joueur1,joueur2,...>` ou `!composition <équipe>` pour voir');
 
       const spaceIdx = raw.indexOf(' ');
       const teamName = spaceIdx >= 0 ? raw.slice(0, spaceIdx).trim() : raw;
@@ -85,7 +85,7 @@ module.exports = (client) => {
       if (!playersRaw) {
         // View lineup
         const lineup = await Lineup.findOne({ team: { $regex: new RegExp(`^${teamName}$`, 'i') } });
-        if (!lineup || !lineup.players.length)
+        if (!composition || !lineup.players.length)
           return message.reply(`Aucune composition définie pour **${teamName}**.`);
 
         const embed = new EmbedBuilder()

@@ -16,10 +16,10 @@ module.exports = (client) => {
     try {
     const content = message.content.trim();
     if (
-      !content.startsWith('!playermatch') &&
-      !content.startsWith('!playerstats') &&
-      !content.startsWith('!playerboard') &&
-      !content.startsWith('!playerreset')
+      !content.startsWith('!matchjoueur') &&
+      !content.startsWith('!statsjoueur') &&
+      !content.startsWith('!classjoueurs') &&
+      !content.startsWith('!resetjoueur')
     ) return;
     if (!message.guild) return;
     if (!message.member) return;
@@ -30,7 +30,7 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // ─── !playermatch <équipe> <joueur> <kills> ───────────────────
-    if (cmd === '!playermatch') {
+    if (cmd === '!matchjoueur') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const teamName   = args[0];
@@ -39,8 +39,8 @@ module.exports = (client) => {
 
       if (!teamName || !playerName || isNaN(kills) || kills < 0)
         return message.reply(
-          '**Usage :** `!playermatch <équipe> <joueur> <kills>`\n' +
-          '**Exemple :** `!playermatch TeamA Pseudo 12`'
+          '**Usage :** `!matchjoueur <équipe> <joueur> <kills>`\n' +
+          '**Exemple :** `!matchjoueur TeamA Pseudo 12`'
         );
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
@@ -54,7 +54,7 @@ module.exports = (client) => {
       if (!inRoster) {
         return message.reply(
           `❌ **${playerName}** n'est pas dans le roster de **${team.name}**.\n` +
-          `Vérifie avec \`!roster ${team.name}\` ou ajoute-le d'abord avec \`!addplayer\`.`
+          `Vérifie avec \`!liste ${team.name}\` ou ajoute-le d'abord avec \`!ajouterplayer\`.`
         );
       }
 
@@ -87,7 +87,7 @@ module.exports = (client) => {
     }
 
     // ─── !playerstats <nom ou @mention> ──────────────────────────
-    if (cmd === '!playerstats') {
+    if (cmd === '!statsjoueur') {
       const mention = message.mentions.members.first();
       let stats = [];
 
@@ -101,7 +101,7 @@ module.exports = (client) => {
         }
       } else {
         const name = args.join(' ').trim();
-        if (!name) return message.reply('Usage : `!playerstats <pseudo>` ou `!playerstats @mention`');
+        if (!name) return message.reply('Usage : `!statsjoueur <pseudo>` ou `!statsjoueur @mention`');
         stats = await PlayerStat.find({
           guildId: message.guild.id,
           displayName: { $regex: new RegExp(escapeRegex(name), 'i') }
@@ -109,7 +109,7 @@ module.exports = (client) => {
       }
 
       if (!stats.length)
-        return message.reply('❌ Aucune statistique trouvée pour ce joueur. Utilise `!playermatch` pour en enregistrer.');
+        return message.reply('❌ Aucune statistique trouvée pour ce joueur. Utilise `!matchjoueur` pour en enregistrer.');
 
       const totalKills   = stats.reduce((s, p) => s + p.totalKills,   0);
       const totalMatches = stats.reduce((s, p) => s + p.totalMatches, 0);
@@ -155,7 +155,7 @@ module.exports = (client) => {
     }
 
     // ─── !playerboard [équipe] ────────────────────────────────────
-    if (cmd === '!playerboard') {
+    if (cmd === '!classjoueurs') {
       const teamFilter = args[0] ? args.join(' ') : null;
       const query      = { guildId: message.guild.id, totalMatches: { $gt: 0 } };
       if (teamFilter) query.teamName = { $regex: new RegExp(escapeRegex(teamFilter), 'i') };
@@ -182,13 +182,13 @@ module.exports = (client) => {
     }
 
     // ─── !playerreset <équipe> <joueur> ──────────────────────────
-    if (cmd === '!playerreset') {
+    if (cmd === '!resetjoueur') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const teamName   = args[0];
       const playerName = args.slice(1).join(' ').trim();
       if (!teamName || !playerName)
-        return message.reply('Usage : `!playerreset <équipe> <joueur>`');
+        return message.reply('Usage : `!resetjoueur <équipe> <joueur>`');
 
       const deleted = await PlayerStat.findOneAndDelete({
         guildId: message.guild.id,

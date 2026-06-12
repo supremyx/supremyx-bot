@@ -11,12 +11,12 @@ module.exports = (client) => {
     if (message.author.bot) return;
 
     const content = message.content.trim();
-    if (!content.startsWith('!tournoi ') && content !== '!tournoi') return;
+    if (!content.startsWith('!detailtournoi ') && content !== '!detailtournoi') return;
 
     const cd = checkCooldown(message.author.id, 'tournoidetail', 8);
     if (cd) return replyCooldown(message, cd, 'tournoidetail');
 
-    const name = content.slice('!tournoi'.length).trim();
+    const name = content.slice('!detailtournoi'.length).trim();
     if (!name)
       return message.reply('Usage : `!tournoi <nom>` — Voir les détails d\'un tournoi.\nListez tous les tournois avec `!tournois`.');
 

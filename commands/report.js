@@ -2,15 +2,15 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!report')) return;
+    if (!message.content.startsWith('!signaler')) return;
 
-    const report = message.content.slice('!report'.length).trim();
+    const report = message.content.slice('!signaler'.length).trim();
 
     if (!report) {
       return message.reply(
-        '**Usage :** `!report <description du problème>`\n' +
+        '**Usage :** `!signaler <description du problème>`\n' +
         'Ton signalement sera transmis au staff de façon anonyme.\n' +
-        'Exemple : `!report TeamX triche pendant les matchs`'
+        'Exemple : `!signaler TeamX triche pendant les matchs`'
       );
     }
 

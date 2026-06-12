@@ -9,7 +9,7 @@ const medals = ['🥇', '🥈', '🥉'];
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (!message.content.startsWith('!ranking')) return;
+    if (!message.content.startsWith('!classement')) return;
     const cd = checkCooldown(message.author.id, 'ranking', 10);
     if (cd) return replyCooldown(message, cd, 'ranking');
 

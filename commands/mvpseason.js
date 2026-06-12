@@ -5,7 +5,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (content !== '!mvpseason' && !content.startsWith('!mvpseason ')) return;
+    if (content !== '!mvpsaison' && !content.startsWith('!mvpsaison ')) return;
 
     const seasons = await Season.find({ active: false, 'snapshot.0': { $exists: true } }).sort({ endedAt: -1 });
 

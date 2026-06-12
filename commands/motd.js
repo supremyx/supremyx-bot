@@ -39,11 +39,11 @@ module.exports = (client, sendOnStartup = false) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !setmotd <texte> ---
-    if (cmd === '!setmotd') {
+    if (cmd === '!setmessagejour') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const text = content.slice('!setmotd'.length).trim();
-      if (!text) return message.reply('Usage : `!setmotd <message du jour>`');
+      const text = content.slice('!setmessagejour'.length).trim();
+      if (!text) return message.reply('Usage : `!setmessagejour <message du jour>`');
 
       const config = await getOrCreateConfig();
       config.motd = text;
@@ -55,9 +55,9 @@ module.exports = (client, sendOnStartup = false) => {
     }
 
     // --- !motd ---
-    if (cmd === '!motd') {
+    if (cmd === '!messagejour') {
       const config = await getOrCreateConfig();
-      if (!config.motd) return message.reply('Aucun message du jour défini. Utilise `!setmotd <texte>` pour en créer un.');
+      if (!config.motd) return message.reply('Aucun message du jour défini. Utilise `!setmessagejour <texte>` pour en créer un.');
 
       const embed = new EmbedBuilder()
         .setTitle('📢 Message du jour')

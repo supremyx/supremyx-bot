@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (content !== '!serverinfo') return;
+    if (content !== '!infoserveur') return;
 
     const guild = message.guild;
     await guild.fetch().catch(() => {});

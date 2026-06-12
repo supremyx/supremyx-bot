@@ -9,7 +9,7 @@ const medals = ['🥇', '🥈', '🥉'];
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (message.content !== '!endtournoi') return;
+    if (message.content !== '!finirtournoi') return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))

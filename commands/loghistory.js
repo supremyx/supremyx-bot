@@ -20,7 +20,7 @@ const CATEGORY_COLORS = {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!log')) return;
+    if (!content.startsWith('!logs')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))

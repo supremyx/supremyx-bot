@@ -6,12 +6,12 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (!message.content.startsWith('!search')) return;
+    if (!message.content.startsWith('!recherche')) return;
     const cd = checkCooldown(message.author.id, 'search', 5);
     if (cd) return replyCooldown(message, cd, 'search');
 
     const query = message.content.split(' ').slice(1).join(' ').trim();
-    if (!query) return message.reply('Usage : `!search <nom>`');
+    if (!query) return message.reply('Usage : `!recherche <nom>`');
 
     const teams = await Team.find({
       name: { $regex: query, $options: 'i' }

@@ -22,7 +22,7 @@ async function getOrCreateConfig() {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!word') && !content.startsWith('!automod')) return;
+    if (!content.startsWith('!mot') && !content.startsWith('!automod')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
@@ -52,10 +52,10 @@ module.exports = (client) => {
     }
 
     // --- !words --- list all words
-    if (cmd === '!words') {
+    if (cmd === '!mots') {
       const words = await BadWord.find().sort({ word: 1 });
       if (!words.length)
-        return message.reply('Aucun mot interdit défini. Utilise `!word add <mot>` pour en ajouter.');
+        return message.reply('Aucun mot interdit défini. Utilise `!mot add <mot>` pour en ajouter.');
 
       const embed = new EmbedBuilder()
         .setTitle(`🚫 Mots interdits — ${words.length} entrée(s)`)
@@ -68,9 +68,9 @@ module.exports = (client) => {
     }
 
     // --- !word add <mot> ---
-    if (cmd === '!word' && sub === 'add') {
+    if (cmd === '!mot' && sub === 'add') {
       const word = args.slice(2).join(' ').toLowerCase().trim();
-      if (!word) return message.reply('Usage : `!word add <mot>`');
+      if (!word) return message.reply('Usage : `!mot add <mot>`');
 
       const exists = await BadWord.findOne({ word });
       if (exists) return message.reply(`\`${word}\` est déjà dans la liste.`);
@@ -83,9 +83,9 @@ module.exports = (client) => {
     }
 
     // --- !word del <mot> ---
-    if (cmd === '!word' && (sub === 'del' || sub === 'remove')) {
+    if (cmd === '!mot' && (sub === 'del' || sub === 'remove')) {
       const word = args.slice(2).join(' ').toLowerCase().trim();
-      if (!word) return message.reply('Usage : `!word del <mot>`');
+      if (!word) return message.reply('Usage : `!mot del <mot>`');
 
       const deleted = await BadWord.findOneAndDelete({ word });
       if (!deleted) return message.reply(`❌ \`${word}\` n'est pas dans la liste.`);
@@ -96,7 +96,7 @@ module.exports = (client) => {
     }
 
     // --- !word setup — load default list ---
-    if (cmd === '!word' && sub === 'setup') {
+    if (cmd === '!mot' && sub === 'setup') {
       let added = 0;
       for (const w of DEFAULT_WORDS) {
         const exists = await BadWord.findOne({ word: w });
@@ -111,7 +111,7 @@ module.exports = (client) => {
     }
 
     // --- !word clear — wipe list ---
-    if (cmd === '!word' && sub === 'clear') {
+    if (cmd === '!mot' && sub === 'clear') {
       const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
       await message.reply('⚠️ Cela effacera **tous** les mots interdits. Réponds `CONFIRMER` dans les 20 secondes.');
       try {
@@ -129,11 +129,11 @@ module.exports = (client) => {
       '**Commandes automod :**\n' +
       '`!automod` — Voir le statut\n' +
       '`!automod on / off` — Activer / désactiver\n' +
-      '`!words` — Voir la liste des mots interdits\n' +
-      '`!word add <mot>` — Ajouter un mot\n' +
-      '`!word del <mot>` — Supprimer un mot\n' +
-      '`!word setup` — Charger la liste par défaut\n' +
-      '`!word clear` — Vider toute la liste'
+      '`!mots` — Voir la liste des mots interdits\n' +
+      '`!mot add <mot>` — Ajouter un mot\n' +
+      '`!mot del <mot>` — Supprimer un mot\n' +
+      '`!mot setup` — Charger la liste par défaut\n' +
+      '`!mot clear` — Vider toute la liste'
     );
   });
 };

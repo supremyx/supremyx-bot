@@ -9,7 +9,7 @@ function xpToLevel(xp) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!userinfo')) return;
+    if (!content.startsWith('!infouser')) return;
     if (!message.guild) return;
 
     const target = message.mentions.members.first() || message.member;

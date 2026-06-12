@@ -21,13 +21,13 @@ function buildEmbed(teamName, matches, page, totalPages) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!history')) return;
+    if (!message.content.startsWith('!historique')) return;
 
     const cd = checkCooldown(message.author.id, 'history', 10);
     if (cd) return replyCooldown(message, cd, 'history');
 
     const name = message.content.split(' ').slice(1).join(' ').trim();
-    if (!name) return message.reply('Usage : `!history <nom>`');
+    if (!name) return message.reply('Usage : `!historique <nom>`');
 
     const Team = require('../database/models/Team');
     const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });

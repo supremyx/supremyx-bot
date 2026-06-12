@@ -20,10 +20,10 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator');
 
     // --- !setlevelchannel #channel ---
-    if (content.startsWith('!setlevelchannel')) {
+    if (content.startsWith('!setchannelniveau')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!setlevelchannel #salon`');
+      if (!channel) return message.reply('Usage : `!setchannelniveau #salon`');
       await LevelConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { channelId: channel.id, enabled: true },
@@ -34,7 +34,7 @@ module.exports = (client) => {
     }
 
     // --- !levelboard / !xpleaderboard ---
-    if (content === '!levelboard' || content === '!xpleaderboard') {
+    if (content === '!classniveau' || content === '!classxp') {
       const cd = checkCooldown(message.author.id, 'levelboard', 15);
       if (cd) return message.reply(`⏳ Attends encore **${cd}s**.`);
 
@@ -56,7 +56,7 @@ module.exports = (client) => {
     }
 
     // --- !level [@user] ---
-    if (content.startsWith('!level')) {
+    if (content.startsWith('!niveau')) {
       const cd = checkCooldown(message.author.id, 'level', 5);
       if (cd) return message.reply(`⏳ Attends encore **${cd}s**.`);
 

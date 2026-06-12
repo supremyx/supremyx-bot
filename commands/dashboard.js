@@ -134,7 +134,7 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator');
 
     // --- !dashboard ---
-    if (cmd === '!dashboard') {
+    if (cmd === '!tableaudebord') {
       const sub = args[1]?.toLowerCase();
 
       // --- !dashboard (generate now) ---
@@ -144,7 +144,7 @@ module.exports = (client) => {
         return message.channel.send({ embeds });
       }
 
-      // --- !dashboard web — lien vers le dashboard classement ---
+      // --- !tableaudebord web — lien vers le dashboard classement ---
       if (sub === 'web') {
         const domain = (process.env.REPLIT_DOMAINS || '').split(',')[0].trim();
         const url    = domain ? `https://${domain}/dashboard/` : null;
@@ -166,10 +166,10 @@ module.exports = (client) => {
 
       if (!isStaff) return message.reply('Staff uniquement');
 
-      // --- !dashboard channel #salon ---
+      // --- !tableaudebord channel #salon ---
       if (sub === 'channel') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('Usage : `!dashboard channel #salon`');
+        if (!channel) return message.reply('Usage : `!tableaudebord channel #salon`');
         await DashboardConfig.findOneAndUpdate(
           { guildId: message.guild.id },
           { channelId: channel.id },
@@ -179,15 +179,15 @@ module.exports = (client) => {
         return message.reply(`✅ Dashboard automatique configuré dans <#${channel.id}>.`);
       }
 
-      // --- !dashboard auto on/off ---
+      // --- !tableaudebord auto on/off ---
       if (sub === 'auto') {
         const state = args[2]?.toLowerCase();
         if (!state || !['on', 'off'].includes(state))
-          return message.reply('Usage : `!dashboard auto on` ou `!dashboard auto off`');
+          return message.reply('Usage : `!tableaudebord auto on` ou `!tableaudebord auto off`');
 
         const cfg = await DashboardConfig.findOne({ guildId: message.guild.id });
         if (!cfg || !cfg.channelId)
-          return message.reply('❌ Configure d\'abord un salon avec `!dashboard channel #salon`.');
+          return message.reply('❌ Configure d\'abord un salon avec `!tableaudebord channel #salon`.');
 
         cfg.autoEnabled = state === 'on';
         await cfg.save();
@@ -200,11 +200,11 @@ module.exports = (client) => {
         );
       }
 
-      // --- !dashboard hour <0-23> ---
+      // --- !tableaudebord hour <0-23> ---
       if (sub === 'hour') {
         const hour = parseInt(args[2]);
         if (isNaN(hour) || hour < 0 || hour > 23)
-          return message.reply('Usage : `!dashboard hour <0-23>` — heure UTC de publication');
+          return message.reply('Usage : `!tableaudebord hour <0-23>` — heure UTC de publication');
 
         await DashboardConfig.findOneAndUpdate(
           { guildId: message.guild.id },
@@ -215,7 +215,7 @@ module.exports = (client) => {
         return message.reply(`✅ Publication automatique à **${hour}h UTC** chaque jour.`);
       }
 
-      // --- !dashboard status ---
+      // --- !tableaudebord status ---
       if (sub === 'status') {
         const cfg = await DashboardConfig.findOne({ guildId: message.guild.id });
         const embed = new EmbedBuilder()
@@ -226,19 +226,19 @@ module.exports = (client) => {
             { name: '🔘 Auto', value: cfg?.autoEnabled ? '✅ Activé' : '⛔ Désactivé', inline: true },
             { name: '🕐 Heure', value: cfg?.postHour !== undefined ? `**${cfg.postHour}h UTC**` : '*8h UTC*', inline: true }
           )
-          .setFooter({ text: '!dashboard now — générer immédiatement' })
+          .setFooter({ text: '!tableaudebord now — générer immédiatement' })
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 
       return message.reply(
-        '**Commandes `!dashboard` :**\n' +
-        '`!dashboard` — Générer le dashboard serveur maintenant\n' +
-        '`!dashboard web` — Lien vers le dashboard classement en ligne\n' +
-        '`!dashboard channel #salon` — Configurer le salon *(staff)*\n' +
-        '`!dashboard auto on / off` — Activer / désactiver la publication auto *(staff)*\n' +
-        '`!dashboard hour <0-23>` — Heure de publication (UTC) *(staff)*\n' +
-        '`!dashboard status` — Voir la configuration *(staff)*'
+        '**Commandes `!tableaudebord` :**\n' +
+        '`!tableaudebord` — Générer le dashboard serveur maintenant\n' +
+        '`!tableaudebord web` — Lien vers le dashboard classement en ligne\n' +
+        '`!tableaudebord channel #salon` — Configurer le salon *(staff)*\n' +
+        '`!tableaudebord auto on / off` — Activer / désactiver la publication auto *(staff)*\n' +
+        '`!tableaudebord hour <0-23>` — Heure de publication (UTC) *(staff)*\n' +
+        '`!tableaudebord status` — Voir la configuration *(staff)*'
       );
     }
   });

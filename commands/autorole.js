@@ -6,17 +6,17 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!autorole')) return;
+    if (!content.startsWith('!rolesauto')) return;
     if (!message.guild) return;
     if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
 
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !autorole set @role ---
+    // --- !rolesauto set @role ---
     if (sub === 'set') {
       const role = message.mentions.roles.first();
-      if (!role) return message.reply('Usage : `!autorole set @role`');
+      if (!role) return message.reply('Usage : `!rolesauto set @role`');
       await AutoroleConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { guildId: message.guild.id, roleId: role.id, enabled: true },
@@ -26,14 +26,14 @@ module.exports = (client) => {
       return message.reply(`✅ Le rôle **@${role.name}** sera attribué automatiquement aux nouveaux membres.`);
     }
 
-    // --- !autorole off ---
+    // --- !rolesauto off ---
     if (sub === 'off') {
       await AutoroleConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: false }, { upsert: true });
       logStaffAction(client, `🎭 **Autorole désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Autorole désactivé.');
     }
 
-    // --- !autorole on ---
+    // --- !rolesauto on ---
     if (sub === 'on') {
       await AutoroleConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: true }, { upsert: true });
       logStaffAction(client, `🎭 **Autorole activé** | Par : ${message.author.tag}`);
@@ -50,7 +50,7 @@ module.exports = (client) => {
         { name: '🔘 Statut', value: config?.enabled ? '✅ Activé' : '⛔ Désactivé', inline: true },
         { name: '🏷️ Rôle', value: role ? `@${role.name}` : 'Non configuré', inline: true }
       )
-      .setFooter({ text: 'Configure avec !autorole set @role' })
+      .setFooter({ text: 'Configure avec !rolesauto set @role' })
       .setTimestamp();
     return message.channel.send({ embeds: [embed] });
     } catch (err) {

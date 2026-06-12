@@ -11,11 +11,11 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // --- !clear <n> ---
-    if (cmd === '!clear') {
+    if (cmd === '!effacer') {
       if (!isStaff) return message.reply('Staff uniquement');
       const n = parseInt(args[1]);
       if (isNaN(n) || n < 1 || n > 100)
-        return message.reply('Usage : `!clear <1-100>`');
+        return message.reply('Usage : `!effacer <1-100>`');
       await message.delete().catch(() => {});
       const deleted = await message.channel.bulkDelete(n, true).catch(() => null);
       if (!deleted) return message.channel.send('❌ Impossible de supprimer (permission manquante).');
@@ -27,11 +27,11 @@ module.exports = (client) => {
     }
 
     // --- !slowmode <secondes> ---
-    if (cmd === '!slowmode') {
+    if (cmd === '!lenteur') {
       if (!isStaff) return message.reply('Staff uniquement');
       const seconds = parseInt(args[1]);
       if (isNaN(seconds) || seconds < 0 || seconds > 21600)
-        return message.reply('Usage : `!slowmode <0-21600>` (0 pour désactiver)');
+        return message.reply('Usage : `!lenteur <0-21600>` (0 pour désactiver)');
       await message.channel.setRateLimitPerUser(seconds).catch(() => null);
       if (seconds === 0) {
         message.reply('✅ Mode lent désactivé.');
@@ -43,12 +43,12 @@ module.exports = (client) => {
     }
 
     // --- !dm <@user> <message> ---
-    if (cmd === '!dm') {
+    if (cmd === '!mp') {
       if (!isStaff) return message.reply('Staff uniquement');
       const target = message.mentions.users.first();
       const text = args.slice(2).join(' ').trim();
       if (!target || !text)
-        return message.reply('Usage : `!dm @utilisateur <message>`');
+        return message.reply('Usage : `!mp @utilisateur <message>`');
       const sent = await target.createDM().then(dm => dm.send(`📩 **Message du staff :**\n${text}`)).catch(() => null);
       if (!sent) return message.reply('❌ Impossible d\'envoyer le DM (messages privés fermés).');
       message.reply(`✅ Message envoyé à **${target.tag}**.`);
@@ -57,13 +57,13 @@ module.exports = (client) => {
     }
 
     // --- !mute <@user> <durée en minutes> [raison] ---
-    if (cmd === '!mute') {
+    if (cmd === '!sourdine') {
       if (!isStaff) return message.reply('Staff uniquement');
       const target = message.mentions.members.first();
       const minutes = parseInt(args[2]);
       const reason = args.slice(3).join(' ') || 'Aucune raison précisée';
       if (!target || isNaN(minutes) || minutes < 1)
-        return message.reply('Usage : `!mute @utilisateur <minutes> [raison]`');
+        return message.reply('Usage : `!sourdine @utilisateur <minutes> [raison]`');
       if (minutes > 10080) return message.reply('❌ Durée maximum : 7 jours (10080 minutes).');
       await target.timeout(minutes * 60 * 1000, reason).catch(() => null);
       const embed = new EmbedBuilder()
@@ -83,10 +83,10 @@ module.exports = (client) => {
     }
 
     // --- !unmute <@user> ---
-    if (cmd === '!unmute') {
+    if (cmd === '!retablir') {
       if (!isStaff) return message.reply('Staff uniquement');
       const target = message.mentions.members.first();
-      if (!target) return message.reply('Usage : `!unmute @utilisateur`');
+      if (!target) return message.reply('Usage : `!retablir @utilisateur`');
       await target.timeout(null).catch(() => null);
       message.reply(`✅ **${target.user.tag}** n'est plus en sourdine.`);
       logStaffAction(client, `🔊 **Unmute** — \`${target.user.tag}\` | Par : ${message.author.tag}`);

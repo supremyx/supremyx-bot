@@ -16,7 +16,7 @@ module.exports = (client) => {
     const content = message.content.trim();
 
     // --- !coinflip ---
-    if (content === '!coinflip') {
+    if (content === '!pileface') {
       const result = Math.random() < 0.5 ? '🪙 **Pile !**' : '🪙 **Face !**';
       const embed = new EmbedBuilder()
         .setTitle('Pile ou Face')
@@ -28,22 +28,22 @@ module.exports = (client) => {
     }
 
     // --- !randteam [équipe1,équipe2,...] ---
-    if (content.startsWith('!randteam')) {
-      const raw = content.slice('!randteam'.length).trim();
+    if (content.startsWith('!tirageteam')) {
+      const raw = content.slice('!tirageteam'.length).trim();
       let teams = [];
 
       if (raw) {
         // Teams passed manually
         teams = raw.split(',').map(t => t.trim()).filter(Boolean);
         if (teams.length < 2) {
-          return message.reply('❌ Il faut au moins 2 équipes. Sépare-les par des virgules.\nExemple : `!randteam TeamA,TeamB,TeamC,TeamD`');
+          return message.reply('❌ Il faut au moins 2 équipes. Sépare-les par des virgules.\nExemple : `!tirageteam TeamA,TeamB,TeamC,TeamD`');
         }
       } else {
         // Pull registered teams from DB
         const dbTeams = await Team.find().select('name');
         teams = dbTeams.map(t => t.name);
         if (teams.length < 2) {
-          return message.reply('❌ Il faut au moins 2 équipes enregistrées, ou passe-les manuellement : `!randteam TeamA,TeamB,TeamC`');
+          return message.reply('❌ Il faut au moins 2 équipes enregistrées, ou passe-les manuellement : `!tirageteam TeamA,TeamB,TeamC`');
         }
       }
 

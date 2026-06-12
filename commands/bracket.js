@@ -33,9 +33,9 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!bracket')) return;
+    if (!content.startsWith('!tableau')) return;
 
-    const raw = content.slice('!bracket'.length).trim();
+    const raw = content.slice('!tableau'.length).trim();
     let teams = [];
 
     if (raw) {

@@ -13,7 +13,7 @@ function indicator(v1, v2) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (!message.content.startsWith('!compare')) return;
+    if (!message.content.startsWith('!comparer')) return;
     const cd = checkCooldown(message.author.id, 'compare', 5);
     if (cd) return replyCooldown(message, cd, 'compare');
 
@@ -25,7 +25,7 @@ module.exports = (client) => {
       const vsIndex = rest.findIndex(a => a.toLowerCase() === 'vs');
 
       if (vsIndex < 1 || vsIndex === rest.length - 1)
-        return message.reply('Usage : `!compare season <équipe1> vs <équipe2>`');
+        return message.reply('Usage : `!comparer season <équipe1> vs <équipe2>`');
 
       const name1 = rest.slice(0, vsIndex).join(' ').trim();
       const name2 = rest.slice(vsIndex + 1).join(' ').trim();
@@ -161,8 +161,8 @@ module.exports = (client) => {
     if (separator === -1 || separator === 0 || separator === args.length - 1)
       return message.reply(
         'Usage :\n' +
-        '`!compare <équipe1> vs <équipe2>` — Stats en direct\n' +
-        '`!compare season <équipe1> vs <équipe2>` — Historique des saisons'
+        '`!comparer <équipe1> vs <équipe2>` — Stats en direct\n' +
+        '`!comparer season <équipe1> vs <équipe2>` — Historique des saisons'
       );
 
     const name1 = args.slice(0, separator).join(' ');

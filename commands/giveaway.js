@@ -22,14 +22,14 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !giveaway <durée> <prix> ---
-    if (cmd === '!giveaway') {
+    if (cmd === '!concours') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const durationStr = args[1];
       const prize = args.slice(2).join(' ').trim();
 
       if (!durationStr || !prize)
-        return message.reply('Usage : `!giveaway <durée> <prix>`\nExemple : `!giveaway 10m Skin exclusif`\nUnités : s, m, h, j');
+        return message.reply('Usage : `!concours <durée> <prix>`\nExemple : `!concours 10m Skin exclusif`\nUnités : s, m, h, j');
 
       const duration = parseDuration(durationStr);
       if (!duration) return message.reply('❌ Durée invalide. Utilise : `10s`, `5m`, `2h`, `1j`');
@@ -90,10 +90,10 @@ module.exports = (client) => {
     }
 
     // --- !reroll <messageId> ---
-    if (cmd === '!reroll') {
+    if (cmd === '!retirer') {
       if (!isStaff) return message.reply('Staff uniquement');
       const msgId = args[1];
-      if (!msgId) return message.reply('Usage : `!reroll <messageId>`');
+      if (!msgId) return message.reply('Usage : `!retirer <messageId>`');
 
       const target = await message.channel.messages.fetch(msgId).catch(() => null);
       if (!target) return message.reply('❌ Message introuvable dans ce salon.');

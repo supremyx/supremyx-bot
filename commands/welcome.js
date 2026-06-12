@@ -45,20 +45,20 @@ module.exports = (client) => {
   // --- !welcome commands ---
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!welcome')) return;
+    if (!content.startsWith('!bienvenue')) return;
     if (!message.guild) return;
     if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
 
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !welcome set <message> ---
+    // --- !bienvenue set <message> ---
     if (sub === 'set') {
-      const text = content.slice('!welcome set'.length).trim();
+      const text = content.slice('!bienvenue set'.length).trim();
       if (!text) return message.reply(
-        'Usage : `!welcome set <message>`\n' +
+        'Usage : `!bienvenue set <message>`\n' +
         'Variables : `{user}` `{username}` `{server}` `{count}`\n' +
-        'Ex : `!welcome set Bienvenue {user} sur {server} ! Tu es notre {count}e membre.`'
+        'Ex : `!bienvenue set Bienvenue {user} sur {server} ! Tu es notre {count}e membre.`'
       );
       await WelcomeConfig.findOneAndUpdate(
         { guildId: message.guild.id },
@@ -69,10 +69,10 @@ module.exports = (client) => {
       return message.reply(`✅ Message de bienvenue mis à jour.`);
     }
 
-    // --- !welcome channel #salon ---
+    // --- !bienvenue channel #salon ---
     if (sub === 'channel') {
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!welcome channel #salon`');
+      if (!channel) return message.reply('Usage : `!bienvenue channel #salon`');
       await WelcomeConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { $set: { channelId: channel.id, enabled: true } },
@@ -82,10 +82,10 @@ module.exports = (client) => {
       return message.reply(`✅ Les messages de bienvenue iront dans <#${channel.id}>.`);
     }
 
-    // --- !welcome test ---
+    // --- !bienvenue test ---
     if (sub === 'test') {
       const config = await WelcomeConfig.findOne({ guildId: message.guild.id });
-      if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!welcome channel #salon`.');
+      if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!bienvenue channel #salon`.');
       const channel = message.guild.channels.cache.get(config.channelId);
       if (!channel) return message.reply('❌ Salon introuvable.');
       const text = applyTemplate(config.message, message.member);
@@ -99,14 +99,14 @@ module.exports = (client) => {
       return message.reply(`✅ Message de bienvenue test envoyé dans <#${channel.id}>.`);
     }
 
-    // --- !welcome off ---
+    // --- !bienvenue off ---
     if (sub === 'off') {
       await WelcomeConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: false }, { upsert: true });
       logStaffAction(client, `👋 **Welcome désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Messages de bienvenue désactivés.');
     }
 
-    // --- !welcome on ---
+    // --- !bienvenue on ---
     if (sub === 'on') {
       await WelcomeConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: true }, { upsert: true });
       logStaffAction(client, `👋 **Welcome activé** | Par : ${message.author.tag}`);

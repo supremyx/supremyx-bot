@@ -3,14 +3,14 @@ const { staffLog } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!announce')) return;
+    if (!message.content.startsWith('!annonce')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');
 
     const text = message.content.split(' ').slice(1).join(' ').trim();
-    if (!text) return message.reply('Usage : `!announce <message>`');
+    if (!text) return message.reply('Usage : `!annonce <message>`');
 
     const channelId = process.env.ANNOUNCE_CHANNEL_ID;
     if (!channelId)

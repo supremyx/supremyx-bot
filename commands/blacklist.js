@@ -7,23 +7,23 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!blacklist')) return;
+    if (!content.startsWith('!listenoiree')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !blacklist add <cible> | <raison> ---
+    // --- !listenoiree add <cible> | <raison> ---
     if (sub === 'add') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const raw = content.slice('!blacklist add'.length).trim();
+      const raw = content.slice('!listenoiree add'.length).trim();
       const pipeIdx = raw.indexOf('|');
       const target = (pipeIdx >= 0 ? raw.slice(0, pipeIdx) : raw).trim();
       const reason = (pipeIdx >= 0 ? raw.slice(pipeIdx + 1) : '').trim() || 'Aucune raison précisée';
 
-      if (!target) return message.reply('Usage : `!blacklist add <équipe ou joueur> | <raison>`');
+      if (!target) return message.reply('Usage : `!listenoiree add <équipe ou joueur> | <raison>`');
 
       const existing = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (existing) return message.reply(`⚠️ **${target}** est déjà dans la blacklist.`);
@@ -44,12 +44,12 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !blacklist remove <cible> ---
+    // --- !listenoiree remove <cible> ---
     if (sub === 'remove' || sub === 'del') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const target = args.slice(2).join(' ').trim();
-      if (!target) return message.reply('Usage : `!blacklist remove <équipe ou joueur>`');
+      if (!target) return message.reply('Usage : `!listenoiree remove <équipe ou joueur>`');
 
       const deleted = await Blacklist.findOneAndDelete({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (!deleted) return message.reply(`❌ **${target}** n'est pas dans la blacklist.`);
@@ -58,7 +58,7 @@ module.exports = (client) => {
       return message.reply(`✅ **${deleted.target}** retiré de la blacklist.`);
     }
 
-    // --- !blacklist list ---
+    // --- !listenoiree list ---
     if (!sub || sub === 'list') {
       const entries = await Blacklist.find().sort({ createdAt: -1 });
       if (!entries.length) return message.reply('✅ La blacklist est vide.');
@@ -80,10 +80,10 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !blacklist check <cible> ---
+    // --- !listenoiree check <cible> ---
     if (sub === 'check') {
       const target = args.slice(2).join(' ').trim();
-      if (!target) return message.reply('Usage : `!blacklist check <équipe ou joueur>`');
+      if (!target) return message.reply('Usage : `!listenoiree check <équipe ou joueur>`');
 
       const entry = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (!entry) return message.reply(`✅ **${target}** n'est pas dans la blacklist.`);
@@ -103,11 +103,11 @@ module.exports = (client) => {
     }
 
     message.reply(
-      '**Commandes `!blacklist` :**\n' +
-      '`!blacklist add <cible> | <raison>` — Ajouter *(staff)*\n' +
-      '`!blacklist remove <cible>` — Retirer *(staff)*\n' +
-      '`!blacklist list` — Voir toute la blacklist\n' +
-      '`!blacklist check <cible>` — Vérifier une cible'
+      '**Commandes `!listenoiree` :**\n' +
+      '`!listenoiree add <cible> | <raison>` — Ajouter *(staff)*\n' +
+      '`!listenoiree remove <cible>` — Retirer *(staff)*\n' +
+      '`!listenoiree list` — Voir toute la blacklist\n' +
+      '`!listenoiree check <cible>` — Vérifier une cible'
     );
     } catch (err) {
       console.error('[blacklist] Erreur:', err);

@@ -15,10 +15,10 @@ const KEY_PERMS = [
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!roleinfo')) return;
+    if (!content.startsWith('!inforole')) return;
 
     const role = message.mentions.roles.first();
-    if (!role) return message.reply('Usage : `!roleinfo @role`');
+    if (!role) return message.reply('Usage : `!inforole @role`');
 
     await message.guild.members.fetch().catch(() => {});
     const memberCount = message.guild.members.cache.filter(m => m.roles.cache.has(role.id)).size;

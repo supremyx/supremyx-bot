@@ -27,7 +27,7 @@ module.exports = (client) => {
     const cacheKey = `${guildId}:${message.author.id}`;
 
     // --- Remove AFK when user sends a message ---
-    if (!content.startsWith('!afk') && afkCache.has(cacheKey)) {
+    if (!content.startsWith('!absent') && afkCache.has(cacheKey)) {
       afkCache.delete(cacheKey);
       await AfkStatus.deleteOne({ guildId, userId: message.author.id }).catch(() => {});
       const reply = await message.reply('✅ Ton statut AFK a été retiré. Bienvenue de retour !');
@@ -36,7 +36,7 @@ module.exports = (client) => {
     }
 
     // --- Mention detection: notify if mentioned user is AFK ---
-    if (message.mentions.users.size > 0 && !content.startsWith('!afk')) {
+    if (message.mentions.users.size > 0 && !content.startsWith('!absent')) {
       for (const [, user] of message.mentions.users) {
         const key = `${guildId}:${user.id}`;
         if (afkCache.has(key) && user.id !== message.author.id) {
@@ -49,8 +49,8 @@ module.exports = (client) => {
     }
 
     // --- !afk [message] ---
-    if (content.startsWith('!afk')) {
-      const afkMsg = content.slice('!afk'.length).trim() || 'AFK';
+    if (content.startsWith('!absent')) {
+      const afkMsg = content.slice('!absent'.length).trim() || 'AFK';
       const since = new Date();
 
       await AfkStatus.findOneAndUpdate(

@@ -5,7 +5,7 @@ const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!export')) return;
+    if (!message.content.startsWith('!exporter')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
@@ -75,6 +75,6 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed], files: [file] });
     }
 
-    message.reply('Usage : `!export` — classement\n`!export matchs` — historique des matchs');
+    message.reply('Usage : `!exporter` — classement\n`!exporter matchs` — historique des matchs');
   });
 };

@@ -17,7 +17,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!setcooldown') && !content.startsWith('!cooldowns') && !content.startsWith('!delcooldown')) return;
+    if (!content.startsWith('!setdelai') && !content.startsWith('!delais') && !content.startsWith('!suppdelai')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
@@ -27,7 +27,7 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // --- !cooldowns --- list all
-    if (cmd === '!cooldowns') {
+    if (cmd === '!delais') {
       const overrides = await CooldownConfig.find().sort({ command: 1 });
       const overrideMap = Object.fromEntries(overrides.map(o => [o.command, o.seconds]));
 
@@ -45,19 +45,19 @@ module.exports = (client) => {
       });
 
       embed.setDescription(rows.join('\n'));
-      embed.setFooter({ text: 'Modifie avec !setcooldown <commande> <secondes> • 0 = sans cooldown' });
+      embed.setFooter({ text: 'Modifie avec !setdelai <commande> <secondes> • 0 = sans cooldown' });
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !setcooldown <commande> <secondes> ---
-    if (cmd === '!setcooldown') {
+    // --- !setdelai <commande> <secondes> ---
+    if (cmd === '!setdelai') {
       const commandName = args[1]?.toLowerCase().replace(/^!/, '');
       const seconds = parseInt(args[2]);
 
       if (!commandName || isNaN(seconds) || seconds < 0)
         return message.reply(
-          'Usage : `!setcooldown <commande> <secondes>`\n' +
-          'Exemple : `!setcooldown ranking 30` — 30s entre chaque `!ranking`\n' +
+          'Usage : `!setdelai <commande> <secondes>`\n' +
+          'Exemple : `!setdelai ranking 30` — 30s entre chaque `!ranking`\n' +
           'Utilise `0` pour désactiver le cooldown d\'une commande.'
         );
 
@@ -77,9 +77,9 @@ module.exports = (client) => {
     }
 
     // --- !delcooldown <commande> --- reset to default
-    if (cmd === '!delcooldown') {
+    if (cmd === '!suppdelai') {
       const commandName = args[1]?.toLowerCase().replace(/^!/, '');
-      if (!commandName) return message.reply('Usage : `!delcooldown <commande>`');
+      if (!commandName) return message.reply('Usage : `!suppdelai <commande>`');
 
       const deleted = await CooldownConfig.findOneAndDelete({ command: commandName });
       if (!deleted) return message.reply(`❌ Aucun cooldown personnalisé pour \`!${commandName}\`. Il utilise déjà la valeur par défaut.`);

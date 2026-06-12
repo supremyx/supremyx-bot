@@ -8,7 +8,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!newseason') && !content.startsWith('!endseason') && !content.startsWith('!saisons') && !content.startsWith('!leaderboard')) return;
+    if (!content.startsWith('!nouvellesaison') && !content.startsWith('!finersaison') && !content.startsWith('!saisons') && !content.startsWith('!palmares')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');
@@ -16,11 +16,11 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // --- !newseason <nom> ---
-    if (cmd === '!newseason') {
+    if (cmd === '!nouvellesaison') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const name = args.slice(1).join(' ').trim();
-      if (!name) return message.reply('Usage : `!newseason <nom de la saison>`\nExemple : `!newseason Saison 2`');
+      if (!name) return message.reply('Usage : `!nouvellesaison <nom de la saison>`\nExemple : `!nouvellesaison Saison 2`');
 
       const existing = await Season.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (existing) return message.reply(`❌ Une saison nommée **${name}** existe déjà.`);
@@ -52,7 +52,7 @@ module.exports = (client) => {
     }
 
     // --- !endseason ---
-    if (cmd === '!endseason') {
+    if (cmd === '!finersaison') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const activeSeason = await Season.findOne({ active: true });
@@ -116,7 +116,7 @@ module.exports = (client) => {
     }
 
     // --- !leaderboard [nom de saison] ---
-    if (cmd === '!leaderboard') {
+    if (cmd === '!palmares') {
       const seasonName = args.slice(1).join(' ').trim();
 
       // Historical season

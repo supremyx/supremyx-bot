@@ -11,14 +11,14 @@ function parseDuration(str) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!remind')) return;
+    if (!message.content.startsWith('!rappel')) return;
 
     const args = message.content.trim().split(' ');
     const durationStr = args[1];
     const text = args.slice(2).join(' ').trim();
 
     if (!durationStr || !text)
-      return message.reply('Usage : `!remind <durée> <message>`\nExemple : `!remind 30m Lancer le match`\nUnités : s, m, h');
+      return message.reply('Usage : `!rappel <durée> <message>`\nExemple : `!rappel 30m Lancer le match`\nUnités : s, m, h');
 
     const duration = parseDuration(durationStr);
     if (!duration) return message.reply('❌ Durée invalide. Utilise : `30s`, `10m`, `2h`');

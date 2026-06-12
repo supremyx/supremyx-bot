@@ -4,13 +4,13 @@ const { logStaffAction } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!embed')) return;
+    if (!content.startsWith('!messageembed')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');
 
-    const rest = content.slice('!embed'.length).trim();
+    const rest = content.slice('!messageembed'.length).trim();
 
     if (!rest) {
       return message.reply(

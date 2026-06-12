@@ -10,7 +10,7 @@ const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!addmatch')) return;
+    if (!message.content.startsWith('!ajoutermatch')) return;
     if (!message.guild) return;
     if (!message.member) return;
 
@@ -24,7 +24,7 @@ module.exports = (client) => {
       const kills = parseInt(args[3]);
 
       if (!name || isNaN(placement) || isNaN(kills))
-        return message.reply('Usage : `!addmatch <nom> <placement> <kills>`');
+        return message.reply('Usage : `!ajoutermatch <nom> <placement> <kills>`');
 
       if (placement < 1 || placement > 100)
         return message.reply('❌ Le placement doit être entre **1** et **100**.');

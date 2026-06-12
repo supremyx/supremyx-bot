@@ -4,14 +4,14 @@ const Blacklist = require('../database/models/Blacklist');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (!message.content.startsWith('!register')) return;
+    if (!message.content.startsWith('!enregistrer')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');
 
     const name = message.content.split(' ').slice(1).join(' ').trim();
-    if (!name) return message.reply('Usage : `!register <nom équipe>`');
+    if (!name) return message.reply('Usage : `!enregistrer <nom équipe>`');
 
     const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${name}$`, 'i') } });
     if (blacklisted) {

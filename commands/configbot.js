@@ -43,14 +43,14 @@ module.exports = (client) => {
     }
 
     // --- !setpointssystem <p1:pts> <p2:pts> ... [kill:<pts>] ---
-    if (cmd === '!setpointssystem') {
+    if (cmd === '!setpoints') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const pairs = args.slice(1);
       if (!pairs.length)
         return message.reply(
-          'Usage : `!setpointssystem <place:pts> ... [kill:<pts>]`\n' +
-          'Exemple : `!setpointssystem 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
+          'Usage : `!setpoints <place:pts> ... [kill:<pts>]`\n' +
+          'Exemple : `!setpoints 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
         );
 
       const config = await getOrCreateConfig();

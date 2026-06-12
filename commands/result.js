@@ -28,7 +28,7 @@ async function getResultChannel(client, guild) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!result')) return;
+    if (!message.content.startsWith('!resultats')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
 
@@ -42,7 +42,7 @@ module.exports = (client) => {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const target = message.mentions.channels.first() ||
                      (args[1] ? message.guild.channels.cache.get(args[1]) : null);
-      if (!target) return message.reply('Usage : `!result channel #salon`');
+      if (!target) return message.reply('Usage : `!resultats channel #salon`');
 
       await ResultConfig.findOneAndUpdate(
         { guildId: message.guild.id },
@@ -70,8 +70,8 @@ module.exports = (client) => {
 
       if (!scheduleId || !teamArgs.length)
         return message.reply(
-          '**Usage :** `!result from <scheduleId> <équipe:placement:kills> [équipe:placement:kills ...]`\n' +
-          '**Exemple :** `!result from 6641abc TeamA:1:8 TeamB:3:5 TeamC:5:2`'
+          '**Usage :** `!resultats from <scheduleId> <équipe:placement:kills> [équipe:placement:kills ...]`\n' +
+          '**Exemple :** `!resultats from 6641abc TeamA:1:8 TeamB:3:5 TeamC:5:2`'
         );
 
       const scheduled = await Schedule.findById(scheduleId).catch(() => null);
@@ -90,18 +90,18 @@ module.exports = (client) => {
 
     // ─── Help ─────────────────────────────────────────────────────
     return message.reply([
-      '**Commandes `!result` :**',
+      '**Commandes `!resultats` :**',
       '',
       '**Poster des résultats (plusieurs équipes d\'un coup) :**',
-      '`!result <eq:placement:kills> [eq:placement:kills ...]`',
-      '`!result TeamA:1:8 TeamB:3:5 TeamC:5:2`',
+      '`!resultats <eq:placement:kills> [eq:placement:kills ...]`',
+      '`!resultats TeamA:1:8 TeamB:3:5 TeamC:5:2`',
       '',
       '**Lier à un match planifié :**',
-      '`!result from <scheduleId> <eq:placement:kills> [...]`',
+      '`!resultats from <scheduleId> <eq:placement:kills> [...]`',
       '',
       '**Configuration :**',
-      '`!result channel #salon` — Salon pour les résultats *(staff)*',
-      '`!result status` — Voir la configuration *(staff)*',
+      '`!resultats channel #salon` — Salon pour les résultats *(staff)*',
+      '`!resultats status` — Voir la configuration *(staff)*',
     ].join('\n'));
   });
 };

@@ -31,7 +31,7 @@ async function getConfig(guildId) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!schedule')) return;
+    if (!message.content.startsWith('!calendrier')) return;
     if (!message.guild) return;
 
     const args    = message.content.split(' ').slice(1);
@@ -87,8 +87,8 @@ module.exports = (client) => {
 
       if (!dateStr || !timeStr || !teamsRaw)
         return message.reply(
-          '**Usage :** `!schedule add <DD/MM/YYYY> <HH:MM> <equipe1,equipe2,...> [note]`\n' +
-          '**Exemple :** `!schedule add 15/06/2025 20:00 TeamA,TeamB Match de poules`'
+          '**Usage :** `!calendrier add <DD/MM/YYYY> <HH:MM> <equipe1,equipe2,...> [note]`\n' +
+          '**Exemple :** `!calendrier add 15/06/2025 20:00 TeamA,TeamB Match de poules`'
         );
 
       const date = parseDateTime(dateStr, timeStr);
@@ -132,7 +132,7 @@ module.exports = (client) => {
       const timeStr = args[3];
 
       if (!id || !dateStr || !timeStr)
-        return message.reply('**Usage :** `!schedule edit <id> <DD/MM/YYYY> <HH:MM> [equipe1,equipe2] [note]`');
+        return message.reply('**Usage :** `!calendrier edit <id> <DD/MM/YYYY> <HH:MM> [equipe1,equipe2] [note]`');
 
       const match = await Schedule.findById(id).catch(() => null);
       if (!match) return message.reply('❌ Match introuvable avec cet ID.');
@@ -158,7 +158,7 @@ module.exports = (client) => {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const id = args[1];
-      if (!id) return message.reply('Usage : `!schedule delete <id>`');
+      if (!id) return message.reply('Usage : `!calendrier delete <id>`');
 
       const deleted = await Schedule.findByIdAndDelete(id).catch(() => null);
       if (!deleted) return message.reply('❌ Aucun match trouvé avec cet ID.');
@@ -179,7 +179,7 @@ module.exports = (client) => {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const target = message.mentions.channels.first() || (args[1] ? message.guild.channels.cache.get(args[1]) : null);
-      if (!target) return message.reply('Usage : `!schedule channel #salon`');
+      if (!target) return message.reply('Usage : `!calendrier channel #salon`');
 
       await ScheduleConfig.findOneAndUpdate(
         { guildId: message.guild.id },
@@ -198,7 +198,7 @@ module.exports = (client) => {
       const type   = args[2]?.toLowerCase(); // 24h | 1h | 15m | all
 
       if (!action || !['on', 'off'].includes(action))
-        return message.reply('Usage : `!schedule remind <on|off> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
+        return message.reply('Usage : `!calendrier remind <on|off> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
 
       const enabled = action === 'on';
       const cfg     = await getConfig(message.guild.id);
@@ -240,15 +240,15 @@ module.exports = (client) => {
 
     // ─── Help ─────────────────────────────────────────────────────
     return message.reply([
-      '**Commandes `!schedule` :**',
-      '`!schedule` — Liste les matchs à venir',
-      '`!schedule add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Ajouter *(staff)*',
-      '`!schedule edit <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note]` — Modifier *(staff)*',
-      '`!schedule delete <id>` — Supprimer *(staff)*',
-      '`!schedule clear` — Supprimer les matchs passés *(staff)*',
-      '`!schedule channel #salon` — Définir le salon des rappels *(staff)*',
-      '`!schedule remind <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
-      '`!schedule status` — Voir la configuration *(staff)*',
+      '**Commandes `!calendrier` :**',
+      '`!calendrier` — Liste les matchs à venir',
+      '`!calendrier add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Ajouter *(staff)*',
+      '`!calendrier edit <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note]` — Modifier *(staff)*',
+      '`!calendrier delete <id>` — Supprimer *(staff)*',
+      '`!calendrier clear` — Supprimer les matchs passés *(staff)*',
+      '`!calendrier channel #salon` — Définir le salon des rappels *(staff)*',
+      '`!calendrier remind <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
+      '`!calendrier status` — Voir la configuration *(staff)*',
     ].join('\n'));
   });
 };

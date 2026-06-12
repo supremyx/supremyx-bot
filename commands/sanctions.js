@@ -132,10 +132,10 @@ module.exports = (client) => {
     // =========================================================
     // !clearactions @user — clear all sanctions (staff)
     // =========================================================
-    if (cmd === '!clearactions') {
+    if (cmd === '!effaceractions') {
       if (!isStaff) return message.reply('Staff uniquement');
       const target = message.mentions.users.first();
-      if (!target) return message.reply('Usage : `!clearactions @user`');
+      if (!target) return message.reply('Usage : `!effaceractions @user`');
 
       const result = await Sanction.deleteMany({ guildId: message.guild.id, userId: target.id });
       logStaffAction(client, `🗑️ **Sanctions effacées** — \`${target.tag}\` (${result.deletedCount}) | Par : ${message.author.tag}`);

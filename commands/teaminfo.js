@@ -15,12 +15,12 @@ module.exports = (client) => {
     if (message.author.bot) return;
 
     const content = message.content.trim();
-    if (!content.startsWith('!teaminfo')) return;
+    if (!content.startsWith('!infoequipe')) return;
 
     const cd = checkCooldown(message.author.id, 'teaminfo', 8);
     if (cd) return replyCooldown(message, cd, 'teaminfo');
 
-    const name = content.slice('!teaminfo'.length).trim();
+    const name = content.slice('!infoequipe'.length).trim();
     if (!name)
       return message.reply('Usage : `!teaminfo <nom équipe>`');
 
@@ -77,7 +77,7 @@ module.exports = (client) => {
         { name: `👥 Roster (${roster?.members.length ?? 0} membre${(roster?.members.length ?? 0) !== 1 ? 's' : ''})`,
           value: rosterLine, inline: false }
       )
-      .setFooter({ text: 'SUPREMYX CI · !stats pour stats détaillées · !roster pour le roster complet' })
+      .setFooter({ text: 'SUPREMYX CI · !stats pour stats détaillées · !liste pour le roster complet' })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

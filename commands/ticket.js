@@ -111,7 +111,7 @@ module.exports = (client) => {
     // =========================================================
     // !ticketconfig
     // =========================================================
-    if (cmd === '!ticketconfig') {
+    if (cmd === '!configticket') {
       if (!isStaff) return message.reply('Staff uniquement');
       const sub = args[1]?.toLowerCase();
       const cfg = await getConfig(message.guild.id);
@@ -127,9 +127,9 @@ module.exports = (client) => {
           )
           .setDescription(
             '**Commandes de configuration :**\n' +
-            '`!ticketconfig staffrole @role` — Rôle qui voit tous les tickets\n' +
-            '`!ticketconfig transcript #salon` — Salon pour les transcripts\n' +
-            '`!ticketconfig category <id>` — Catégorie Discord pour les salons ticket'
+            '`!configticket staffrole @role` — Rôle qui voit tous les tickets\n' +
+            '`!configticket transcript #salon` — Salon pour les transcripts\n' +
+            '`!configticket category <id>` — Catégorie Discord pour les salons ticket'
           )
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
@@ -137,7 +137,7 @@ module.exports = (client) => {
 
       if (sub === 'staffrole') {
         const role = message.mentions.roles.first();
-        if (!role) return message.reply('Usage : `!ticketconfig staffrole @role`');
+        if (!role) return message.reply('Usage : `!configticket staffrole @role`');
         cfg.staffRoleId = role.id;
         await cfg.save();
         logStaffAction(client, `🎫 **Ticket staffrole** → @${role.name} | Par : ${message.author.tag}`);
@@ -146,7 +146,7 @@ module.exports = (client) => {
 
       if (sub === 'transcript') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('Usage : `!ticketconfig transcript #salon`');
+        if (!channel) return message.reply('Usage : `!configticket transcript #salon`');
         cfg.transcriptChannelId = channel.id;
         await cfg.save();
         logStaffAction(client, `🎫 **Ticket transcript** → <#${channel.id}> | Par : ${message.author.tag}`);
@@ -155,7 +155,7 @@ module.exports = (client) => {
 
       if (sub === 'category') {
         const categoryId = args[2];
-        if (!categoryId) return message.reply('Usage : `!ticketconfig category <id>` — Copie l\'ID de la catégorie Discord (mode développeur)');
+        if (!categoryId) return message.reply('Usage : `!configticket category <id>` — Copie l\'ID de la catégorie Discord (mode développeur)');
         const category = message.guild.channels.cache.get(categoryId);
         if (!category || category.type !== ChannelType.GuildCategory)
           return message.reply('❌ Catégorie introuvable. Vérifie l\'ID (catégorie Discord, pas un salon).');
@@ -203,7 +203,7 @@ module.exports = (client) => {
 
       // One open ticket at a time
       const existing = await Ticket.findOne({ userId: message.author.id, closed: false });
-      if (existing) return message.reply(`Tu as déjà un ticket ouvert : <#${existing.channelId}>\nFerme-le d'abord avec \`!close\`.`);
+      if (existing) return message.reply(`Tu as déjà un ticket ouvert : <#${existing.channelId}>\nFerme-le d'abord avec \`!fermer\`.`);
 
       const cfg = await getConfig(message.guild.id);
       const safeName = message.author.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || 'membre';
@@ -238,10 +238,10 @@ module.exports = (client) => {
           (subject ? `**Sujet :** ${subject}\n\n` : '') +
           'Décris ton problème en détail, le staff arrivera dès que possible.\n\n' +
           '**Commandes disponibles ici :**\n' +
-          '`!close` — Fermer ce ticket\n' +
-          '`!resolve` — Marquer comme résolu *(staff)*\n' +
-          '`!claim` — Prendre en charge *(staff)*\n' +
-          '`!adduser @user` — Ajouter un membre *(staff)*'
+          '`!fermer` — Fermer ce ticket\n' +
+          '`!resoudre` — Marquer comme résolu *(staff)*\n' +
+          '`!prendre` — Prendre en charge *(staff)*\n' +
+          '`!ajouteruser @user` — Ajouter un membre *(staff)*'
         )
         .addFields({ name: '📌 Statut', value: STATUS_LABELS.ouvert, inline: true })
         .setFooter({ text: `Ouvert par ${message.author.tag}` })
@@ -283,7 +283,7 @@ module.exports = (client) => {
     // =========================================================
     // !claim — claim the current ticket (staff, inside ticket channel)
     // =========================================================
-    if (cmd === '!claim') {
+    if (cmd === '!prendre') {
       if (!isStaff) return message.reply('Staff uniquement');
       const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
       if (!ticket) return;
@@ -305,7 +305,7 @@ module.exports = (client) => {
     // =========================================================
     // !resolve — mark ticket as resolved (staff)
     // =========================================================
-    if (cmd === '!resolve') {
+    if (cmd === '!resoudre') {
       if (!isStaff) return message.reply('Staff uniquement');
       const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
       if (!ticket) return;
@@ -315,7 +315,7 @@ module.exports = (client) => {
 
       const embed = new EmbedBuilder()
         .setColor(0x57F287)
-        .setDescription(`✅ Ce ticket a été marqué comme **résolu** par **${message.author}**.\nTape \`!close\` pour le fermer définitivement.`)
+        .setDescription(`✅ Ce ticket a été marqué comme **résolu** par **${message.author}**.\nTape \`!fermer\` pour le fermer définitivement.`)
         .setTimestamp();
 
       logStaffAction(client, `🎫 **Ticket résolu** — \`${ticket.userTag}\` | Par : ${message.author.tag}`);
@@ -325,13 +325,13 @@ module.exports = (client) => {
     // =========================================================
     // !adduser @user — add a member to the current ticket (staff)
     // =========================================================
-    if (cmd === '!adduser') {
+    if (cmd === '!ajouteruser') {
       if (!isStaff) return message.reply('Staff uniquement');
       const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
       if (!ticket) return;
 
       const target = message.mentions.members.first();
-      if (!target) return message.reply('Usage : `!adduser @user`');
+      if (!target) return message.reply('Usage : `!ajouteruser @user`');
 
       await message.channel.permissionOverwrites.edit(target.id, {
         ViewChannel: true,
@@ -346,7 +346,7 @@ module.exports = (client) => {
     // =========================================================
     // !close — close current ticket
     // =========================================================
-    if (cmd === '!close') {
+    if (cmd === '!fermer') {
       const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
       if (!ticket) return;
 

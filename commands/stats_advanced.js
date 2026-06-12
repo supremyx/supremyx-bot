@@ -17,9 +17,9 @@ module.exports = (client) => {
     const cmd = args[0].toLowerCase();
 
     // --- !streak <équipe> ---
-    if (cmd === '!streak') {
+    if (cmd === '!serie') {
       const name = args.slice(1).join(' ').trim();
-      if (!name) return message.reply('Usage : `!streak <nom équipe>`');
+      if (!name) return message.reply('Usage : `!serie <nom équipe>`');
 
       const matches = await Match.find({ team: { $regex: new RegExp(`^${name}$`, 'i') } }).sort({ createdAt: -1 });
       if (!matches.length) return message.reply(`Aucun match trouvé pour **${name}**.`);
@@ -53,11 +53,11 @@ module.exports = (client) => {
     }
 
     // --- !calc <placement> <kills> ---
-    if (cmd === '!calc') {
+    if (cmd === '!calculer') {
       const placement = parseInt(args[1]);
       const kills = parseInt(args[2]);
       if (isNaN(placement) || isNaN(kills))
-        return message.reply('Usage : `!calc <placement> <kills>`\nExemple : `!calc 2 5`');
+        return message.reply('Usage : `!calculer <placement> <kills>`\nExemple : `!calculer 2 5`');
 
       const config = await Config.findOne();
       const ptMap = config?.pointSystem || new Map([['1',12],['2',9],['3',7],['4',5],['5',4],['6',3],['7',2],['8',1]]);
@@ -79,9 +79,9 @@ module.exports = (client) => {
     }
 
     // --- !consistency <équipe> ---
-    if (cmd === '!consistency') {
+    if (cmd === '!regularite') {
       const name = args.slice(1).join(' ').trim();
-      if (!name) return message.reply('Usage : `!consistency <nom équipe>`');
+      if (!name) return message.reply('Usage : `!regularite <nom équipe>`');
 
       const matches = await Match.find({ team: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (matches.length < 2) return message.reply(`Il faut au moins 2 matchs pour calculer la régularité de **${name}**.`);
@@ -114,9 +114,9 @@ module.exports = (client) => {
     }
 
     // --- !h2h <equipe1> vs <equipe2> ---
-    if (cmd === '!h2h') {
+    if (cmd === '!faceatface') {
       const vsIndex = args.findIndex(a => a.toLowerCase() === 'vs');
-      if (vsIndex < 2) return message.reply('Usage : `!h2h <equipe1> vs <equipe2>`');
+      if (vsIndex < 2) return message.reply('Usage : `!faceatface <equipe1> vs <equipe2>`');
 
       const team1 = args.slice(1, vsIndex).join(' ').trim();
       const team2 = args.slice(vsIndex + 1).join(' ').trim();

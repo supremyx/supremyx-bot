@@ -15,7 +15,7 @@ function run(cmd, cwd) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!changelog')) return;
+    if (!content.startsWith('!journal')) return;
     if (!message.guild) return;
 
     if (!message.member.permissions.has('Administrator'))

@@ -12,7 +12,7 @@ function emojiKey(raw) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!reactionrole')) return;
+    if (!content.startsWith('!rolereaction')) return;
     if (!message.guild) return;
 
     const isStaff = message.member.permissions.has('Administrator');

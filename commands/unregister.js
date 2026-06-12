@@ -5,14 +5,14 @@ const { staffLog } = require('../utils/staffLog');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (message.content.startsWith('!unregister')) {
+    if (message.content.startsWith('!desenregistrer')) {
       if (!message.guild) return;
 
       if (!message.member.permissions.has('Administrator'))
         return message.reply('Staff uniquement');
 
       const name = message.content.split(' ').slice(1).join(' ').trim();
-      if (!name) return message.reply('Usage : `!unregister <nom équipe>`');
+      if (!name) return message.reply('Usage : `!desenregistrer <nom équipe>`');
 
       const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');

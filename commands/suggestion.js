@@ -9,10 +9,10 @@ module.exports = (client) => {
     if (!message.guild) return;
 
     // --- !setsuggestion #channel ---
-    if (content.startsWith('!setsuggestion')) {
+    if (content.startsWith('!configsuggestion')) {
       if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!setsuggestion #salon`');
+      if (!channel) return message.reply('Usage : `!configsuggestion #salon`');
       await SuggestionConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { guildId: message.guild.id, channelId: channel.id },
@@ -28,10 +28,10 @@ module.exports = (client) => {
       if (!text) return message.reply('Usage : `!suggestion <ton idée>`');
 
       const config = await SuggestionConfig.findOne({ guildId: message.guild.id });
-      if (!config) return message.reply('❌ Aucun salon de suggestions configuré. Un staff doit utiliser `!setsuggestion #salon`.');
+      if (!config) return message.reply('❌ Aucun salon de suggestions configuré. Un staff doit utiliser `!configsuggestion #salon`.');
 
       const suggChannel = message.guild.channels.cache.get(config.channelId);
-      if (!suggChannel) return message.reply('❌ Salon de suggestions introuvable. Reconfigurez avec `!setsuggestion`.');
+      if (!suggChannel) return message.reply('❌ Salon de suggestions introuvable. Reconfigurez avec `!configsuggestion`.');
 
       const sugg = await Suggestion.create({
         guildId: message.guild.id,
@@ -61,13 +61,13 @@ module.exports = (client) => {
     }
 
     // --- !suggestion accept/reject <id> [note] ---
-    if (content.startsWith('!sugaccept') || content.startsWith('!sugreject')) {
+    if (content.startsWith('!acceptersugg') || content.startsWith('!rejetersugg')) {
       if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
-      const isAccept = content.startsWith('!sugaccept');
+      const isAccept = content.startsWith('!acceptersugg');
       const args = content.split(' ');
       const id = args[1];
       const note = args.slice(2).join(' ').trim();
-      if (!id) return message.reply(`Usage : \`!${isAccept ? 'sugaccept' : 'sugreject'} <id> [note]\``);
+      if (!id) return message.reply(`Usage : \`!${isAccept ? 'acceptersugg' : 'rejetersugg'} <id> [note]\``);
 
       const sugg = await Suggestion.findById(id).catch(() => null);
       if (!sugg) return message.reply('❌ Suggestion introuvable.');

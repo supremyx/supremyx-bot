@@ -11,10 +11,10 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator') ?? false;
 
     // --- !setbirthday #channel ---
-    if (content.startsWith('!setbirthday')) {
+    if (content.startsWith('!setanniversaire')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!setbirthday #salon`');
+      if (!channel) return message.reply('Usage : `!setanniversaire #salon`');
       await BirthdayConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { guildId: message.guild.id, channelId: channel.id },
@@ -24,7 +24,7 @@ module.exports = (client) => {
       return message.reply(`✅ Les anniversaires seront annoncés dans <#${channel.id}>.`);
     }
 
-    if (!content.startsWith('!birthday')) return;
+    if (!content.startsWith('!anniversaire')) return;
 
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
@@ -32,7 +32,7 @@ module.exports = (client) => {
     // --- !birthday set DD/MM[/YYYY] ---
     if (sub === 'set') {
       const dateStr = args[2];
-      if (!dateStr) return message.reply('Usage : `!birthday set DD/MM` ou `!birthday set DD/MM/YYYY`');
+      if (!dateStr) return message.reply('Usage : `!anniversaire set DD/MM` ou `!anniversaire set DD/MM/YYYY`');
       const parts = dateStr.split('/');
       const day = parseInt(parts[0]);
       const month = parseInt(parts[1]);
@@ -64,7 +64,7 @@ module.exports = (client) => {
     // --- !birthday list ---
     if (!sub || sub === 'list') {
       const birthdays = await Birthday.find({ guildId: message.guild.id }).sort({ month: 1, day: 1 });
-      if (!birthdays.length) return message.reply('Aucun anniversaire enregistré. Utilise `!birthday set DD/MM`.');
+      if (!birthdays.length) return message.reply('Aucun anniversaire enregistré. Utilise `!anniversaire set DD/MM`.');
 
       const today = new Date();
       const formatted = birthdays.map(b => {
@@ -89,13 +89,13 @@ module.exports = (client) => {
     }
 
     message.reply(
-      '**Commandes `!birthday` :**\n' +
-      '`!birthday set DD/MM` — Enregistrer ton anniversaire\n' +
-      '`!birthday set DD/MM/YYYY` — Avec l\'année\n' +
-      '`!birthday list` — Voir tous les anniversaires\n' +
-      '`!birthday check [@user]` — Vérifier un anniversaire\n' +
-      '`!birthday del` — Supprimer ton anniversaire\n' +
-      '`!setbirthday #salon` — Configurer le salon d\'annonce *(staff)*'
+      '**Commandes `!anniversaire` :**\n' +
+      '`!anniversaire set DD/MM` — Enregistrer ton anniversaire\n' +
+      '`!anniversaire set DD/MM/YYYY` — Avec l\'année\n' +
+      '`!anniversaire list` — Voir tous les anniversaires\n' +
+      '`!anniversaire check [@user]` — Vérifier un anniversaire\n' +
+      '`!anniversaire del` — Supprimer ton anniversaire\n' +
+      '`!setanniversaire #salon` — Configurer le salon d\'annonce *(staff)*'
     );
     } catch (err) {
       console.error('[birthday] Erreur:', err);

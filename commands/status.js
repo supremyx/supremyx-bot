@@ -21,7 +21,7 @@ function formatUptime(ms) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content.trim() !== '!status') return;
+    if (message.content.trim() !== '!statut') return;
 
     const [teams, matches, tournaments, activeTournoi, warns, upcomingMatches] = await Promise.all([
       Team.countDocuments(),

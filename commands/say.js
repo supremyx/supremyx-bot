@@ -2,7 +2,7 @@ const { staffLog } = require('../utils/staffLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.startsWith('!say')) return;
+    if (!message.content.startsWith('!dire')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
 
