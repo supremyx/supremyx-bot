@@ -1,11 +1,12 @@
 const Schedule = require('../database/models/Schedule');
 const { EmbedBuilder } = require('discord.js');
+const { getAnnounceChannelId } = require('./channelConfig');
 
 function startReminder(client) {
   // Check every minute
   setInterval(async () => {
     try {
-      const announceChannel = client.channels.cache.get(process.env.ANNOUNCE_CHANNEL_ID);
+      const announceChannel = client.channels.cache.get(getAnnounceChannelId());
       if (!announceChannel) return;
 
       const now = new Date();

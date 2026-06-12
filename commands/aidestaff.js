@@ -106,6 +106,8 @@ module.exports = (client) => {
           name: '⚙️ Configuration Serveur',
           value: [
             '`!config` — Configurer les paramètres généraux du bot',
+            '`!setannonce #salon` — Définir le salon d\'annonces du bot (annonces, rappels, MOTD)',
+            '`!setlogs #salon` — Définir le salon de logs staff (modération, automod, signalements)',
             '`!rolesauto set @role` — Définir le rôle automatique à l\'arrivée',
             '`!rolereaction [add|remove|list]` — Gérer les reaction-roles',
             '`!setanniversaire #salon` — Configurer le salon des anniversaires',

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { staffLog } = require('../utils/staffLog');
+const { getAnnounceChannelId } = require('../utils/channelConfig');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -12,9 +13,9 @@ module.exports = (client) => {
     const text = message.content.split(' ').slice(1).join(' ').trim();
     if (!text) return message.reply('Usage : `!annonce <message>`');
 
-    const channelId = process.env.ANNOUNCE_CHANNEL_ID;
+    const channelId = getAnnounceChannelId();
     if (!channelId)
-      return message.reply('❌ `ANNOUNCE_CHANNEL_ID` non configuré. Ajoute l\'ID du salon d\'annonces dans les variables d\'environnement.');
+      return message.reply('❌ Salon d\'annonces non configuré. Utilise `!setannonce #salon` pour le définir.');
 
     const channel = client.channels.cache.get(channelId);
     if (!channel)

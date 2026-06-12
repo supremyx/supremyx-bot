@@ -1,8 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
+const { getLogChannelId } = require('./channelConfig');
 
 function setupErrorHandler(client) {
   async function sendErrorLog(title, error) {
-    const channelId = process.env.LOG_CHANNEL_ID;
+    const channelId = getLogChannelId();
     if (!channelId) return;
 
     const channel = client.channels.cache.get(channelId);

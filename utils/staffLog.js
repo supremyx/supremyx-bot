@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const StaffLogEntry = require('../database/models/StaffLogEntry');
+const { getLogChannelId } = require('./channelConfig');
 
 // Detect category from message content
 function detectCategory(message) {
@@ -22,7 +23,7 @@ function detectCategory(message) {
  * Usage: logStaffAction(client, '🎯 **Action** details | Par : tag')
  */
 async function logStaffAction(client, message) {
-  const channelId = process.env.LOG_CHANNEL_ID;
+  const channelId = getLogChannelId();
   if (channelId) {
     const channel = client.channels.cache.get(channelId);
     if (channel) {
@@ -46,7 +47,7 @@ async function staffLog(client, { action, details, author }) {
   const colors = { addmatch: 0x57F287, unregister: 0xED4245, resetmatch: 0xFEE75C };
   const icons = { addmatch: '🎯', unregister: '🗑️', resetmatch: '🔄' };
 
-  const channelId = process.env.LOG_CHANNEL_ID;
+  const channelId = getLogChannelId();
   if (channelId) {
     const channel = client.channels.cache.get(channelId);
     if (channel) {

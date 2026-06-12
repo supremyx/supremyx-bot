@@ -1,6 +1,7 @@
 const BadWord = require('../database/models/BadWord');
 const AutomodConfig = require('../database/models/AutomodConfig');
 const { EmbedBuilder } = require('discord.js');
+const { getLogChannelId } = require('./channelConfig');
 
 // Cache words in memory, refreshed every 5 min
 let cachedWords = null;
@@ -55,7 +56,7 @@ async function startAutomod(client) {
       await message.react('🚨').catch(() => {});
 
       // Report to log channel
-      const logChannelId = process.env.LOG_CHANNEL_ID;
+      const logChannelId = getLogChannelId();
       if (!logChannelId) return;
       const logChannel = client.channels.cache.get(logChannelId);
       if (!logChannel) return;

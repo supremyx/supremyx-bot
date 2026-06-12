@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { getLogChannelId } = require('../utils/channelConfig');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -14,7 +15,7 @@ module.exports = (client) => {
       );
     }
 
-    const logChannel = client.channels.cache.get(process.env.LOG_CHANNEL_ID);
+    const logChannel = client.channels.cache.get(getLogChannelId());
     if (!logChannel) {
       return message.reply('❌ Impossible de contacter le staff pour le moment. Réessaie plus tard.');
     }

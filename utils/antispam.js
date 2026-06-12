@@ -1,5 +1,6 @@
 const AntispamConfig = require('../database/models/AntispamConfig');
 const { EmbedBuilder } = require('discord.js');
+const { getLogChannelId } = require('./channelConfig');
 
 // userId → array of message timestamps
 const tracker = new Map();
@@ -47,7 +48,7 @@ async function startAntispam(client) {
       await message.react('⏱️').catch(() => {});
 
       // Report to staff log channel
-      const logChannelId = process.env.LOG_CHANNEL_ID;
+      const logChannelId = getLogChannelId();
       if (!logChannelId) return;
       const logChannel = client.channels.cache.get(logChannelId);
       if (!logChannel) return;

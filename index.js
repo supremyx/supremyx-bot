@@ -158,6 +158,7 @@ require('./commands/rankroles')(client);
 
 // --- Config ---
 require('./commands/configbot')(client);
+require('./commands/setchannel')(client);
 
 // --- Blacklist ---
 require('./commands/blacklist')(client);

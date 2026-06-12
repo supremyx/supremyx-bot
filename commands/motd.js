@@ -1,6 +1,7 @@
 const Config = require('../database/models/Config');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { getAnnounceChannelId } = require('../utils/channelConfig');
 
 async function getOrCreateConfig() {
   let config = await Config.findOne();
@@ -12,7 +13,7 @@ async function sendMotd(client) {
   const config = await Config.findOne();
   if (!config || !config.motd) return;
 
-  const announceChannel = client.channels.cache.get(process.env.ANNOUNCE_CHANNEL_ID);
+  const announceChannel = client.channels.cache.get(getAnnounceChannelId());
   if (!announceChannel) return;
 
   const embed = new EmbedBuilder()
