@@ -38,8 +38,8 @@ module.exports = (client) => {
     const sub     = args[0]?.toLowerCase();
     const isStaff = message.member.permissions.has('Administrator');
 
-    // ─── !schedule / !schedule list ──────────────────────────────
-    if (!sub || sub === 'list') {
+    // ─── !calendrier / !calendrier liste ──────────────────────────────
+    if (!sub || sub === 'liste') {
       const now      = new Date();
       const upcoming = await Schedule.find({ date: { $gte: now } }).sort({ date: 1 }).limit(10);
 
@@ -76,8 +76,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ─── !schedule add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note] ─
-    if (sub === 'add') {
+    // ─── !calendrier ajouter <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note] ─
+    if (sub === 'ajouter') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const dateStr  = args[1];
@@ -87,8 +87,8 @@ module.exports = (client) => {
 
       if (!dateStr || !timeStr || !teamsRaw)
         return message.reply(
-          '**Usage :** `!calendrier add <DD/MM/YYYY> <HH:MM> <equipe1,equipe2,...> [note]`\n' +
-          '**Exemple :** `!calendrier add 15/06/2025 20:00 TeamA,TeamB Match de poules`'
+          '**Usage :** `!calendrier ajouter <DD/MM/YYYY> <HH:MM> <equipe1,equipe2,...> [note]`\n' +
+          '**Exemple :** `!calendrier ajouter 15/06/2025 20:00 TeamA,TeamB Match de poules`'
         );
 
       const date = parseDateTime(dateStr, timeStr);
@@ -123,8 +123,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ─── !schedule edit <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note] ──
-    if (sub === 'edit') {
+    // ─── !calendrier modifier <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note] ──
+    if (sub === 'modifier') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const id      = args[1];
@@ -132,7 +132,7 @@ module.exports = (client) => {
       const timeStr = args[3];
 
       if (!id || !dateStr || !timeStr)
-        return message.reply('**Usage :** `!calendrier edit <id> <DD/MM/YYYY> <HH:MM> [equipe1,equipe2] [note]`');
+        return message.reply('**Usage :** `!calendrier modifier <id> <DD/MM/YYYY> <HH:MM> [equipe1,equipe2] [note]`');
 
       const match = await Schedule.findById(id).catch(() => null);
       if (!match) return message.reply('❌ Match introuvable avec cet ID.');
@@ -153,12 +153,12 @@ module.exports = (client) => {
       return message.reply(`✅ Match mis à jour : **${formatDate(date)} à ${formatTime(date)}**`);
     }
 
-    // ─── !schedule delete <id> ────────────────────────────────────
-    if (sub === 'delete' || sub === 'del') {
+    // ─── !calendrier supprimer <id> ────────────────────────────────────
+    if (sub === 'supprimer' || sub === 'effacer') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const id = args[1];
-      if (!id) return message.reply('Usage : `!calendrier delete <id>`');
+      if (!id) return message.reply('Usage : `!calendrier supprimer <id>`');
 
       const deleted = await Schedule.findByIdAndDelete(id).catch(() => null);
       if (!deleted) return message.reply('❌ Aucun match trouvé avec cet ID.');
@@ -167,19 +167,19 @@ module.exports = (client) => {
       return message.reply(`✅ Match du **${formatDate(deleted.date)} à ${formatTime(deleted.date)}** supprimé.`);
     }
 
-    // ─── !schedule clear ──────────────────────────────────────────
-    if (sub === 'clear') {
+    // ─── !calendrier nettoyer ──────────────────────────────────────────
+    if (sub === 'nettoyer') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const result = await Schedule.deleteMany({ date: { $lt: new Date() } });
       return message.reply(`🗑️ **${result.deletedCount}** match(s) passé(s) supprimé(s).`);
     }
 
-    // ─── !schedule channel #salon ─────────────────────────────────
-    if (sub === 'channel') {
+    // ─── !calendrier salon #salon ─────────────────────────────────
+    if (sub === 'salon' || sub === 'channel') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const target = message.mentions.channels.first() || (args[1] ? message.guild.channels.cache.get(args[1]) : null);
-      if (!target) return message.reply('Usage : `!calendrier channel #salon`');
+      if (!target) return message.reply('Usage : `!calendrier salon #salon`');
 
       await ScheduleConfig.findOneAndUpdate(
         { guildId: message.guild.id },

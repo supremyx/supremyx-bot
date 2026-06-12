@@ -13,10 +13,10 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !rolesauto set @role ---
-    if (sub === 'set') {
+    // --- !rolesauto definir @role ---
+    if (sub === 'definir' || sub === 'set') {
       const role = message.mentions.roles.first();
-      if (!role) return message.reply('Usage : `!rolesauto set @role`');
+      if (!role) return message.reply('Usage : `!rolesauto definir @role`');
       await AutoroleConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { guildId: message.guild.id, roleId: role.id, enabled: true },
@@ -50,7 +50,7 @@ module.exports = (client) => {
         { name: '🔘 Statut', value: config?.enabled ? '✅ Activé' : '⛔ Désactivé', inline: true },
         { name: '🏷️ Rôle', value: role ? `@${role.name}` : 'Non configuré', inline: true }
       )
-      .setFooter({ text: 'Configure avec !rolesauto set @role' })
+      .setFooter({ text: 'Configurer avec !rolesauto definir @role' })
       .setTimestamp();
     return message.channel.send({ embeds: [embed] });
     } catch (err) {

@@ -29,8 +29,8 @@ module.exports = (client) => {
     const args = content.split(' ').slice(1);
     const sub = args[0]?.toLowerCase();
 
-    // --- !log clear ---
-    if (sub === 'clear') {
+    // --- !logs vider ---
+    if (sub === 'vider') {
       const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
       await message.reply('⚠️ Cette action effacera **tout l\'historique** des logs. Réponds `CONFIRMER` dans les 20 secondes.');
       try {
@@ -42,8 +42,8 @@ module.exports = (client) => {
       }
     }
 
-    // --- !log stats ---
-    if (sub === 'stats') {
+    // --- !logs statistiques ---
+    if (sub === 'statistiques') {
       const total = await StaffLogEntry.countDocuments();
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayCount = await StaffLogEntry.countDocuments({ createdAt: { $gte: today } });
@@ -68,8 +68,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !log today ---
-    if (sub === 'today') {
+    // --- !logs aujourdhui ---
+    if (sub === 'aujourdhui') {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const entries = await StaffLogEntry.find({ createdAt: { $gte: today } }).sort({ createdAt: -1 }).limit(20);
 

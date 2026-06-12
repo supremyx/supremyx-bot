@@ -21,8 +21,8 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !reactionrole add #channel <messageId> <emoji> @role [label] ---
-    if (sub === 'add') {
+    // --- !reactionrole ajouter #channel <messageId> <emoji> @role [label] ---
+    if (sub === 'ajouter') {
       const targetChannel = message.mentions.channels.first();
       const msgId = targetChannel ? args[3] : args[2];
       const emoji = targetChannel ? args[4] : args[3];
@@ -32,8 +32,8 @@ module.exports = (client) => {
 
       if (!msgId || !emoji || !role || !targetChannel)
         return message.reply(
-          'Usage : `!reactionrole add #salon <messageId> <emoji> @role [label]`\n' +
-          'Exemple : `!reactionrole add #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
+          'Usage : `!reactionrole ajouter #salon <messageId> <emoji> @role [label]`\n' +
+          'Exemple : `!reactionrole ajouter #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
           'Astuce : active le mode développeur Discord pour copier l\'ID d\'un message.'
         );
 
@@ -78,13 +78,13 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !reactionrole remove <messageId> <emoji> ---
-    if (sub === 'remove' || sub === 'del') {
+    // --- !reactionrole retirer <messageId> <emoji> ---
+    if (sub === 'retirer' || sub === 'supprimer') {
       const msgId = args[2];
       const emoji = args[3];
 
       if (!msgId || !emoji)
-        return message.reply('Usage : `!reactionrole remove <messageId> <emoji>`');
+        return message.reply('Usage : `!reactionrole retirer <messageId> <emoji>`');
 
       const emojiStr = emojiKey(emoji);
       const deleted = await ReactionRole.findOneAndDelete({ messageId: msgId, emoji: emojiStr });
@@ -95,12 +95,12 @@ module.exports = (client) => {
       return message.reply(`✅ Reaction-role **${emoji}** supprimé.`);
     }
 
-    // --- !reactionrole list ---
-    if (!sub || sub === 'list') {
+    // --- !reactionrole liste ---
+    if (!sub || sub === 'liste') {
       const entries = await ReactionRole.find({ guildId: message.guild.id }).sort({ createdAt: -1 });
 
       if (!entries.length)
-        return message.reply('Aucun reaction-role configuré. Utilise `!reactionrole add` pour en créer un.');
+        return message.reply('Aucun reaction-role configuré. Utilise `!reactionrole ajouter` pour en créer un.');
 
       const embed = new EmbedBuilder()
         .setTitle(`🎭 Reaction-roles — ${entries.length} entrée(s)`)
@@ -119,10 +119,10 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !reactionrole clear <messageId> --- remove all for a message
-    if (sub === 'clear') {
+    // --- !reactionrole vider <messageId> --- remove all for a message
+    if (sub === 'vider') {
       const msgId = args[2];
-      if (!msgId) return message.reply('Usage : `!reactionrole clear <messageId>`');
+      if (!msgId) return message.reply('Usage : `!reactionrole vider <messageId>`');
 
       const result = await ReactionRole.deleteMany({ messageId: msgId });
       if (!result.deletedCount) return message.reply('❌ Aucun reaction-role sur ce message.');
@@ -133,10 +133,10 @@ module.exports = (client) => {
 
     message.reply(
       '**Commandes `!reactionrole` :**\n' +
-      '`!reactionrole add <msgId> <emoji> @role [label]` — Configurer\n' +
-      '`!reactionrole remove <msgId> <emoji>` — Supprimer\n' +
-      '`!reactionrole clear <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
-      '`!reactionrole list` — Voir tous les reaction-roles'
+      '`!reactionrole ajouter #salon <msgId> <emoji> @role [label]` — Configurer\n' +
+      '`!reactionrole retirer <msgId> <emoji>` — Supprimer\n' +
+      '`!reactionrole vider <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
+      '`!reactionrole liste` — Voir tous les reaction-roles'
     );
   });
 };

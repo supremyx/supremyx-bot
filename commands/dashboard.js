@@ -105,7 +105,7 @@ async function buildDashboardEmbed(guild, client) {
   // Active events
   if (activeEvents.length) {
     const rows = activeEvents.map(e =>
-      `• **#${e.eventNumber} ${e.title}** — ${e.date || 'Date TBD'} | ✅ ${e.joined.length}`
+      `• **#${e.eventNumber} ${e.title}** — ${e.date || 'Date à définir'} | ✅ ${e.joined.length}`
     ).join('\n');
     mainEmbed.addFields({ name: `📅 Événements actifs (${activeEvents.length})`, value: rows });
   }
@@ -166,17 +166,17 @@ module.exports = (client) => {
 
       if (!isStaff) return message.reply('Staff uniquement');
 
-      // --- !tableaudebord channel #salon ---
-      if (sub === 'channel') {
+      // --- !tableaudebord salon #salon ---
+      if (sub === 'salon' || sub === 'channel') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('Usage : `!tableaudebord channel #salon`');
+        if (!channel) return message.reply('Usage : `!tableaudebord salon #salon`');
         await DashboardConfig.findOneAndUpdate(
           { guildId: message.guild.id },
           { channelId: channel.id },
           { upsert: true, new: true }
         );
-        logStaffAction(client, `📊 **Dashboard** → salon <#${channel.id}> | Par : ${message.author.tag}`);
-        return message.reply(`✅ Dashboard automatique configuré dans <#${channel.id}>.`);
+        logStaffAction(client, `📊 **Tableau de bord** → salon <#${channel.id}> | Par : ${message.author.tag}`);
+        return message.reply(`✅ Tableau de bord automatique configuré dans <#${channel.id}>.`);
       }
 
       // --- !tableaudebord auto on/off ---
@@ -187,7 +187,7 @@ module.exports = (client) => {
 
         const cfg = await DashboardConfig.findOne({ guildId: message.guild.id });
         if (!cfg || !cfg.channelId)
-          return message.reply('❌ Configure d\'abord un salon avec `!tableaudebord channel #salon`.');
+          return message.reply('❌ Configure d\'abord un salon avec `!tableaudebord salon #salon`.');
 
         cfg.autoEnabled = state === 'on';
         await cfg.save();
@@ -200,23 +200,23 @@ module.exports = (client) => {
         );
       }
 
-      // --- !tableaudebord hour <0-23> ---
-      if (sub === 'hour') {
+      // --- !tableaudebord heure <0-23> ---
+      if (sub === 'heure' || sub === 'hour') {
         const hour = parseInt(args[2]);
         if (isNaN(hour) || hour < 0 || hour > 23)
-          return message.reply('Usage : `!tableaudebord hour <0-23>` — heure UTC de publication');
+          return message.reply('Usage : `!tableaudebord heure <0-23>` — heure UTC de publication');
 
         await DashboardConfig.findOneAndUpdate(
           { guildId: message.guild.id },
           { postHour: hour },
           { upsert: true, new: true }
         );
-        logStaffAction(client, `📊 **Dashboard hour** → ${hour}h UTC | Par : ${message.author.tag}`);
+        logStaffAction(client, `📊 **Tableau de bord heure** → ${hour}h UTC | Par : ${message.author.tag}`);
         return message.reply(`✅ Publication automatique à **${hour}h UTC** chaque jour.`);
       }
 
-      // --- !tableaudebord status ---
-      if (sub === 'status') {
+      // --- !tableaudebord statut ---
+      if (sub === 'statut' || sub === 'status') {
         const cfg = await DashboardConfig.findOne({ guildId: message.guild.id });
         const embed = new EmbedBuilder()
           .setTitle('📊 Configuration du Dashboard')
@@ -233,12 +233,12 @@ module.exports = (client) => {
 
       return message.reply(
         '**Commandes `!tableaudebord` :**\n' +
-        '`!tableaudebord` — Générer le dashboard serveur maintenant\n' +
+        '`!tableaudebord` — Générer le tableau de bord serveur maintenant\n' +
         '`!tableaudebord web` — Lien vers le dashboard classement en ligne\n' +
-        '`!tableaudebord channel #salon` — Configurer le salon *(staff)*\n' +
+        '`!tableaudebord salon #salon` — Configurer le salon *(staff)*\n' +
         '`!tableaudebord auto on / off` — Activer / désactiver la publication auto *(staff)*\n' +
-        '`!tableaudebord hour <0-23>` — Heure de publication (UTC) *(staff)*\n' +
-        '`!tableaudebord status` — Voir la configuration *(staff)*'
+        '`!tableaudebord heure <0-23>` — Heure de publication (UTC) *(staff)*\n' +
+        '`!tableaudebord statut` — Voir la configuration *(staff)*'
       );
     }
   });
