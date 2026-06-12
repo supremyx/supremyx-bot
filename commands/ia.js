@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
+const IaConfig = require('../database/models/IaConfig');
 
 let openrouter = null;
 function getOpenRouter() {
@@ -19,22 +20,31 @@ function getOpenRouter() {
 }
 
 const MODELS = {
-  'gpt-4o-mini':   { id: 'openai/gpt-4o-mini',                        label: 'GPT-4o Mini',          emoji: '🟢', desc: 'Rapide et efficace (défaut)' },
-  'gpt-4o':        { id: 'openai/gpt-4o',                              label: 'GPT-4o',               emoji: '🔵', desc: 'Très puissant (OpenAI)' },
-  'claude-haiku':  { id: 'anthropic/claude-3.5-haiku',                 label: 'Claude 3.5 Haiku',     emoji: '🟣', desc: 'Rapide et précis (Anthropic)' },
-  'claude-sonnet': { id: 'anthropic/claude-3.5-sonnet',                label: 'Claude 3.5 Sonnet',    emoji: '🟤', desc: 'Très puissant (Anthropic)' },
-  'gemini-flash':  { id: 'google/gemini-2.0-flash-exp:free',           label: 'Gemini 2.0 Flash',     emoji: '🔴', desc: 'Ultra rapide (Google) — gratuit' },
-  'mistral':       { id: 'mistralai/mistral-7b-instruct:free',         label: 'Mistral 7B',           emoji: '⚪', desc: 'Open-source léger — gratuit' },
-  'llama':         { id: 'meta-llama/llama-3.1-8b-instruct:free',      label: 'LLaMA 3.1 8B',         emoji: '🟡', desc: 'Open-source (Meta) — gratuit' },
+  'gpt-4o-mini':   { id: 'openai/gpt-4o-mini',                      label: 'GPT-4o Mini',       emoji: '🟢', desc: 'Rapide et efficace (défaut)' },
+  'gpt-4o':        { id: 'openai/gpt-4o',                            label: 'GPT-4o',             emoji: '🔵', desc: 'Très puissant (OpenAI)' },
+  'claude-haiku':  { id: 'anthropic/claude-3.5-haiku',               label: 'Claude 3.5 Haiku',  emoji: '🟣', desc: 'Rapide et précis (Anthropic)' },
+  'claude-sonnet': { id: 'anthropic/claude-3.5-sonnet',              label: 'Claude 3.5 Sonnet', emoji: '🟤', desc: 'Très puissant (Anthropic)' },
+  'gemini-flash':  { id: 'google/gemini-2.0-flash-exp:free',         label: 'Gemini 2.0 Flash',  emoji: '🔴', desc: 'Ultra rapide (Google) — gratuit' },
+  'mistral':       { id: 'mistralai/mistral-7b-instruct:free',       label: 'Mistral 7B',         emoji: '⚪', desc: 'Open-source léger — gratuit' },
+  'llama':         { id: 'meta-llama/llama-3.1-8b-instruct:free',    label: 'LLaMA 3.1 8B',      emoji: '🟡', desc: 'Open-source (Meta) — gratuit' },
 };
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 
-const guildModels = new Map();
 const conversations = new Map();
 
-function getModel(guildId) {
-  return MODELS[guildModels.get(guildId) || DEFAULT_MODEL];
+async function getGuildModel(guildId) {
+  const config = await IaConfig.findOne({ guildId });
+  const alias = config?.model || DEFAULT_MODEL;
+  return { alias, model: MODELS[alias] || MODELS[DEFAULT_MODEL] };
+}
+
+async function setGuildModel(guildId, alias) {
+  await IaConfig.findOneAndUpdate(
+    { guildId },
+    { model: alias },
+    { upsert: true, new: true }
+  );
 }
 
 module.exports = (client) => {
@@ -49,7 +59,7 @@ module.exports = (client) => {
     const sub = args[0]?.toLowerCase();
 
     if (sub === 'modeles' || sub === 'modèles') {
-      const current = guildModels.get(message.guild.id) || DEFAULT_MODEL;
+      const { alias: current } = await getGuildModel(message.guild.id);
       const lines = Object.entries(MODELS).map(([alias, m]) => {
         const isCurrent = alias === current ? ' ← **actuel**' : '';
         return `${m.emoji} \`!ia modele ${alias}\` — **${m.label}** : ${m.desc}${isCurrent}`;
@@ -72,7 +82,7 @@ module.exports = (client) => {
         const list = Object.keys(MODELS).map(k => `\`${k}\``).join(', ');
         return message.reply(`❓ Modèle invalide. Choix disponibles : ${list}\nUtilise \`!ia modeles\` pour voir les détails.`);
       }
-      guildModels.set(message.guild.id, alias);
+      await setGuildModel(message.guild.id, alias);
       conversations.clear();
       const m = MODELS[alias];
       const embed = new EmbedBuilder()
@@ -114,7 +124,7 @@ module.exports = (client) => {
       return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé OpenRouter manquante).');
     }
 
-    const model = getModel(message.guild.id);
+    const { model } = await getGuildModel(message.guild.id);
 
     try {
       const userId = message.author.id;
