@@ -59,6 +59,9 @@ client.once('clientReady', () => {
   console.log('📅 Système rappels calendrier activé');
 });
 
+// --- Intelligence Artificielle ---
+require('./commands/ia')(client);
+
 // --- Utilitaires ---
 require('./commands/ping')(client);
 require('./commands/status')(client);
