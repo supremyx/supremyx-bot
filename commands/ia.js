@@ -2,7 +2,14 @@ const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai = null;
+function getOpenAI() {
+  if (!openai) {
+    if (!process.env.OPENAI_API_KEY) return null;
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openai;
+}
 
 const conversations = new Map();
 
@@ -22,6 +29,11 @@ module.exports = (client) => {
 
     const thinking = await message.channel.send('🤖 Réflexion en cours...');
 
+    const client_ai = getOpenAI();
+    if (!client_ai) {
+      return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé API manquante).');
+    }
+
     try {
       const userId = message.author.id;
       if (!conversations.has(userId)) {
@@ -40,7 +52,7 @@ module.exports = (client) => {
         history.splice(1, history.length - 21);
       }
 
-      const response = await openai.chat.completions.create({
+      const response = await client_ai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: history,
         max_tokens: 1024,
