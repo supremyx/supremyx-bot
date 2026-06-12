@@ -29,10 +29,10 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !birthday set DD/MM[/YYYY] ---
-    if (sub === 'set') {
+    // --- !anniversaire définir DD/MM[/YYYY] ---
+    if (sub === 'définir' || sub === 'definir') {
       const dateStr = args[2];
-      if (!dateStr) return message.reply('Usage : `!anniversaire set DD/MM` ou `!anniversaire set DD/MM/YYYY`');
+      if (!dateStr) return message.reply('Usage : `!anniversaire définir DD/MM` ou `!anniversaire définir DD/MM/YYYY`');
       const parts = dateStr.split('/');
       const day = parseInt(parts[0]);
       const month = parseInt(parts[1]);
@@ -54,17 +54,17 @@ module.exports = (client) => {
       return message.reply(`🎂 Ton anniversaire a été enregistré : **${day}/${month}${year ? `/${year}` : ''}**`);
     }
 
-    // --- !birthday del ---
-    if (sub === 'del' || sub === 'delete') {
+    // --- !anniversaire supprimer ---
+    if (sub === 'supprimer') {
       const deleted = await Birthday.findOneAndDelete({ guildId: message.guild.id, userId: message.author.id });
       if (!deleted) return message.reply('❌ Tu n\'as pas enregistré d\'anniversaire.');
       return message.reply('✅ Ton anniversaire a été supprimé.');
     }
 
-    // --- !birthday list ---
-    if (!sub || sub === 'list') {
+    // --- !anniversaire liste ---
+    if (!sub || sub === 'liste') {
       const birthdays = await Birthday.find({ guildId: message.guild.id }).sort({ month: 1, day: 1 });
-      if (!birthdays.length) return message.reply('Aucun anniversaire enregistré. Utilise `!anniversaire set DD/MM`.');
+      if (!birthdays.length) return message.reply('Aucun anniversaire enregistré. Utilise `!anniversaire définir DD/MM`.');
 
       const today = new Date();
       const formatted = birthdays.map(b => {
@@ -80,8 +80,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !birthday check [@user] ---
-    if (sub === 'check') {
+    // --- !anniversaire vérifier [@user] ---
+    if (sub === 'vérifier' || sub === 'verifier') {
       const target = message.mentions.users.first() || message.author;
       const b = await Birthday.findOne({ guildId: message.guild.id, userId: target.id });
       if (!b) return message.reply(`❌ ${target.username} n'a pas enregistré son anniversaire.`);
@@ -90,11 +90,11 @@ module.exports = (client) => {
 
     message.reply(
       '**Commandes `!anniversaire` :**\n' +
-      '`!anniversaire set DD/MM` — Enregistrer ton anniversaire\n' +
-      '`!anniversaire set DD/MM/YYYY` — Avec l\'année\n' +
-      '`!anniversaire list` — Voir tous les anniversaires\n' +
-      '`!anniversaire check [@user]` — Vérifier un anniversaire\n' +
-      '`!anniversaire del` — Supprimer ton anniversaire\n' +
+      '`!anniversaire définir DD/MM` — Enregistrer ton anniversaire\n' +
+      '`!anniversaire définir DD/MM/YYYY` — Avec l\'année\n' +
+      '`!anniversaire liste` — Voir tous les anniversaires\n' +
+      '`!anniversaire vérifier [@user]` — Vérifier un anniversaire\n' +
+      '`!anniversaire supprimer` — Supprimer ton anniversaire\n' +
       '`!setanniversaire #salon` — Configurer le salon d\'annonce *(staff)*'
     );
     } catch (err) {

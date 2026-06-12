@@ -122,40 +122,40 @@ module.exports = (client) => {
           .setColor(0x5865F2)
           .addFields(
             { name: '🏷️ Rôle staff', value: cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : '*Non configuré*', inline: true },
-            { name: '📄 Salon transcripts', value: cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : '*Non configuré*', inline: true },
+            { name: '📄 Salon transcriptions', value: cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : '*Non configuré*', inline: true },
             { name: '📁 Catégorie Discord', value: cfg.ticketCategoryId || '*Non configurée*', inline: true }
           )
           .setDescription(
             '**Commandes de configuration :**\n' +
-            '`!configticket staffrole @role` — Rôle qui voit tous les tickets\n' +
-            '`!configticket transcript #salon` — Salon pour les transcripts\n' +
-            '`!configticket category <id>` — Catégorie Discord pour les salons ticket'
+            '`!configticket rolstaff @role` — Rôle qui voit tous les tickets\n' +
+            '`!configticket transcription #salon` — Salon pour les transcriptions\n' +
+            '`!configticket categorie <id>` — Catégorie Discord pour les salons ticket'
           )
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 
-      if (sub === 'staffrole') {
+      if (sub === 'rolstaff') {
         const role = message.mentions.roles.first();
-        if (!role) return message.reply('Usage : `!configticket staffrole @role`');
+        if (!role) return message.reply('Usage : `!configticket rolstaff @role`');
         cfg.staffRoleId = role.id;
         await cfg.save();
-        logStaffAction(client, `🎫 **Ticket staffrole** → @${role.name} | Par : ${message.author.tag}`);
+        logStaffAction(client, `🎫 **Ticket rolstaff** → @${role.name} | Par : ${message.author.tag}`);
         return message.reply(`✅ Rôle staff tickets : **@${role.name}**`);
       }
 
-      if (sub === 'transcript') {
+      if (sub === 'transcription') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('Usage : `!configticket transcript #salon`');
+        if (!channel) return message.reply('Usage : `!configticket transcription #salon`');
         cfg.transcriptChannelId = channel.id;
         await cfg.save();
-        logStaffAction(client, `🎫 **Ticket transcript** → <#${channel.id}> | Par : ${message.author.tag}`);
-        return message.reply(`✅ Transcripts dans <#${channel.id}>`);
+        logStaffAction(client, `🎫 **Ticket transcription** → <#${channel.id}> | Par : ${message.author.tag}`);
+        return message.reply(`✅ Transcriptions dans <#${channel.id}>`);
       }
 
-      if (sub === 'category') {
+      if (sub === 'categorie') {
         const categoryId = args[2];
-        if (!categoryId) return message.reply('Usage : `!configticket category <id>` — Copie l\'ID de la catégorie Discord (mode développeur)');
+        if (!categoryId) return message.reply('Usage : `!configticket categorie <id>` — Copie l\'ID de la catégorie Discord (mode développeur)');
         const category = message.guild.channels.cache.get(categoryId);
         if (!category || category.type !== ChannelType.GuildCategory)
           return message.reply('❌ Catégorie introuvable. Vérifie l\'ID (catégorie Discord, pas un salon).');
@@ -165,13 +165,13 @@ module.exports = (client) => {
         return message.reply(`✅ Les tickets seront créés dans la catégorie **${category.name}**.`);
       }
 
-      return message.reply('Sous-commandes : `staffrole`, `transcript`, `category`');
+      return message.reply('Sous-commandes : `rolstaff`, `transcription`, `categorie`');
     }
 
     // =========================================================
     // !ticket panel
     // =========================================================
-    if (cmd === '!ticket' && args[1]?.toLowerCase() === 'panel') {
+    if (cmd === '!ticket' && args[1]?.toLowerCase() === 'panneau') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const embed = new EmbedBuilder()
@@ -195,7 +195,7 @@ module.exports = (client) => {
     // =========================================================
     // !ticket [support|signalement|candidature] [sujet...]
     // =========================================================
-    if (cmd === '!ticket' && args[1]?.toLowerCase() !== 'panel') {
+    if (cmd === '!ticket' && args[1]?.toLowerCase() !== 'panneau') {
       const rawCat = args[1]?.toLowerCase();
       const category = CATEGORIES[rawCat] ? rawCat : 'support';
       const subject = (rawCat && !CATEGORIES[rawCat] ? args.slice(1) : args.slice(2)).join(' ').trim();

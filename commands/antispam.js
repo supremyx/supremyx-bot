@@ -40,31 +40,31 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !antispam on ---
-    if (sub === 'on') {
+    // --- !antispam activer ---
+    if (sub === 'activer') {
       config.enabled = true;
       await config.save();
       logStaffAction(client, `✅ **Anti-spam activé** | Par : ${message.author.tag}`);
       return message.reply('✅ Anti-spam **activé**.');
     }
 
-    // --- !antispam off ---
-    if (sub === 'off') {
+    // --- !antispam désactiver ---
+    if (sub === 'désactiver' || sub === 'desactiver') {
       config.enabled = false;
       await config.save();
       logStaffAction(client, `⛔ **Anti-spam désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Anti-spam **désactivé**.');
     }
 
-    // --- !antispam set <messages> <secondes> ---
-    if (sub === 'set') {
+    // --- !antispam configurer <messages> <secondes> ---
+    if (sub === 'configurer') {
       const maxMessages = parseInt(args[2]);
       const windowSeconds = parseInt(args[3]);
 
       if (isNaN(maxMessages) || isNaN(windowSeconds) || maxMessages < 2 || windowSeconds < 1) {
         return message.reply(
-          'Usage : `!antispam set <messages> <secondes>`\n' +
-          'Exemple : `!antispam set 5 5` — signale si 5 messages en 5 secondes\n' +
+          'Usage : `!antispam configurer <messages> <secondes>`\n' +
+          'Exemple : `!antispam configurer 5 5` — signale si 5 messages en 5 secondes\n' +
           'Minimum : 2 messages, 1 seconde.'
         );
       }
@@ -80,9 +80,9 @@ module.exports = (client) => {
     message.reply(
       '**Commandes `!antispam` :**\n' +
       '`!antispam` — Voir le statut et la configuration\n' +
-      '`!antispam on` — Activer\n' +
-      '`!antispam off` — Désactiver\n' +
-      '`!antispam set <messages> <secondes>` — Configurer le seuil'
+      '`!antispam activer` — Activer\n' +
+      '`!antispam désactiver` — Désactiver\n' +
+      '`!antispam configurer <messages> <secondes>` — Configurer le seuil'
     );
     } catch (err) {
       console.error('[antispam] Erreur:', err);

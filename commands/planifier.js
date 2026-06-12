@@ -85,7 +85,7 @@ const AIDE = [
   '`!planifier dupliquer <ID> [| #autre-salon]` — Cloner un message (copie en pause pour ajustement)',
   '`!planifier pause <ID>` — Mettre en pause / reprendre',
   '`!planifier supprimer <ID>` — Supprimer définitivement',
-  '`!planifier test <ID>` — Envoyer maintenant (test)',
+  '`!planifier tester <ID>` — Envoyer maintenant (test)',
   '',
   '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
   '**Titre optionnel :** ajoute `Titre >> ` avant le contenu.',
@@ -114,7 +114,7 @@ module.exports = (client) => {
     const sub  = rest.split(/\s+/)[0]?.toLowerCase();
 
     // ── Aide ──────────────────────────────────────────────────────
-    if (!rest || sub === 'aide' || sub === 'help') {
+    if (!rest || sub === 'aide') {
       return message.reply(AIDE);
     }
 
@@ -194,7 +194,7 @@ module.exports = (client) => {
     }
 
     // ── Supprimer ──────────────────────────────────────────────────
-    if (sub === 'supprimer' || sub === 'delete') {
+    if (sub === 'supprimer') {
       const id = rest.split(/\s+/)[1];
       if (!id) return message.reply('Usage : `!planifier supprimer <ID>`');
 
@@ -212,7 +212,7 @@ module.exports = (client) => {
     }
 
     // ── Modifier ───────────────────────────────────────────────────
-    if (sub === 'modifier' || sub === 'edit') {
+    if (sub === 'modifier') {
       const bodyRaw = rest.slice(sub.length).trim();
       const parts   = bodyRaw.split('|').map(p => p.trim());
 
@@ -337,7 +337,7 @@ module.exports = (client) => {
     }
 
     // ── Dupliquer ──────────────────────────────────────────────────
-    if (sub === 'dupliquer' || sub === 'clone') {
+    if (sub === 'dupliquer') {
       const parts = rest.slice(sub.length).trim().split('|').map(p => p.trim());
       const id    = parts[0];
       if (!id) return message.reply('Usage : `!planifier dupliquer <ID> [| #autre-salon]`');
@@ -401,9 +401,9 @@ module.exports = (client) => {
     }
 
     // ── Test ───────────────────────────────────────────────────────
-    if (sub === 'test') {
+    if (sub === 'tester') {
       const id = rest.split(/\s+/)[1];
-      if (!id) return message.reply('Usage : `!planifier test <ID>`');
+      if (!id) return message.reply('Usage : `!planifier tester <ID>`');
 
       const doc = await AutoMessage.findOne({ _id: id, guildId: message.guild.id }).catch(() => null);
       if (!doc) return message.reply('❌ Message introuvable.');
@@ -543,7 +543,7 @@ module.exports = (client) => {
           { name: 'Prochaine', value: formatNextRun(doc.nextRun), inline: false },
           { name: 'Contenu',   value: (title ? `**${title}**\n` : '') + msgContent.slice(0,300), inline: false },
         )
-        .setFooter({ text: `Créé par ${message.author.tag} · !planifier test ${doc._id} pour tester` })
+        .setFooter({ text: `Créé par ${message.author.tag} · !planifier tester ${doc._id} pour tester` })
         .setTimestamp();
 
       message.reply({ embeds: [confirmEmbed] });

@@ -96,16 +96,16 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
-    // ── !ia reset ──────────────────────────────────────────────────────────────
-    if (sub === 'reset') {
+    // ── !ia réinitialiser ──────────────────────────────────────────────────────
+    if (sub === 'réinitialiser' || sub === 'reinitialiser') {
       conversations.delete(message.author.id);
       const msg = await message.reply('🧹 Ton historique de conversation avec l\'IA a été effacé.');
       setTimeout(() => msg.delete().catch(() => {}), 5000);
       return;
     }
 
-    // ── !ia stats ──────────────────────────────────────────────────────────────
-    if (sub === 'stats') {
+    // ── !ia statistiques ───────────────────────────────────────────────────────
+    if (sub === 'statistiques') {
       const guildId = message.guild.id;
       const all = await IaUsage.find({ guildId }).lean();
 
@@ -186,7 +186,7 @@ module.exports = (client) => {
       return message.reply(
         '❓ Utilisation : `!ia <ta question>`\n' +
         'Exemple : `!ia Qui est le meilleur joueur de l\'équipe ?`\n\n' +
-        `🤖 Modèles : \`!ia modeles\` · Stats : \`!ia stats\` · Changer (admin) : \`!ia modele <nom>\`\n` +
+        `🤖 Modèles : \`!ia modeles\` · Stats : \`!ia statistiques\` · Changer (admin) : \`!ia modele <nom>\`\n` +
         `Modèles disponibles : ${list}`
       );
     }
@@ -241,7 +241,7 @@ module.exports = (client) => {
         .setColor(0xFF8C00)
         .setAuthor({ name: `SUPREMYX IA · ${model.emoji} ${model.label}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(chunks[0])
-        .setFooter({ text: `Demandé par ${message.author.username} · !ia reset pour effacer l'historique` })
+        .setFooter({ text: `Demandé par ${message.author.username} · !ia réinitialiser pour effacer l'historique` })
         .setTimestamp();
 
       await thinking.edit({ content: '', embeds: [embed] });

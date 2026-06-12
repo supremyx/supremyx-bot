@@ -175,7 +175,7 @@ module.exports = (client) => {
     }
 
     // ─── !calendrier salon #salon ─────────────────────────────────
-    if (sub === 'salon' || sub === 'channel') {
+    if (sub === 'salon') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const target = message.mentions.channels.first() || (args[1] ? message.guild.channels.cache.get(args[1]) : null);
@@ -192,15 +192,15 @@ module.exports = (client) => {
     }
 
     // ─── !calendrier rappels off/on ──────────────────────────────────
-    if (sub === 'rappels' || sub === 'remind') {
+    if (sub === 'rappels') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const action = args[1]?.toLowerCase();
       const type   = args[2]?.toLowerCase(); // 24h | 1h | 15m | all
 
-      if (!action || !['on', 'off'].includes(action))
-        return message.reply('Usage : `!calendrier rappels <on|off> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
+      if (!action || !['activer', 'désactiver', 'desactiver'].includes(action))
+        return message.reply('Usage : `!calendrier rappels <activer|désactiver> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
 
-      const enabled = action === 'on';
+      const enabled = action === 'activer';
       const cfg     = await getConfig(message.guild.id);
 
       if (!type || type === 'all') {
@@ -218,7 +218,7 @@ module.exports = (client) => {
     }
 
     // ─── !calendrier statut ─────────────────────────────────────────
-    if (sub === 'statut' || sub === 'status') {
+    if (sub === 'statut') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const cfg = await getConfig(message.guild.id);
@@ -247,7 +247,7 @@ module.exports = (client) => {
       '`!calendrier supprimer <id>` — Supprimer *(staff)*',
       '`!calendrier nettoyer` — Supprimer les matchs passés *(staff)*',
       '`!calendrier salon #salon` — Définir le salon des rappels *(staff)*',
-      '`!calendrier rappels <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
+      '`!calendrier rappels <activer|désactiver> [24h|1h|15m]` — Gérer les rappels *(staff)*',
       '`!calendrier statut` — Voir la configuration *(staff)*',
     ].join('\n'));
   });

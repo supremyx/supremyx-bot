@@ -168,27 +168,27 @@ module.exports = (client) => {
                 return `• **${r.warnCount} warns** → ${ACTION_LABELS[r.action]}${dur}`;
               }).join('\n') || '*Aucune règle configurée*'
           )
-          .setFooter({ text: 'Configure avec !escalade set <warns> <action> [durée_min]' })
+          .setFooter({ text: 'Configure avec !escalade configurer <warns> <action> [durée_min]' })
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 
-      // --- !escalade on/off ---
-      if (sub === 'on' || sub === 'off') {
+      // --- !escalade activer/désactiver ---
+      if (sub === 'activer' || sub === 'désactiver' || sub === 'desactiver') {
         config = config || await EscaladeConfig.create({ guildId: message.guild.id, rules: DEFAULT_RULES });
-        config.enabled = sub === 'on';
+        config.enabled = sub === 'activer';
         await config.save();
-        logStaffAction(client, `🤖 **Auto-escalade ${sub === 'on' ? 'activée' : 'désactivée'}** | Par : ${message.author.tag}`);
-        return message.reply(`${sub === 'on' ? '✅ Auto-escalade **activée**.' : '⛔ Auto-escalade **désactivée**.'}`);
+        logStaffAction(client, `🤖 **Auto-escalade ${sub === 'activer' ? 'activée' : 'désactivée'}** | Par : ${message.author.tag}`);
+        return message.reply(`${sub === 'activer' ? '✅ Auto-escalade **activée**.' : '⛔ Auto-escalade **désactivée**.'}`);
       }
 
-      // --- !escalade set <warns> <action> [durée_min] ---
-      if (sub === 'set') {
+      // --- !escalade configurer <warns> <action> [durée_min] ---
+      if (sub === 'configurer') {
         const warnCount = parseInt(args[2]);
         const action = args[3]?.toLowerCase();
         const duration = parseInt(args[4]) || null;
 
-        if (isNaN(warnCount) || warnCount < 1) return message.reply('Usage : `!escalade set <warns> <action> [durée_min]`');
+        if (isNaN(warnCount) || warnCount < 1) return message.reply('Usage : `!escalade configurer <warns> <action> [durée_min]`');
         if (!['mute', 'kick', 'ban'].includes(action)) return message.reply('❌ Action invalide : `mute`, `kick`, `ban`');
         if (action === 'mute' && !duration) return message.reply('❌ Durée requise pour mute. Ex : `!escalade set 3 mute 60`');
 
@@ -205,18 +205,18 @@ module.exports = (client) => {
         return message.reply(`✅ Règle configurée : **${warnCount} warns** → **${ACTION_LABELS[action]}${durStr}**`);
       }
 
-      // --- !escalade del <warns> ---
-      if (sub === 'del' || sub === 'delete') {
+      // --- !escalade supprimer <warns> ---
+      if (sub === 'supprimer') {
         const warnCount = parseInt(args[2]);
-        if (!config || isNaN(warnCount)) return message.reply('Usage : `!escalade del <warns>`');
+        if (!config || isNaN(warnCount)) return message.reply('Usage : `!escalade supprimer <warns>`');
         config.rules = config.rules.filter(r => r.warnCount !== warnCount);
         await config.save();
         logStaffAction(client, `🗑️ **Escalade** règle supprimée : ${warnCount} warns | Par : ${message.author.tag}`);
         return message.reply(`✅ Règle **${warnCount} warns** supprimée.`);
       }
 
-      // --- !escalade reset ---
-      if (sub === 'reset') {
+      // --- !escalade réinitialiser ---
+      if (sub === 'réinitialiser' || sub === 'reinitialiser') {
         if (config) {
           config.rules = DEFAULT_RULES;
           config.enabled = true;
@@ -231,10 +231,10 @@ module.exports = (client) => {
       return message.reply(
         '**Commandes `!escalade` :**\n' +
         '`!escalade` — Voir les règles actuelles\n' +
-        '`!escalade on / off` — Activer / désactiver\n' +
-        '`!escalade set <warns> <action> [durée_min]` — Configurer une règle\n' +
-        '`!escalade del <warns>` — Supprimer une règle\n' +
-        '`!escalade reset` — Réinitialiser aux valeurs par défaut'
+        '`!escalade activer / désactiver` — Activer / désactiver\n' +
+        '`!escalade configurer <warns> <action> [durée_min]` — Configurer une règle\n' +
+        '`!escalade supprimer <warns>` — Supprimer une règle\n' +
+        '`!escalade réinitialiser` — Réinitialiser aux valeurs par défaut'
       );
     }
   });

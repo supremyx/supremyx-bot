@@ -14,7 +14,7 @@ module.exports = (client) => {
     const sub = args[1]?.toLowerCase();
 
     // --- !rolesauto definir @role ---
-    if (sub === 'definir' || sub === 'set') {
+    if (sub === 'definir') {
       const role = message.mentions.roles.first();
       if (!role) return message.reply('Usage : `!rolesauto definir @role`');
       await AutoroleConfig.findOneAndUpdate(
@@ -26,15 +26,15 @@ module.exports = (client) => {
       return message.reply(`✅ Le rôle **@${role.name}** sera attribué automatiquement aux nouveaux membres.`);
     }
 
-    // --- !rolesauto off ---
-    if (sub === 'off') {
+    // --- !rolesauto désactiver ---
+    if (sub === 'désactiver' || sub === 'desactiver') {
       await AutoroleConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: false }, { upsert: true });
       logStaffAction(client, `🎭 **Autorole désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Autorole désactivé.');
     }
 
-    // --- !rolesauto on ---
-    if (sub === 'on') {
+    // --- !rolesauto activer ---
+    if (sub === 'activer') {
       await AutoroleConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: true }, { upsert: true });
       logStaffAction(client, `🎭 **Autorole activé** | Par : ${message.author.tag}`);
       return message.reply('✅ Autorole activé.');

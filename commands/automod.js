@@ -35,20 +35,20 @@ module.exports = (client) => {
     // --- !automod on/off ---
     if (cmd === '!automod') {
       const config = await getOrCreateConfig();
-      if (sub === 'on') {
+      if (sub === 'activer') {
         config.enabled = true;
         await config.save();
         logStaffAction(client, `✅ **Automod activé** | Par : ${message.author.tag}`);
         return message.reply('✅ Détection de mots interdits **activée**.');
       }
-      if (sub === 'off') {
+      if (sub === 'désactiver' || sub === 'desactiver') {
         config.enabled = false;
         await config.save();
         logStaffAction(client, `⛔ **Automod désactivé** | Par : ${message.author.tag}`);
         return message.reply('⛔ Détection de mots interdits **désactivée**.');
       }
       // Status
-      return message.reply(`Automod est actuellement **${config.enabled ? 'activé ✅' : 'désactivé ⛔'}**.\nUtilise \`!automod on\` ou \`!automod off\`.`);
+      return message.reply(`Automod est actuellement **${config.enabled ? 'activé ✅' : 'désactivé ⛔'}**.\nUtilise \`!automod activer\` ou \`!automod désactiver\`.`);
     }
 
     // --- !mots --- list all words
@@ -128,7 +128,7 @@ module.exports = (client) => {
     message.reply(
       '**Commandes automod :**\n' +
       '`!automod` — Voir le statut\n' +
-      '`!automod on / off` — Activer / désactiver\n' +
+      '`!automod activer / désactiver` — Activer / désactiver\n' +
       '`!mots` — Voir la liste des mots interdits\n' +
       '`!mot ajouter <mot>` — Ajouter un mot\n' +
       '`!mot retirer <mot>` — Supprimer un mot\n' +

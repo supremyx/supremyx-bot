@@ -53,12 +53,12 @@ module.exports = (client) => {
     const sub = args[1]?.toLowerCase();
 
     // --- !bienvenue definir <message> ---
-    if (sub === 'definir' || sub === 'set') {
-      const text = content.slice(sub === 'definir' ? '!bienvenue definir'.length : '!bienvenue set'.length).trim();
+    if (sub === 'definir') {
+      const text = content.slice('!bienvenue definir'.length).trim();
       if (!text) return message.reply(
-        'Usage : `!bienvenue set <message>`\n' +
+        'Usage : `!bienvenue definir <message>`\n' +
         'Variables : `{user}` `{username}` `{server}` `{count}`\n' +
-        'Ex : `!bienvenue set Bienvenue {user} sur {server} ! Tu es notre {count}e membre.`'
+        'Ex : `!bienvenue definir Bienvenue {user} sur {server} ! Tu es notre {count}e membre.`'
       );
       await WelcomeConfig.findOneAndUpdate(
         { guildId: message.guild.id },
@@ -70,7 +70,7 @@ module.exports = (client) => {
     }
 
     // --- !bienvenue salon #salon ---
-    if (sub === 'salon' || sub === 'channel') {
+    if (sub === 'salon') {
       const channel = message.mentions.channels.first();
       if (!channel) return message.reply('Usage : `!bienvenue salon #salon`');
       await WelcomeConfig.findOneAndUpdate(
@@ -83,7 +83,7 @@ module.exports = (client) => {
     }
 
     // --- !bienvenue tester ---
-    if (sub === 'tester' || sub === 'test') {
+    if (sub === 'tester') {
       const config = await WelcomeConfig.findOne({ guildId: message.guild.id });
       if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!bienvenue salon #salon`.');
       const channel = message.guild.channels.cache.get(config.channelId);
@@ -99,15 +99,15 @@ module.exports = (client) => {
       return message.reply(`✅ Message de bienvenue test envoyé dans <#${channel.id}>.`);
     }
 
-    // --- !bienvenue off ---
-    if (sub === 'off') {
+    // --- !bienvenue désactiver ---
+    if (sub === 'désactiver' || sub === 'desactiver') {
       await WelcomeConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: false }, { upsert: true });
       logStaffAction(client, `👋 **Welcome désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Messages de bienvenue désactivés.');
     }
 
-    // --- !bienvenue on ---
-    if (sub === 'on') {
+    // --- !bienvenue activer ---
+    if (sub === 'activer') {
       await WelcomeConfig.findOneAndUpdate({ guildId: message.guild.id }, { enabled: true }, { upsert: true });
       logStaffAction(client, `👋 **Welcome activé** | Par : ${message.author.tag}`);
       return message.reply('✅ Messages de bienvenue activés.');

@@ -33,7 +33,7 @@ module.exports = (client) => {
           { name: '`!inscription liste`', value: 'Voir toutes les inscriptions' },
           { name: '`!inscription valider <@user ou nom équipe>`', value: 'Valider manuellement une inscription' },
           { name: '`!inscription refuser <@user ou nom équipe> [raison]`', value: 'Refuser une inscription' },
-          { name: '`!inscription reset`', value: 'Réinitialiser toutes les inscriptions du tournoi' },
+          { name: '`!inscription réinitialiser`', value: 'Réinitialiser toutes les inscriptions du tournoi' },
         )
         .setFooter({ text: 'Les équipes s\'inscrivent avec !inscrire' });
       return message.channel.send({ embeds: [embed] });
@@ -240,8 +240,8 @@ module.exports = (client) => {
       return message.reply(`❌ Inscription de **${reg.teamName}** refusée.`);
     }
 
-    // ── !inscription reset ──
-    if (sub === 'reset') {
+    // ── !inscription réinitialiser ──
+    if (sub === 'réinitialiser' || sub === 'reinitialiser') {
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('reset_confirm').setLabel('Confirmer').setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId('reset_cancel').setLabel('Annuler').setStyle(ButtonStyle.Secondary)

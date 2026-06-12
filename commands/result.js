@@ -38,11 +38,11 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // ─── !result channel #salon ───────────────────────────────────
-    if (sub === 'channel') {
+    if (sub === 'salon') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const target = message.mentions.channels.first() ||
                      (args[1] ? message.guild.channels.cache.get(args[1]) : null);
-      if (!target) return message.reply('Usage : `!resultats channel #salon`');
+      if (!target) return message.reply('Usage : `!resultats salon #salon`');
 
       await ResultConfig.findOneAndUpdate(
         { guildId: message.guild.id },
@@ -53,16 +53,16 @@ module.exports = (client) => {
     }
 
     // ─── !result status ───────────────────────────────────────────
-    if (sub === 'status') {
+    if (sub === 'statut') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const cfg = await ResultConfig.findOne({ guildId: message.guild.id });
       const ch  = cfg?.channelId ? `<#${cfg.channelId}>` : '*non configuré*';
       return message.reply(`📢 **Salon des résultats :** ${ch}`);
     }
 
-    // ─── !result from <scheduleId> <eq:place:kills> [...] ─────────
+    // ─── !resultats depuis <scheduleId> <eq:place:kills> [...] ────
     // Post results linked to a scheduled match
-    if (sub === 'from') {
+    if (sub === 'depuis') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const scheduleId = args[1];
@@ -70,8 +70,8 @@ module.exports = (client) => {
 
       if (!scheduleId || !teamArgs.length)
         return message.reply(
-          '**Usage :** `!resultats from <scheduleId> <équipe:placement:kills> [équipe:placement:kills ...]`\n' +
-          '**Exemple :** `!resultats from 6641abc TeamA:1:8 TeamB:3:5 TeamC:5:2`'
+          '**Usage :** `!resultats depuis <scheduleId> <équipe:placement:kills> [équipe:placement:kills ...]`\n' +
+          '**Exemple :** `!resultats depuis 6641abc TeamA:1:8 TeamB:3:5 TeamC:5:2`'
         );
 
       const scheduled = await Schedule.findById(scheduleId).catch(() => null);
@@ -97,11 +97,11 @@ module.exports = (client) => {
       '`!resultats TeamA:1:8 TeamB:3:5 TeamC:5:2`',
       '',
       '**Lier à un match planifié :**',
-      '`!resultats from <scheduleId> <eq:placement:kills> [...]`',
+      '`!resultats depuis <scheduleId> <eq:placement:kills> [...]`',
       '',
       '**Configuration :**',
-      '`!resultats channel #salon` — Salon pour les résultats *(staff)*',
-      '`!resultats status` — Voir la configuration *(staff)*',
+      '`!resultats salon #salon` — Salon pour les résultats *(staff)*',
+      '`!resultats statut` — Voir la configuration *(staff)*',
     ].join('\n'));
   });
 };
