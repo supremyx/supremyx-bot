@@ -5,6 +5,7 @@ const CommandStat = require('../database/models/CommandStat');
  */
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.content.startsWith('!')) return;
 

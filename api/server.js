@@ -78,9 +78,15 @@ router.get('/api-docs', (_req, res) => res.json({
     { method: 'GET',  path: '/results',           auth: false, description: 'Derniers résultats de matchs (query: limit, max 50)' },
     { method: 'GET',  path: '/schedule',          auth: false, description: 'Matchs à venir (query: past=true pour tout voir)' },
     { method: 'GET',  path: '/tournaments',       auth: false, description: 'Liste des tournois' },
+    { method: 'GET',  path: '/tournaments/:id',   auth: false, description: 'Détail d\'un tournoi' },
     { method: 'GET',  path: '/rosters',           auth: false, description: 'Tous les rosters' },
     { method: 'GET',  path: '/rosters/:team',     auth: false, description: 'Roster d\'une équipe' },
     { method: 'GET',  path: '/logs',              auth: false, description: 'Logs d\'activité staff (query: limit, category)' },
+    { method: 'GET',  path: '/seasons',           auth: false, description: 'Historique des saisons et vainqueurs' },
+    { method: 'GET',  path: '/warnings',          auth: false, description: 'Liste des avertissements actifs' },
+    { method: 'GET',  path: '/sanctions',         auth: false, description: 'Liste des sanctions (kick, ban, mute)' },
+    { method: 'GET',  path: '/blacklist',         auth: false, description: 'Liste noire des équipes/joueurs' },
+    { method: 'GET',  path: '/botstats',          auth: false, description: 'Statistiques d\'utilisation des commandes + IA' },
     { method: 'POST', path: '/addpoints',         auth: true,  description: 'Ajouter des points/kills à une équipe (body: team, points, kills)' },
     { method: 'POST', path: '/removematch',       auth: true,  description: 'Supprimer un match (body: team ou matchId)' },
   ],
@@ -777,8 +783,15 @@ app.use('/', router);
 app.use('/bot-api', router);
 
 function startApiServer() {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🌐 API SUPREMYX démarrée sur le port ${PORT}`);
+  });
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${PORT} déjà occupé — API standalone ignorée (bot déjà actif).`);
+    } else {
+      console.error('❌ Erreur serveur API:', err);
+    }
   });
 }
 
