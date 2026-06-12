@@ -69,6 +69,7 @@ module.exports = (client) => {
             '`!ia <question>` — Poser une question à l\'IA SUPREMYX',
             '`!ia reset` — Effacer son historique de conversation IA',
             '`!ia modeles` — Voir les modèles IA disponibles et l\'actuel',
+            '`!ia stats` — Statistiques d\'utilisation de l\'IA (utilisateurs, modèles)',
           ].join('\n'),
           inline: false,
         },

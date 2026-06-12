@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
 const IaConfig = require('../database/models/IaConfig');
+const IaUsage  = require('../database/models/IaUsage');
 
 let openrouter = null;
 function getOpenRouter() {
@@ -30,7 +31,6 @@ const MODELS = {
 };
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
-
 const conversations = new Map();
 
 async function getGuildModel(guildId) {
@@ -58,6 +58,7 @@ module.exports = (client) => {
     const args = content.slice(3).trim().split(/\s+/);
     const sub = args[0]?.toLowerCase();
 
+    // ── !ia modeles ────────────────────────────────────────────────────────────
     if (sub === 'modeles' || sub === 'modèles') {
       const { alias: current } = await getGuildModel(message.guild.id);
       const lines = Object.entries(MODELS).map(([alias, m]) => {
@@ -73,6 +74,7 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
+    // ── !ia modele <alias> ─────────────────────────────────────────────────────
     if (sub === 'modele' || sub === 'modèle') {
       if (!message.member?.permissions.has('Administrator')) {
         return message.reply('❌ Seuls les administrateurs peuvent changer le modèle IA.');
@@ -94,6 +96,7 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
+    // ── !ia reset ──────────────────────────────────────────────────────────────
     if (sub === 'reset') {
       conversations.delete(message.author.id);
       const msg = await message.reply('🧹 Ton historique de conversation avec l\'IA a été effacé.');
@@ -101,6 +104,80 @@ module.exports = (client) => {
       return;
     }
 
+    // ── !ia stats ──────────────────────────────────────────────────────────────
+    if (sub === 'stats') {
+      const guildId = message.guild.id;
+      const all = await IaUsage.find({ guildId }).lean();
+
+      if (all.length === 0) {
+        return message.reply('📊 Aucune utilisation de l\'IA enregistrée sur ce serveur pour l\'instant.');
+      }
+
+      // Top utilisateurs
+      const userMap = new Map();
+      for (const u of all) {
+        userMap.set(u.username, (userMap.get(u.username) || 0) + 1);
+      }
+      const topUsers = [...userMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      // Répartition par modèle
+      const modelMap = new Map();
+      for (const u of all) {
+        modelMap.set(u.modelAlias, (modelMap.get(u.modelAlias) || 0) + 1);
+      }
+      const modelLines = [...modelMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([alias, count]) => {
+          const m = MODELS[alias];
+          const pct = Math.round((count / all.length) * 100);
+          return `${m ? m.emoji : '🤖'} **${m ? m.label : alias}** — ${count} fois (${pct}%)`;
+        });
+
+      // Activité 7 derniers jours
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recent = all.filter(u => new Date(u.usedAt) >= sevenDaysAgo).length;
+
+      const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+      const userLines = topUsers.map(([username, count], i) =>
+        `${medals[i]} **${username}** — ${count} question${count > 1 ? 's' : ''}`
+      );
+
+      const { alias: currentAlias } = await getGuildModel(guildId);
+      const currentModel = MODELS[currentAlias];
+
+      const embed = new EmbedBuilder()
+        .setColor(0xFF8C00)
+        .setAuthor({ name: 'SUPREMYX IA · Statistiques', iconURL: client.user.displayAvatarURL() })
+        .addFields(
+          {
+            name: '📊 Vue d\'ensemble',
+            value: [
+              `**Total questions :** ${all.length}`,
+              `**7 derniers jours :** ${recent}`,
+              `**Modèle actuel :** ${currentModel.emoji} ${currentModel.label}`,
+            ].join('\n'),
+            inline: false,
+          },
+          {
+            name: '👑 Top utilisateurs',
+            value: userLines.join('\n') || '—',
+            inline: true,
+          },
+          {
+            name: '🤖 Par modèle',
+            value: modelLines.join('\n') || '—',
+            inline: true,
+          }
+        )
+        .setFooter({ text: `Statistiques du serveur ${message.guild.name}` })
+        .setTimestamp();
+
+      return message.reply({ embeds: [embed] });
+    }
+
+    // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 
     const question = content.slice(4).trim();
@@ -109,7 +186,7 @@ module.exports = (client) => {
       return message.reply(
         '❓ Utilisation : `!ia <ta question>`\n' +
         'Exemple : `!ia Qui est le meilleur joueur de l\'équipe ?`\n\n' +
-        `🤖 Modèles : \`!ia modeles\` · Changer (admin) : \`!ia modele <nom>\`\n` +
+        `🤖 Modèles : \`!ia modeles\` · Stats : \`!ia stats\` · Changer (admin) : \`!ia modele <nom>\`\n` +
         `Modèles disponibles : ${list}`
       );
     }
@@ -124,7 +201,7 @@ module.exports = (client) => {
       return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé OpenRouter manquante).');
     }
 
-    const { model } = await getGuildModel(message.guild.id);
+    const { alias: modelAlias, model } = await getGuildModel(message.guild.id);
 
     try {
       const userId = message.author.id;
@@ -139,10 +216,7 @@ module.exports = (client) => {
 
       const history = conversations.get(userId);
       history.push({ role: 'user', content: question });
-
-      if (history.length > 21) {
-        history.splice(1, history.length - 21);
-      }
+      if (history.length > 21) history.splice(1, history.length - 21);
 
       const response = await client_ai.chat.completions.create({
         model: model.id,
@@ -152,6 +226,14 @@ module.exports = (client) => {
 
       const answer = response.choices[0]?.message?.content || 'Aucune réponse obtenue.';
       history.push({ role: 'assistant', content: answer });
+
+      // Enregistrer l'utilisation
+      IaUsage.create({
+        guildId:    message.guild.id,
+        userId:     message.author.id,
+        username:   message.author.username,
+        modelAlias,
+      }).catch(err => console.error('[IA] Erreur tracking:', err));
 
       const chunks = answer.match(/[\s\S]{1,4000}/g) || [answer];
 
