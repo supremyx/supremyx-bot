@@ -15,7 +15,7 @@ module.exports = (client) => {
     if (cd) return replyCooldown(message, cd, 'aidestaff');
 
     const color = 0xED4245;
-    const footer = { text: 'SUPREMYX CI · Commandes réservées au staff Administrator' };
+    const footer = { text: 'SUPREMYX Esports · Commandes réservées au staff Administrator' };
 
     const embed1 = new EmbedBuilder()
       .setColor(color)
