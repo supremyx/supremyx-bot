@@ -159,6 +159,7 @@ require('./commands/rankroles')(client);
 // --- Config ---
 require('./commands/configbot')(client);
 require('./commands/setchannel')(client);
+require('./commands/voirconfig')(client);
 
 // --- Blacklist ---
 require('./commands/blacklist')(client);

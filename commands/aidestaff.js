@@ -105,6 +105,7 @@ module.exports = (client) => {
         {
           name: '⚙️ Configuration Serveur',
           value: [
+            '`!voirconfig` — Afficher tous les paramètres configurés du serveur en un seul embed',
             '`!config` — Configurer les paramètres généraux du bot',
             '`!salonannonce #salon` — Définir le salon d\'annonces du bot (annonces, rappels, MOTD)',
             '`!salonjournaux #salon` — Définir le salon de journaux staff (modération, automod, signalements)',
