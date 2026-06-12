@@ -54,10 +54,10 @@ module.exports = (client) => {
         .setColor(totalWarns >= 3 ? 0xED4245 : 0xFEE75C)
         .addFields(
           { name: '🎯 Cible', value: target, inline: true },
-          { name: '⚠️ Total warns', value: `${totalWarns}`, inline: true },
+          { name: '⚠️ Total avertissements', value: `${totalWarns}`, inline: true },
           { name: '📝 Raison', value: reason }
         )
-        .setFooter({ text: `Warn par ${message.author.tag}` })
+        .setFooter({ text: `Avertissement par ${message.author.tag}` })
         .setTimestamp();
 
       if (totalWarns >= 3) {
@@ -84,7 +84,7 @@ module.exports = (client) => {
           .setColor(0xFEE75C)
           .addFields(
             { name: '📝 Raison', value: reason },
-            { name: '⚠️ Total warns', value: `${totalWarns}` }
+            { name: '⚠️ Total avertissements', value: `${totalWarns}` }
           )
           .setFooter({ text: `Par ${message.author.tag}` })
           .setTimestamp();

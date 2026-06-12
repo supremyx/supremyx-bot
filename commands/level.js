@@ -74,7 +74,7 @@ module.exports = (client) => {
         .setThumbnail(target.user.displayAvatarURL())
         .addFields(
           { name: '🏆 Niveau', value: `**${level}**`, inline: true },
-          { name: '⭐ XP Total', value: `**${xp}**`, inline: true },
+          { name: '⭐ XP total', value: `**${xp}**`, inline: true },
           { name: '🎯 Prochain niveau', value: `**${nextLevelXp}** XP`, inline: true },
           { name: '📊 Progression', value: `\`${bar}\` ${xp}/${nextLevelXp}` }
         )

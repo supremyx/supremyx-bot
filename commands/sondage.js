@@ -109,8 +109,8 @@ async function closeSondage(client, id) {
         }).join('\n\n')
       )
       .addFields(
-        { name: '🗳️ Total votes', value: `${total}`, inline: true },
-        { name: '🏆 Gagnant', value: winner.count > 0 ? winner.option : 'Aucun vote', inline: true }
+        { name: '🗳️ Total des votes', value: `${total}`, inline: true },
+        { name: '🏆 Gagnant', value: winner.count > 0 ? winner.option : 'Aucun vote enregistré', inline: true }
       )
       .setFooter({ text: `Sondage clôturé • Créé par ${sondage.createdBy}` })
       .setTimestamp();

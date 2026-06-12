@@ -52,9 +52,9 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !bienvenue set <message> ---
-    if (sub === 'set') {
-      const text = content.slice('!bienvenue set'.length).trim();
+    // --- !bienvenue definir <message> ---
+    if (sub === 'definir' || sub === 'set') {
+      const text = content.slice(sub === 'definir' ? '!bienvenue definir'.length : '!bienvenue set'.length).trim();
       if (!text) return message.reply(
         'Usage : `!bienvenue set <message>`\n' +
         'Variables : `{user}` `{username}` `{server}` `{count}`\n' +
@@ -69,10 +69,10 @@ module.exports = (client) => {
       return message.reply(`✅ Message de bienvenue mis à jour.`);
     }
 
-    // --- !bienvenue channel #salon ---
-    if (sub === 'channel') {
+    // --- !bienvenue salon #salon ---
+    if (sub === 'salon' || sub === 'channel') {
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!bienvenue channel #salon`');
+      if (!channel) return message.reply('Usage : `!bienvenue salon #salon`');
       await WelcomeConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { $set: { channelId: channel.id, enabled: true } },
@@ -82,10 +82,10 @@ module.exports = (client) => {
       return message.reply(`✅ Les messages de bienvenue iront dans <#${channel.id}>.`);
     }
 
-    // --- !bienvenue test ---
-    if (sub === 'test') {
+    // --- !bienvenue tester ---
+    if (sub === 'tester' || sub === 'test') {
       const config = await WelcomeConfig.findOne({ guildId: message.guild.id });
-      if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!bienvenue channel #salon`.');
+      if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!bienvenue salon #salon`.');
       const channel = message.guild.channels.cache.get(config.channelId);
       if (!channel) return message.reply('❌ Salon introuvable.');
       const text = applyTemplate(config.message, message.member);

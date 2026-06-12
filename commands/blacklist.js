@@ -104,10 +104,10 @@ module.exports = (client) => {
 
     message.reply(
       '**Commandes `!listenoiree` :**\n' +
-      '`!listenoiree add <cible> | <raison>` — Ajouter *(staff)*\n' +
-      '`!listenoiree remove <cible>` — Retirer *(staff)*\n' +
-      '`!listenoiree list` — Voir toute la blacklist\n' +
-      '`!listenoiree check <cible>` — Vérifier une cible'
+      '`!listenoiree ajouter <cible> | <raison>` — Ajouter *(staff)*\n' +
+      '`!listenoiree retirer <cible>` — Retirer *(staff)*\n' +
+      '`!listenoiree liste` — Voir toute la liste noire\n' +
+      '`!listenoiree verifier <cible>` — Vérifier une cible'
     );
     } catch (err) {
       console.error('[blacklist] Erreur:', err);
