@@ -36,10 +36,10 @@ function fmtDate(d: string) {
 }
 
 const TYPE_STYLE: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  warn:  { bg: "rgba(250,204,21,0.15)", text: "#fde047", border: "rgba(250,204,21,0.3)", label: "⚠️ Warn" },
-  mute:  { bg: "rgba(99,102,241,0.15)", text: "#a5b4fc", border: "rgba(99,102,241,0.3)", label: "🔇 Mute" },
-  kick:  { bg: "rgba(249,115,22,0.15)", text: "#fdba74", border: "rgba(249,115,22,0.3)", label: "👢 Kick" },
-  ban:   { bg: "rgba(239,68,68,0.15)",  text: "#fca5a5", border: "rgba(239,68,68,0.3)",  label: "🔨 Ban" },
+  warn:  { bg: "rgba(250,204,21,0.15)", text: "#fde047", border: "rgba(250,204,21,0.3)", label: "⚠️ Avertissement" },
+  mute:  { bg: "rgba(99,102,241,0.15)", text: "#a5b4fc", border: "rgba(99,102,241,0.3)", label: "🔇 Muet" },
+  kick:  { bg: "rgba(249,115,22,0.15)", text: "#fdba74", border: "rgba(249,115,22,0.3)", label: "👢 Expulsion" },
+  ban:   { bg: "rgba(239,68,68,0.15)",  text: "#fca5a5", border: "rgba(239,68,68,0.3)",  label: "🔨 Bannissement" },
 };
 
 export default function ModerationPage() {
@@ -184,7 +184,7 @@ export default function ModerationPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm">{s.userTag}</span>
-                          {s.active && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)" }}>Active</span>}
+                          {s.active && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.3)" }}>En cours</span>}
                           {s.autoEscalation && <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }}>Auto-escalade</span>}
                           {s.duration && <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{s.duration} min</span>}
                         </div>

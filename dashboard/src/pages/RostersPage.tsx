@@ -30,8 +30,23 @@ const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> 
 };
 const DEFAULT_ROLE = { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)" };
 
+const ROLE_LABELS: Record<string, string> = {
+  captain:    "Capitaine",
+  leader:     "Chef d'équipe",
+  coach:      "Coach",
+  manager:    "Manager",
+  substitute: "Remplaçant",
+  sub:        "Remplaçant",
+  member:     "Membre",
+  player:     "Joueur",
+};
+
 function roleStyle(role: string) {
   return ROLE_COLORS[role.toLowerCase()] ?? DEFAULT_ROLE;
+}
+
+function roleLabel(role: string) {
+  return ROLE_LABELS[role.toLowerCase()] ?? role;
 }
 
 function TeamCard({ roster }: { roster: Roster }) {
@@ -80,7 +95,7 @@ function TeamCard({ roster }: { roster: Roster }) {
                       <td className="py-2.5 px-5 font-semibold text-sm">{m.displayName}</td>
                       <td className="py-2.5 px-5">
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
-                          {m.role}
+                          {roleLabel(m.role)}
                         </span>
                       </td>
                       <td className="py-2.5 px-5 text-xs hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{m.joinedAt ? fmtDate(m.joinedAt) : "—"}</td>
@@ -135,7 +150,7 @@ export default function RostersPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="font-bold text-sm">Rosters des équipes</h2>
+          <h2 className="font-bold text-sm">Compositions des équipes</h2>
           <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Cliquer sur une équipe pour voir ses membres</p>
         </div>
         {rosters.length > 0 && (
