@@ -20,6 +20,7 @@
     "discord.js": "^14.26.4",
     "dotenv": "^16.6.1",
     "drizzle-zod": "^0.8.3",
+    "esbuild": "^0.28.1",
     "express": "^5.2.1",
     "mongoose": "^8.24.0",
     "openai": "^4.104.0",
@@ -36,5 +37,8 @@
   },
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["core-js", "esbuild"]
   }
 }
