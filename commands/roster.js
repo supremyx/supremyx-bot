@@ -32,7 +32,7 @@ function buildRosterEmbed(roster, teamName) {
     .setColor(0x5865F2)
     .setTimestamp();
 
-  if (!liste || !roster.members.length) {
+  if (!roster || !roster.members.length) {
     embed.setDescription('*Aucun membre dans ce roster pour l\'instant.*');
     return embed;
   }
@@ -258,7 +258,7 @@ module.exports = (client) => {
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);
-      if (!liste || !roster.members.length) return message.reply(`❌ Le roster de **${team.name}** est déjà vide.`);
+      if (!roster || !roster.members.length) return message.reply(`❌ Le roster de **${team.name}** est déjà vide.`);
 
       const count = roster.members.length;
       roster.members = [];

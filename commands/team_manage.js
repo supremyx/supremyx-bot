@@ -85,7 +85,7 @@ module.exports = (client) => {
       if (!playersRaw) {
         // View lineup
         const lineup = await Lineup.findOne({ team: { $regex: new RegExp(`^${teamName}$`, 'i') } });
-        if (!composition || !lineup.players.length)
+        if (!lineup || !lineup.players.length)
           return message.reply(`Aucune composition définie pour **${teamName}**.`);
 
         const embed = new EmbedBuilder()
