@@ -2,13 +2,20 @@ const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
 
-let openai = null;
-function getOpenAI() {
-  if (!openai) {
-    if (!process.env.OPENAI_API_KEY) return null;
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openrouter = null;
+function getOpenRouter() {
+  if (!openrouter) {
+    if (!process.env.OPENROUTER_API_KEY) return null;
+    openrouter = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://discord.com',
+        'X-Title': 'SUPREMYX Bot',
+      },
+    });
   }
-  return openai;
+  return openrouter;
 }
 
 const conversations = new Map();
@@ -29,9 +36,9 @@ module.exports = (client) => {
 
     const thinking = await message.channel.send('🤖 Réflexion en cours...');
 
-    const client_ai = getOpenAI();
+    const client_ai = getOpenRouter();
     if (!client_ai) {
-      return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé API manquante).');
+      return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé OpenRouter manquante).');
     }
 
     try {
@@ -53,7 +60,7 @@ module.exports = (client) => {
       }
 
       const response = await client_ai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'openai/gpt-4o-mini',
         messages: history,
         max_tokens: 1024,
       });
@@ -80,8 +87,8 @@ module.exports = (client) => {
       }
 
     } catch (err) {
-      console.error('[IA] Erreur OpenAI:', err);
-      await thinking.edit('❌ Une erreur est survenue avec l\'IA. Vérifie que la clé API OpenAI est valide.');
+      console.error('[IA] Erreur OpenRouter:', err);
+      await thinking.edit('❌ Une erreur est survenue avec l\'IA. Vérifie que la clé API OpenRouter est valide.');
     }
   });
 
