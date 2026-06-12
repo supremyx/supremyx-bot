@@ -48,12 +48,12 @@ module.exports = (client) => {
     try {
       const dm = await message.author.createDM();
       await dm.send({
-        content: '**💾 Backup SUPREMYX** — Conserve ce fichier en lieu sûr.',
+        content: '**💾 Sauvegarde SUPREMYX** — Conserve ce fichier en lieu sûr.',
         files: [file]
       });
       message.channel.send({ embeds: [embed] });
     } catch {
-      message.reply('❌ Impossible d\'envoyer le backup en DM. Vérifie que tes messages privés sont ouverts.');
+      message.reply('❌ Impossible d\'envoyer la sauvegarde en DM. Vérifie que tes messages privés sont ouverts.');
     }
   });
 };

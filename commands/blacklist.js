@@ -14,16 +14,16 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !listenoiree add <cible> | <raison> ---
-    if (sub === 'add') {
+    // --- !listenoiree ajouter <cible> | <raison> ---
+    if (sub === 'ajouter') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const raw = content.slice('!listenoiree add'.length).trim();
+      const raw = content.slice('!listenoiree ajouter'.length).trim();
       const pipeIdx = raw.indexOf('|');
       const target = (pipeIdx >= 0 ? raw.slice(0, pipeIdx) : raw).trim();
       const reason = (pipeIdx >= 0 ? raw.slice(pipeIdx + 1) : '').trim() || 'Aucune raison précisée';
 
-      if (!target) return message.reply('Usage : `!listenoiree add <équipe ou joueur> | <raison>`');
+      if (!target) return message.reply('Usage : `!listenoiree ajouter <équipe ou joueur> | <raison>`');
 
       const existing = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (existing) return message.reply(`⚠️ **${target}** est déjà dans la blacklist.`);
@@ -44,12 +44,12 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !listenoiree remove <cible> ---
-    if (sub === 'remove' || sub === 'del') {
+    // --- !listenoiree retirer <cible> ---
+    if (sub === 'retirer' || sub === 'supprimer') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const target = args.slice(2).join(' ').trim();
-      if (!target) return message.reply('Usage : `!listenoiree remove <équipe ou joueur>`');
+      if (!target) return message.reply('Usage : `!listenoiree retirer <équipe ou joueur>`');
 
       const deleted = await Blacklist.findOneAndDelete({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (!deleted) return message.reply(`❌ **${target}** n'est pas dans la blacklist.`);
@@ -58,8 +58,8 @@ module.exports = (client) => {
       return message.reply(`✅ **${deleted.target}** retiré de la blacklist.`);
     }
 
-    // --- !listenoiree list ---
-    if (!sub || sub === 'list') {
+    // --- !listenoiree liste ---
+    if (!sub || sub === 'liste') {
       const entries = await Blacklist.find().sort({ createdAt: -1 });
       if (!entries.length) return message.reply('✅ La blacklist est vide.');
 
@@ -80,10 +80,10 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !listenoiree check <cible> ---
-    if (sub === 'check') {
+    // --- !listenoiree verifier <cible> ---
+    if (sub === 'verifier') {
       const target = args.slice(2).join(' ').trim();
-      if (!target) return message.reply('Usage : `!listenoiree check <équipe ou joueur>`');
+      if (!target) return message.reply('Usage : `!listenoiree verifier <équipe ou joueur>`');
 
       const entry = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
       if (!entry) return message.reply(`✅ **${target}** n'est pas dans la blacklist.`);

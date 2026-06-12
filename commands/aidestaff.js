@@ -15,7 +15,7 @@ module.exports = (client) => {
     if (cd) return replyCooldown(message, cd, 'aidestaff');
 
     const color = 0xED4245;
-    const footer = { text: 'SUPREMYX Esports · Commandes réservées au staff Administrator' };
+    const footer = { text: 'SUPREMYX Esports · Commandes réservées au staff Administrateur' };
 
     const embed1 = new EmbedBuilder()
       .setColor(color)
@@ -94,9 +94,9 @@ module.exports = (client) => {
             '`!supprimerwarn @user [ID]` — Retirer un avertissement',
             '`!verrouiller` — Verrouiller le canal pour @everyone',
             '`!deverrouiller` — Déverrouiller le canal',
-            '`!listenoiree [add|remove|list] <nom>` — Gérer la blacklist équipes/joueurs',
-            '`!automod [add|remove|list] <mot>` — Configurer le filtre de mots',
-            '`!mot <mot>` — Ajouter un mot interdit à l\'automod',
+            '`!listenoiree [ajouter|retirer|liste] <nom>` — Gérer la liste noire équipes/joueurs',
+            '`!automod on/off` — Activer/désactiver le filtre de mots',
+            '`!mot ajouter/retirer <mot>` — Gérer les mots interdits',
             '`!antispam [config]` — Configurer la protection anti-spam',
             '`!ticket [config]` — Configurer le système de tickets support',
           ].join('\n'),
@@ -115,7 +115,7 @@ module.exports = (client) => {
             '`!setchannelniveau #salon` — Configurer le salon des montées de niveau',
             '`!règlement [config]` — Configurer le règlement interactif du serveur',
             '`!setregles` / `!ajouterregle <texte>` — Gérer les règles affichées',
-            '`!evenement [create|cancel|list]` — Gérer les événements RSVP',
+            '`!event [creer|annuler|liste]` — Gérer les événements RSVP',
             '`!setplanning` — Configurer le calendrier automatique de matchs',
             '`!setdelai <commande> <secondes>` — Modifier le cooldown d\'une commande',
             '`!delais` — Voir tous les cooldowns configurés',

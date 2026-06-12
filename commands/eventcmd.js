@@ -108,10 +108,10 @@ module.exports = (client) => {
       return message.reply(`✅ Événement **#${num}** créé.`);
     }
 
-    // --- !event list ---
-    if (!sub || sub === 'list') {
+    // --- !event liste ---
+    if (!sub || sub === 'liste') {
       const events = await GuildEvent.find({ guildId: message.guild.id, cancelled: false }).sort({ eventNumber: -1 }).limit(10);
-      if (!events.length) return message.reply('Aucun événement actif. Crée-en un avec `!event create`.');
+      if (!events.length) return message.reply('Aucun événement actif. Crée-en un avec `!event creer`.');
       const embed = new EmbedBuilder()
         .setTitle('📅 Événements à venir')
         .setColor(0x5865F2)
@@ -122,11 +122,11 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !event cancel <id> ---
-    if (sub === 'cancel') {
+    // --- !event annuler <id> ---
+    if (sub === 'annuler') {
       if (!isStaff) return message.reply('Staff uniquement');
       const num = parseInt(args[2]);
-      if (isNaN(num)) return message.reply('Usage : `!event cancel <id>`');
+      if (isNaN(num)) return message.reply('Usage : `!event annuler <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
       if (!ev) return message.reply('❌ Événement introuvable.');
       ev.cancelled = true;
@@ -142,7 +142,7 @@ module.exports = (client) => {
     }
 
     // --- !event participants <id> ---
-    if (sub === 'participants' || sub === 'who') {
+    if (sub === 'participants' || sub === 'inscrits') {
       const num = parseInt(args[2]);
       if (isNaN(num)) return message.reply('Usage : `!event participants <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
@@ -161,10 +161,10 @@ module.exports = (client) => {
 
     message.reply(
       '**Commandes `!event` :**\n' +
-      '`!event create <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
-      '`!event list` — Voir les événements en cours\n' +
+      '`!event creer <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
+      '`!event liste` — Voir les événements en cours\n' +
       '`!event participants <id>` — Voir qui participe\n' +
-      '`!event cancel <id>` — Annuler un événement *(staff)*'
+      '`!event annuler <id>` — Annuler un événement *(staff)*'
     );
   });
 };

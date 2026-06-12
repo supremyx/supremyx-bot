@@ -66,7 +66,7 @@ module.exports = (client) => {
 
         if (!participants.size) {
           const noWinEmbed = new EmbedBuilder()
-            .setTitle('🎉 Giveaway terminé')
+            .setTitle('🎉 Concours terminé')
             .setColor(0x99AAB5)
             .setDescription(`**${prize}**\n\nAucun participant. Pas de gagnant.`)
             .setTimestamp();
@@ -75,7 +75,7 @@ module.exports = (client) => {
 
         const winner = participants.random();
         const winEmbed = new EmbedBuilder()
-          .setTitle('🎉 Giveaway terminé !')
+          .setTitle('🎉 Concours terminé !')
           .setColor(0x57F287)
           .setDescription(`**${prize}**\n\n🏆 Gagnant : **${winner.tag}** ${winner}`)
           .addFields({ name: '👥 Participants', value: `${participants.size}`, inline: true })
@@ -106,7 +106,7 @@ module.exports = (client) => {
       if (!participants.size) return message.reply('Aucun participant.');
 
       const winner = participants.random();
-      message.channel.send(`🔁 **Reroll !** Nouveau gagnant : **${winner.tag}** ${winner} 🎉`);
+      message.channel.send(`🔁 **Nouveau tirage !** Nouveau gagnant : **${winner.tag}** ${winner} 🎉`);
     }
   });
 };
