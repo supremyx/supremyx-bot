@@ -10,7 +10,7 @@ module.exports = (client) => {
     const cd = checkCooldown(message.author.id, 'aide', 10);
     if (cd) return replyCooldown(message, cd, 'aide');
 
-    const footer = { text: 'SUPREMYX CI · Tape !aidestaff si tu es staff' };
+    const footer = { text: 'SUPREMYX Esports · Tape !aidestaff si tu es staff' };
     const color = 0xFF8C00;
 
     const embed1 = new EmbedBuilder()
