@@ -104,7 +104,7 @@ module.exports = (client) => {
             config.maxTeams > 0 ? { name: '🎯 Places disponibles', value: `${config.maxTeams} équipes max`, inline: true } : { name: '🎯 Places', value: 'Illimité', inline: true },
             { name: '📅 Ouvert le', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true }
           )
-          .setFooter({ text: 'SUPREMYX Tournament System' })
+          .setFooter({ text: 'Système de tournois SUPREMYX' })
           .setTimestamp();
 
         const msg = await regChannel.send({ embeds: [announceEmbed] });
@@ -399,7 +399,7 @@ async function postToAnnouncementChannel(client, guildId, reg, config) {
         { name: '📞 Contact', value: `<@${reg.contactId}>`, inline: true },
         { name: '🏆 Tournoi', value: reg.tournamentName, inline: true }
       )
-      .setFooter({ text: 'SUPREMYX Tournament System' })
+      .setFooter({ text: 'Système de tournois SUPREMYX' })
       .setTimestamp();
 
     await channel.send({ embeds: [embed] });

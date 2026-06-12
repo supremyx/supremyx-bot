@@ -191,14 +191,14 @@ module.exports = (client) => {
       return message.reply(`✅ Les rappels de matchs seront envoyés dans <#${target.id}>.\nRappels : **24h avant**, **1h avant**, **15 min avant**.`);
     }
 
-    // ─── !schedule remind off/on ──────────────────────────────────
-    if (sub === 'remind') {
+    // ─── !calendrier rappels off/on ──────────────────────────────────
+    if (sub === 'rappels' || sub === 'remind') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
       const action = args[1]?.toLowerCase();
       const type   = args[2]?.toLowerCase(); // 24h | 1h | 15m | all
 
       if (!action || !['on', 'off'].includes(action))
-        return message.reply('Usage : `!calendrier remind <on|off> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
+        return message.reply('Usage : `!calendrier rappels <on|off> [24h|1h|15m]`\nOmets le type pour tout activer/désactiver.');
 
       const enabled = action === 'on';
       const cfg     = await getConfig(message.guild.id);
@@ -217,8 +217,8 @@ module.exports = (client) => {
       return message.reply(`✅ **${label}** ${enabled ? 'activé' : 'désactivé'}.`);
     }
 
-    // ─── !schedule status ─────────────────────────────────────────
-    if (sub === 'status') {
+    // ─── !calendrier statut ─────────────────────────────────────────
+    if (sub === 'statut' || sub === 'status') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const cfg = await getConfig(message.guild.id);
@@ -242,13 +242,13 @@ module.exports = (client) => {
     return message.reply([
       '**Commandes `!calendrier` :**',
       '`!calendrier` — Liste les matchs à venir',
-      '`!calendrier add <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Ajouter *(staff)*',
-      '`!calendrier edit <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note]` — Modifier *(staff)*',
-      '`!calendrier delete <id>` — Supprimer *(staff)*',
-      '`!calendrier clear` — Supprimer les matchs passés *(staff)*',
-      '`!calendrier channel #salon` — Définir le salon des rappels *(staff)*',
-      '`!calendrier remind <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
-      '`!calendrier status` — Voir la configuration *(staff)*',
+      '`!calendrier ajouter <DD/MM/YYYY> <HH:MM> <eq1,eq2,...> [note]` — Ajouter *(staff)*',
+      '`!calendrier modifier <id> <DD/MM/YYYY> <HH:MM> [eq1,eq2] [note]` — Modifier *(staff)*',
+      '`!calendrier supprimer <id>` — Supprimer *(staff)*',
+      '`!calendrier nettoyer` — Supprimer les matchs passés *(staff)*',
+      '`!calendrier salon #salon` — Définir le salon des rappels *(staff)*',
+      '`!calendrier rappels <on|off> [24h|1h|15m]` — Gérer les rappels *(staff)*',
+      '`!calendrier statut` — Voir la configuration *(staff)*',
     ].join('\n'));
   });
 };
