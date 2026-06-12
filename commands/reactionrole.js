@@ -32,8 +32,8 @@ module.exports = (client) => {
 
       if (!msgId || !emoji || !role || !targetChannel)
         return message.reply(
-          'Usage : `!reactionrole ajouter #salon <messageId> <emoji> @role [label]`\n' +
-          'Exemple : `!reactionrole ajouter #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
+          'Usage : `!rolereaction ajouter #salon <messageId> <emoji> @role [label]`\n' +
+          'Exemple : `!rolereaction ajouter #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
           'Astuce : active le mode développeur Discord pour copier l\'ID d\'un message.'
         );
 
@@ -84,7 +84,7 @@ module.exports = (client) => {
       const emoji = args[3];
 
       if (!msgId || !emoji)
-        return message.reply('Usage : `!reactionrole retirer <messageId> <emoji>`');
+        return message.reply('Usage : `!rolereaction retirer <messageId> <emoji>`');
 
       const emojiStr = emojiKey(emoji);
       const deleted = await ReactionRole.findOneAndDelete({ messageId: msgId, emoji: emojiStr });
@@ -100,7 +100,7 @@ module.exports = (client) => {
       const entries = await ReactionRole.find({ guildId: message.guild.id }).sort({ createdAt: -1 });
 
       if (!entries.length)
-        return message.reply('Aucun reaction-role configuré. Utilise `!reactionrole ajouter` pour en créer un.');
+        return message.reply('Aucun reaction-role configuré. Utilise `!rolereaction ajouter` pour en créer un.');
 
       const embed = new EmbedBuilder()
         .setTitle(`🎭 Reaction-roles — ${entries.length} entrée(s)`)
@@ -122,7 +122,7 @@ module.exports = (client) => {
     // --- !reactionrole vider <messageId> --- remove all for a message
     if (sub === 'vider') {
       const msgId = args[2];
-      if (!msgId) return message.reply('Usage : `!reactionrole vider <messageId>`');
+      if (!msgId) return message.reply('Usage : `!rolereaction vider <messageId>`');
 
       const result = await ReactionRole.deleteMany({ messageId: msgId });
       if (!result.deletedCount) return message.reply('❌ Aucun reaction-role sur ce message.');
@@ -132,11 +132,11 @@ module.exports = (client) => {
     }
 
     message.reply(
-      '**Commandes `!reactionrole` :**\n' +
-      '`!reactionrole ajouter #salon <msgId> <emoji> @role [label]` — Configurer\n' +
-      '`!reactionrole retirer <msgId> <emoji>` — Supprimer\n' +
-      '`!reactionrole vider <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
-      '`!reactionrole liste` — Voir tous les reaction-roles'
+      '**Commandes `!rolereaction` :**\n' +
+      '`!rolereaction ajouter #salon <msgId> <emoji> @role [label]` — Configurer\n' +
+      '`!rolereaction retirer <msgId> <emoji>` — Supprimer\n' +
+      '`!rolereaction vider <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
+      '`!rolereaction liste` — Voir tous les reaction-roles'
     );
   });
 };

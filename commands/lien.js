@@ -122,7 +122,7 @@ module.exports = (client) => {
   // ── !lien ─────────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!lien') || content.startsWith('!lienbutton')) return;
+    if (content !== '!lien' && !content.startsWith('!lien ')) return;
     if (!message.guild) return;
     if (!message.member) return;
 

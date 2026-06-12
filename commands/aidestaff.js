@@ -110,7 +110,7 @@ module.exports = (client) => {
             '`!salonannonce #salon` — Définir le salon d\'annonces du bot (annonces, rappels, MOTD)',
             '`!salonjournaux #salon` — Définir le salon de journaux staff (modération, automod, signalements)',
             '`!rolesauto definir @role` — Définir le rôle automatique à l\'arrivée',
-            '`!reactionrole [ajouter|retirer|liste]` — Gérer les reaction-roles',
+            '`!rolereaction [ajouter|retirer|liste]` — Gérer les reaction-roles',
             '`!setanniversaire #salon` — Configurer le salon des anniversaires',
             '`!setchannelniveau #salon` — Configurer le salon des montées de niveau',
             '`!règlement [config]` — Configurer le règlement interactif du serveur',
