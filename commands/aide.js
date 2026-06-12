@@ -1,74 +1,216 @@
-const { EmbedBuilder } = require('discord.js');
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+} = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
-// ─── Catalogue complet des commandes non-staff ────────────────────────────────
-const CMDS = [
-  // Stats & Équipes
-  { cmd: '!stats <équipe>',                   desc: 'Résumé des performances d\'une équipe',              cat: '📊 Stats & Équipes' },
-  { cmd: '!infoequipe <équipe>',              desc: 'Fiche détaillée d\'une équipe',                      cat: '📊 Stats & Équipes' },
-  { cmd: '!classement',                        desc: 'Classement général des équipes',                    cat: '📊 Stats & Équipes' },
-  { cmd: '!top [N]',                           desc: 'Top N équipes (défaut : 10)',                        cat: '📊 Stats & Équipes' },
-  { cmd: '!comparer <T1> vs <T2>',            desc: 'Comparer deux équipes face à face',                  cat: '📊 Stats & Équipes' },
-  { cmd: '!historique <équipe>',              desc: 'Historique complet des matchs',                      cat: '📊 Stats & Équipes' },
-  { cmd: '!matchs',                            desc: 'Statistiques globales de tous les matchs',           cat: '📊 Stats & Équipes' },
-  { cmd: '!liste <équipe>',                   desc: 'Roster / composition d\'une équipe',                 cat: '📊 Stats & Équipes' },
-  { cmd: '!composition <équipe>',             desc: 'Voir la composition détaillée d\'une équipe',        cat: '📊 Stats & Équipes' },
-  { cmd: '!recherche <nom>',                  desc: 'Rechercher une équipe ou un joueur',                 cat: '📊 Stats & Équipes' },
-  // Stats Joueurs
-  { cmd: '!statsjoueur <nom>',                desc: 'Stats complètes d\'un joueur',                       cat: '👤 Stats Joueurs' },
-  { cmd: '!matchjoueur <nom>',                desc: 'Historique des matchs d\'un joueur',                 cat: '👤 Stats Joueurs' },
-  { cmd: '!classjoueurs',                      desc: 'Classement général des joueurs',                    cat: '👤 Stats Joueurs' },
-  { cmd: '!classniveau',                       desc: 'Classement par niveau XP',                          cat: '👤 Stats Joueurs' },
-  // Stats Avancées
-  { cmd: '!serie <équipe>',                   desc: 'Série de victoires/défaites en cours',               cat: '📈 Stats Avancées' },
-  { cmd: '!calculer <équipe>',                desc: 'Calcul avancé des performances',                     cat: '📈 Stats Avancées' },
-  { cmd: '!regularite <équipe>',              desc: 'Indice de régularité sur les derniers matchs',       cat: '📈 Stats Avancées' },
-  { cmd: '!faceatface <T1> <T2>',             desc: 'Bilan historique entre deux équipes',                cat: '📈 Stats Avancées' },
-  // Tournois & Saisons
-  { cmd: '!tournois',                          desc: 'Liste de tous les tournois',                        cat: '🏆 Tournois & Saisons' },
-  { cmd: '!detailtournoi <nom>',              desc: 'Détails et classement d\'un tournoi',                cat: '🏆 Tournois & Saisons' },
-  { cmd: '!inscrire <nom_équipe>',            desc: 'Inscrire son équipe à un tournoi',                   cat: '🏆 Tournois & Saisons' },
-  { cmd: '!mvp',                               desc: 'MVP actuel (meilleur ratio kills)',                  cat: '🏆 Tournois & Saisons' },
-  { cmd: '!mvpsaison',                         desc: 'MVP des saisons passées',                           cat: '🏆 Tournois & Saisons' },
-  { cmd: '!saisons',                           desc: 'Historique et vainqueurs des saisons',              cat: '🏆 Tournois & Saisons' },
-  { cmd: '!palmares',                          desc: 'Palmarès complet du serveur',                       cat: '🏆 Tournois & Saisons' },
-  { cmd: '!trophees',                          desc: 'Tous les trophées décernés',                        cat: '🏆 Tournois & Saisons' },
-  { cmd: '!recompenses',                       desc: 'Voir les rôles attribués par rang',                 cat: '🏆 Tournois & Saisons' },
-  // Niveau & Profil
-  { cmd: '!niveau',                            desc: 'Ton niveau XP et ta progression',                   cat: '📊 Niveau & Profil' },
-  { cmd: '!infouser [@user]',                 desc: 'Infos, niveau et avertissements d\'un membre',       cat: '📊 Niveau & Profil' },
-  { cmd: '!infoserveur',                       desc: 'Informations sur le serveur Discord',               cat: '📊 Niveau & Profil' },
-  { cmd: '!inforole @role',                   desc: 'Détails techniques d\'un rôle',                      cat: '📊 Niveau & Profil' },
-  { cmd: '!ping',                              desc: 'Latence du bot et de l\'API Discord',               cat: '📊 Niveau & Profil' },
-  { cmd: '!statut',                            desc: 'Statut du bot et aperçu des tournois actifs',       cat: '📊 Niveau & Profil' },
-  // IA
-  { cmd: '!ia <question>',                    desc: 'Poser une question à l\'IA SUPREMYX',                cat: '🤖 Intelligence Artificielle' },
-  { cmd: '!ia réinitialiser',                 desc: 'Effacer son historique de conversation IA',          cat: '🤖 Intelligence Artificielle' },
-  { cmd: '!ia modeles',                        desc: 'Voir les modèles IA disponibles et l\'actuel',      cat: '🤖 Intelligence Artificielle' },
-  { cmd: '!ia statistiques',                  desc: 'Statistiques d\'utilisation de l\'IA',               cat: '🤖 Intelligence Artificielle' },
-  // Outils
-  { cmd: '!rappel <durée> <texte>',           desc: 'Créer un rappel (ex : !rappel 2h match ce soir)',    cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!absent [message]',                  desc: 'Passer en mode AFK (les mentions notifient)',        cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!anniversaire définir JJ/MM[/AAAA]',desc: 'Enregistrer sa date d\'anniversaire',               cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!anniversaire liste',                desc: 'Voir les anniversaires du serveur',                  cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!anniversaire vérifier [@user]',    desc: 'Vérifier l\'anniversaire d\'un membre',              cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!pileface',                          desc: 'Lancer une pièce (pile ou face)',                    cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!tirageteam <@u1> <@u2> ...',       desc: 'Tirer des équipes aléatoires',                       cat: '🛠️ Outils & Utilitaires' },
-  { cmd: '!messagejour',                       desc: 'Voir le message du jour posté par le bot',          cat: '🛠️ Outils & Utilitaires' },
-  // Communauté
-  { cmd: '!suggestion <texte>',               desc: 'Envoyer une suggestion au staff',                    cat: '📬 Communauté & Tickets' },
-  { cmd: '!signaler <problème>',              desc: 'Signaler un problème anonymement',                   cat: '📬 Communauté & Tickets' },
-  { cmd: '!ticket [support|signalement|candidature]', desc: 'Ouvrir un ticket',                          cat: '📬 Communauté & Tickets' },
-  { cmd: '!fermer',                            desc: 'Fermer son ticket en cours',                        cat: '📬 Communauté & Tickets' },
-  { cmd: '!vote <question> | <opt1> | <opt2>',desc: 'Participer / créer un vote',                        cat: '📬 Communauté & Tickets' },
-  { cmd: '!sanctions [@user]',                desc: 'Voir ses sanctions (ou celles d\'un membre)',         cat: '📬 Communauté & Tickets' },
-  { cmd: '!avertissements [@user]',           desc: 'Voir l\'historique des avertissements',              cat: '📬 Communauté & Tickets' },
-  // Règles
-  { cmd: '!regles',                            desc: 'Afficher les règles du serveur',                    cat: '📋 Règles du serveur' },
-  { cmd: '!règlement',                         desc: 'Afficher le règlement interactif complet',          cat: '📋 Règles du serveur' },
+// ─── Catalogue par catégorie ──────────────────────────────────────────────────
+const CATS = [
+  {
+    value: 'stats_equipes',
+    label: 'Stats & Équipes',
+    emoji: '📊',
+    description: 'Classement, matchs, rosters, recherche',
+    cmds: [
+      '`!stats <équipe>` — Résumé des performances d\'une équipe',
+      '`!infoequipe <équipe>` — Fiche détaillée d\'une équipe',
+      '`!classement` — Classement général des équipes',
+      '`!top [N]` — Top N équipes (défaut : 10)',
+      '`!comparer <T1> vs <T2>` — Comparer deux équipes face à face',
+      '`!historique <équipe>` — Historique complet des matchs',
+      '`!matchs` — Statistiques globales de tous les matchs',
+      '`!liste <équipe>` — Roster / composition d\'une équipe',
+      '`!composition <équipe>` — Voir la composition détaillée d\'une équipe',
+      '`!recherche <nom>` — Rechercher une équipe ou un joueur',
+    ],
+  },
+  {
+    value: 'stats_joueurs',
+    label: 'Stats Joueurs',
+    emoji: '👤',
+    description: 'Stats individuelles, classements joueurs',
+    cmds: [
+      '`!statsjoueur <nom>` — Stats complètes d\'un joueur',
+      '`!matchjoueur <nom>` — Historique des matchs d\'un joueur',
+      '`!classjoueurs` — Classement général des joueurs',
+      '`!classniveau` — Classement par niveau XP',
+    ],
+  },
+  {
+    value: 'stats_avancees',
+    label: 'Stats Avancées',
+    emoji: '📈',
+    description: 'Séries, régularité, face à face',
+    cmds: [
+      '`!serie <équipe>` — Série de victoires/défaites en cours',
+      '`!calculer <équipe>` — Calcul avancé des performances',
+      '`!regularite <équipe>` — Indice de régularité sur les derniers matchs',
+      '`!faceatface <T1> <T2>` — Bilan historique entre deux équipes',
+    ],
+  },
+  {
+    value: 'tournois',
+    label: 'Tournois & Saisons',
+    emoji: '🏆',
+    description: 'Tournois, MVP, saisons, palmarès',
+    cmds: [
+      '`!tournois` — Liste de tous les tournois',
+      '`!detailtournoi <nom>` — Détails et classement d\'un tournoi',
+      '`!inscrire <nom_équipe>` — Inscrire son équipe à un tournoi',
+      '`!mvp` — MVP actuel (meilleur ratio kills)',
+      '`!mvpsaison` — MVP des saisons passées',
+      '`!saisons` — Historique et vainqueurs des saisons',
+      '`!palmares` — Palmarès complet du serveur',
+      '`!trophees` — Tous les trophées décernés',
+      '`!recompenses` — Voir les rôles attribués par rang',
+    ],
+  },
+  {
+    value: 'profil',
+    label: 'Niveau & Profil',
+    emoji: '🪪',
+    description: 'Niveau XP, infos serveur et membres',
+    cmds: [
+      '`!niveau` — Ton niveau XP et ta progression',
+      '`!infouser [@user]` — Infos, niveau et avertissements d\'un membre',
+      '`!infoserveur` — Informations sur le serveur Discord',
+      '`!inforole @role` — Détails techniques d\'un rôle',
+      '`!ping` — Latence du bot et de l\'API Discord',
+      '`!statut` — Statut du bot et aperçu des tournois actifs',
+    ],
+  },
+  {
+    value: 'ia',
+    label: 'Intelligence Artificielle',
+    emoji: '🤖',
+    description: 'Poser des questions à l\'IA SUPREMYX',
+    cmds: [
+      '`!ia <question>` — Poser une question à l\'IA SUPREMYX',
+      '`!ia réinitialiser` — Effacer son historique de conversation IA',
+      '`!ia modeles` — Voir les modèles IA disponibles et l\'actuel',
+      '`!ia statistiques` — Statistiques d\'utilisation de l\'IA',
+    ],
+  },
+  {
+    value: 'outils',
+    label: 'Outils & Utilitaires',
+    emoji: '🛠️',
+    description: 'Rappels, AFK, anniversaires, tirages',
+    cmds: [
+      '`!rappel <durée> <texte>` — Créer un rappel (ex : `!rappel 2h match ce soir`)',
+      '`!absent [message]` — Passer en mode AFK (les mentions notifient l\'auteur)',
+      '`!anniversaire définir JJ/MM[/AAAA]` — Enregistrer sa date d\'anniversaire',
+      '`!anniversaire liste` — Voir les anniversaires du serveur',
+      '`!anniversaire vérifier [@user]` — Vérifier l\'anniversaire d\'un membre',
+      '`!pileface` — Lancer une pièce (pile ou face)',
+      '`!tirageteam <@u1> <@u2> ...` — Tirer des équipes aléatoires',
+      '`!messagejour` — Voir le message du jour posté par le bot',
+    ],
+  },
+  {
+    value: 'communaute',
+    label: 'Communauté & Tickets',
+    emoji: '📬',
+    description: 'Suggestions, tickets, votes, sanctions',
+    cmds: [
+      '`!suggestion <texte>` — Envoyer une suggestion au staff',
+      '`!signaler <problème>` — Signaler un problème anonymement',
+      '`!ticket [support|signalement|candidature]` — Ouvrir un ticket',
+      '`!fermer` — Fermer son ticket en cours',
+      '`!vote <question> | <opt1> | <opt2>` — Participer / créer un vote',
+      '`!sanctions [@user]` — Voir ses sanctions (ou celles d\'un membre)',
+      '`!avertissements [@user]` — Voir l\'historique des avertissements',
+    ],
+  },
+  {
+    value: 'regles',
+    label: 'Règles du serveur',
+    emoji: '📋',
+    description: 'Règles et règlement du serveur',
+    cmds: [
+      '`!regles` — Afficher les règles du serveur',
+      '`!règlement` — Afficher le règlement interactif complet',
+    ],
+  },
 ];
 
+// Catalogue à plat pour la recherche
+const ALL_CMDS = CATS.flatMap(c =>
+  c.cmds.map(cmd => ({ cmd, cat: `${c.emoji} ${c.label}`, catValue: c.value }))
+);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function buildRow(userId) {
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`aide_cat:${userId}`)
+      .setPlaceholder('📂 Choisir une catégorie...')
+      .addOptions([
+        {
+          label: 'Vue d\'ensemble',
+          value: 'overview',
+          description: 'Toutes les catégories disponibles',
+          emoji: '🏠',
+        },
+        ...CATS.map(c => ({
+          label: c.label,
+          value: c.value,
+          description: c.description,
+          emoji: c.emoji,
+        })),
+      ])
+  );
+}
+
+function buildOverviewEmbed(client) {
+  const lines = CATS.map(c => `${c.emoji} **${c.label}** — ${c.description}`).join('\n');
+  return new EmbedBuilder()
+    .setColor(0xFF8C00)
+    .setAuthor({ name: 'SUPREMYX — Aide générale', iconURL: client.user.displayAvatarURL() })
+    .setDescription(
+      '> 💡 Paramètres `< >` **obligatoires**, `[ ]` **optionnels**.\n' +
+      '> Utilise le menu déroulant pour naviguer ou `!aide <terme>` pour rechercher.\n\n' +
+      lines
+    )
+    .setFooter({ text: 'SUPREMYX Esports · !aidestaff pour les commandes réservées au staff' })
+    .setTimestamp();
+}
+
+function buildCatEmbed(client, cat) {
+  const fields = [];
+  let chunk = [];
+  let len = 0;
+  let first = true;
+
+  for (const line of cat.cmds) {
+    const lineLen = line.length + 1;
+    if (len + lineLen > 1020 && chunk.length) {
+      fields.push({ name: first ? `${cat.emoji} ${cat.label}` : '\u200b', value: chunk.join('\n'), inline: false });
+      first = false;
+      chunk = [line];
+      len = lineLen;
+    } else {
+      chunk.push(line);
+      len += lineLen;
+    }
+  }
+  if (chunk.length) {
+    fields.push({ name: first ? `${cat.emoji} ${cat.label}` : '\u200b', value: chunk.join('\n'), inline: false });
+  }
+
+  return new EmbedBuilder()
+    .setColor(0xFF8C00)
+    .setAuthor({ name: 'SUPREMYX — Aide générale', iconURL: client.user.displayAvatarURL() })
+    .addFields(fields)
+    .setFooter({ text: 'SUPREMYX Esports · Utilise le menu pour changer de catégorie · !aide <terme> pour rechercher' })
+    .setTimestamp();
+}
+
+// ─── Module ───────────────────────────────────────────────────────────────────
 module.exports = (client) => {
+
+  // ── Commande principale ────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     if (!message.guild) return;
     if (message.author.bot) return;
@@ -81,23 +223,23 @@ module.exports = (client) => {
 
     const query = content.slice('!aide'.length).trim().toLowerCase();
 
-    // ── Mode recherche ────────────────────────────────────────────────────────
+    // ── Mode recherche ──────────────────────────────────────────────────────
     if (query) {
-      const results = CMDS.filter(c =>
+      const results = ALL_CMDS.filter(c =>
         c.cmd.toLowerCase().includes(query) ||
-        c.desc.toLowerCase().includes(query) ||
         c.cat.toLowerCase().includes(query)
       );
 
       if (!results.length) {
-        return message.reply(`🔍 Aucune commande trouvée pour **"${query}"**.\nTape \`!aide\` pour voir toutes les commandes.`);
+        return message.reply(
+          `🔍 Aucune commande trouvée pour **"${query}"**.\nTape \`!aide\` pour voir toutes les commandes.`
+        );
       }
 
-      // Regrouper par catégorie
       const byCategory = {};
       for (const r of results) {
         if (!byCategory[r.cat]) byCategory[r.cat] = [];
-        byCategory[r.cat].push(`\`${r.cmd}\` — ${r.desc}`);
+        byCategory[r.cat].push(r.cmd);
       }
 
       const fields = Object.entries(byCategory).map(([name, lines]) => ({
@@ -117,133 +259,42 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ── Mode aide complète ────────────────────────────────────────────────────
-    const footer = { text: 'SUPREMYX Esports · Tape !aidestaff si tu es staff · !aide <terme> pour rechercher' };
-    const color = 0xFF8C00;
+    // ── Mode menu ───────────────────────────────────────────────────────────
+    await message.channel.send({
+      embeds: [buildOverviewEmbed(client)],
+      components: [buildRow(message.author.id)],
+    });
+  });
 
-    const embed1 = new EmbedBuilder()
-      .setColor(color)
-      .setAuthor({ name: 'SUPREMYX — Aide générale', iconURL: client.user.displayAvatarURL() })
-      .setDescription('Toutes les commandes disponibles pour la communauté.\n> 💡 Paramètres `< >` **obligatoires**, `[ ]` **optionnels**. Tape `!aide <terme>` pour filtrer.')
-      .addFields(
-        {
-          name: '📊 Stats & Équipes',
-          value: [
-            '`!stats <équipe>` — Résumé des performances d\'une équipe',
-            '`!infoequipe <équipe>` — Fiche détaillée d\'une équipe',
-            '`!classement` — Classement général des équipes',
-            '`!top [N]` — Top N équipes (défaut : 10)',
-            '`!comparer <T1> vs <T2>` — Comparer deux équipes face à face',
-            '`!historique <équipe>` — Historique complet des matchs',
-            '`!matchs` — Statistiques globales de tous les matchs',
-            '`!liste <équipe>` — Roster / composition d\'une équipe',
-            '`!composition <équipe>` — Voir la composition détaillée',
-            '`!recherche <nom>` — Rechercher une équipe ou un joueur',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '👤 Stats Joueurs',
-          value: [
-            '`!statsjoueur <nom>` — Stats complètes d\'un joueur',
-            '`!matchjoueur <nom>` — Historique des matchs d\'un joueur',
-            '`!classjoueurs` — Classement général des joueurs',
-            '`!classniveau` — Classement par niveau XP',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📈 Stats Avancées',
-          value: [
-            '`!serie <équipe>` — Série de victoires/défaites en cours',
-            '`!calculer <équipe>` — Calcul avancé des performances',
-            '`!regularite <équipe>` — Indice de régularité sur les derniers matchs',
-            '`!faceatface <T1> <T2>` — Bilan historique entre deux équipes',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🏆 Tournois & Saisons',
-          value: [
-            '`!tournois` — Liste de tous les tournois',
-            '`!detailtournoi <nom>` — Détails et classement d\'un tournoi',
-            '`!inscrire <nom_équipe>` — Inscrire son équipe à un tournoi',
-            '`!mvp` — MVP actuel (meilleur ratio kills)',
-            '`!mvpsaison` — MVP des saisons passées',
-            '`!saisons` — Historique et vainqueurs des saisons',
-            '`!palmares` — Palmarès complet du serveur',
-            '`!trophees` — Tous les trophées décernés',
-            '`!recompenses` — Voir les rôles attribués par rang',
-          ].join('\n'),
-          inline: false,
-        }
-      );
+  // ── Interaction menu ───────────────────────────────────────────────────────
+  client.on('interactionCreate', async interaction => {
+    if (!interaction.isStringSelectMenu()) return;
+    if (!interaction.customId.startsWith('aide_cat:')) return;
 
-    const embed2 = new EmbedBuilder()
-      .setColor(color)
-      .addFields(
-        {
-          name: '📊 Niveau & Profil',
-          value: [
-            '`!niveau` — Ton niveau XP et ta progression',
-            '`!infouser [@user]` — Infos, niveau et avertissements d\'un membre',
-            '`!infoserveur` — Informations sur le serveur Discord',
-            '`!inforole @role` — Détails techniques d\'un rôle',
-            '`!ping` — Latence du bot et de l\'API Discord',
-            '`!statut` — Statut du bot et aperçu des tournois actifs',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🤖 Intelligence Artificielle',
-          value: [
-            '`!ia <question>` — Poser une question à l\'IA SUPREMYX',
-            '`!ia réinitialiser` — Effacer son historique de conversation IA',
-            '`!ia modeles` — Voir les modèles IA disponibles et l\'actuel',
-            '`!ia statistiques` — Statistiques d\'utilisation de l\'IA',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🛠️ Outils & Utilitaires',
-          value: [
-            '`!rappel <durée> <texte>` — Créer un rappel (ex : `!rappel 2h match ce soir`)',
-            '`!absent [message]` — Passer en mode AFK (les mentions notifient l\'auteur)',
-            '`!anniversaire définir JJ/MM[/AAAA]` — Enregistrer sa date d\'anniversaire',
-            '`!anniversaire liste` — Voir les anniversaires du serveur',
-            '`!anniversaire vérifier [@user]` — Vérifier l\'anniversaire d\'un membre',
-            '`!pileface` — Lancer une pièce (pile ou face)',
-            '`!tirageteam <@u1> <@u2> ...` — Tirer des équipes aléatoires',
-            '`!messagejour` — Voir le message du jour posté par le bot',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📬 Communauté & Tickets',
-          value: [
-            '`!suggestion <texte>` — Envoyer une suggestion au staff',
-            '`!signaler <problème>` — Signaler un problème anonymement',
-            '`!ticket [support|signalement|candidature]` — Ouvrir un ticket',
-            '`!fermer` — Fermer son ticket en cours',
-            '`!vote <question> | <opt1> | <opt2>` — Participer / créer un vote',
-            '`!sanctions [@user]` — Voir ses sanctions (ou celles d\'un membre)',
-            '`!avertissements [@user]` — Voir l\'historique des avertissements',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📋 Règles du serveur',
-          value: [
-            '`!regles` — Afficher les règles du serveur',
-            '`!règlement` — Afficher le règlement interactif complet',
-          ].join('\n'),
-          inline: false,
-        }
-      )
-      .setFooter(footer)
-      .setTimestamp();
+    const ownerId = interaction.customId.split(':')[1];
+    if (interaction.user.id !== ownerId) {
+      return interaction.reply({
+        content: '⚠️ Seul l\'auteur de la commande peut utiliser ce menu.',
+        ephemeral: true,
+      });
+    }
 
-    await message.channel.send({ embeds: [embed1] });
-    await message.channel.send({ embeds: [embed2] });
+    const selected = interaction.values[0];
+    const row = buildRow(ownerId);
+
+    if (selected === 'overview') {
+      return interaction.update({
+        embeds: [buildOverviewEmbed(client)],
+        components: [row],
+      });
+    }
+
+    const cat = CATS.find(c => c.value === selected);
+    if (!cat) return interaction.update({ components: [row] });
+
+    return interaction.update({
+      embeds: [buildCatEmbed(client, cat)],
+      components: [row],
+    });
   });
 };
