@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
 const IaConfig   = require('../database/models/IaConfig');
@@ -6,6 +6,7 @@ const IaUsage    = require('../database/models/IaUsage');
 const Team       = require('../database/models/Team');
 const Match      = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
+const PlayerStat = require('../database/models/PlayerStat');
 
 let openrouter = null;
 function getOpenRouter() {
@@ -312,6 +313,115 @@ module.exports = (client) => {
         .setDescription(answer).setTimestamp()
         .setFooter({ text: `Résumé généré par IA · Demandé par ${message.author.username}` });
       return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia historique <joueur> ───────────────────────────────────────────────
+    if (sub === 'historique') {
+      const cd = checkCooldown(message.author.id, 'ia-historique', 10);
+      if (cd) return replyCooldown(message, cd, 'ia-historique');
+
+      const playerName = args.slice(1).join(' ').trim();
+      if (!playerName) return message.reply('Usage : `!ia historique <nom_du_joueur>`');
+
+      const guildId = message.guild.id;
+      const stat    = await PlayerStat.findOne({
+        guildId,
+        displayName: new RegExp(`^${playerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+      });
+
+      if (!stat) return message.reply(`❌ Joueur **${playerName}** introuvable sur ce serveur.`);
+
+      const history = [...stat.history].reverse(); // du plus récent au plus ancien
+      const PER_PAGE = 10;
+      const totalPages = Math.max(1, Math.ceil(history.length / PER_PAGE));
+
+      if (!history.length) {
+        return message.reply(`❌ **${stat.displayName}** n'a aucun match dans son historique.`);
+      }
+
+      const buildEmbed = (page) => {
+        const slice  = history.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+        const avgKills = stat.totalMatches > 0 ? (stat.totalKills / stat.totalMatches).toFixed(2) : '0.00';
+
+        const lines = slice.map((m, i) => {
+          const idx     = page * PER_PAGE + i + 1;
+          const dateStr = m.date
+            ? new Date(m.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '—';
+          const tourn = m.tournamentName ? ` · *${m.tournamentName}*` : '';
+          const killEmoji = m.kills >= 10 ? '🔥' : m.kills >= 5 ? '⭐' : '•';
+          return `\`${String(idx).padStart(3)}\` ${killEmoji} **${m.kills}** kills · #${m.teamPlacement}${tourn} · ${dateStr}`;
+        });
+
+        return new EmbedBuilder()
+          .setColor(0xFF8C00)
+          .setAuthor({
+            name: `📜 Historique — ${stat.displayName} (${stat.teamName})`,
+            iconURL: client.user.displayAvatarURL(),
+          })
+          .setDescription(lines.join('\n'))
+          .addFields(
+            { name: '🔫 Total kills',   value: `**${stat.totalKills}**`,           inline: true },
+            { name: '⭐ Meilleur match', value: `**${stat.bestKills}** kills`,       inline: true },
+            { name: '📊 Moy. kills',    value: `**${avgKills}** / match`,           inline: true },
+          )
+          .setFooter({ text: `Page ${page + 1}/${totalPages} · ${history.length} match(s) au total · SUPREMYX Esports` })
+          .setTimestamp();
+      };
+
+      const buildRow = (page, disabled = false) => new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('hist_prev')
+          .setLabel('◀ Précédent')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled || page === 0),
+        new ButtonBuilder()
+          .setCustomId('hist_next')
+          .setLabel('Suivant ▶')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled || page >= totalPages - 1),
+        new ButtonBuilder()
+          .setCustomId('hist_first')
+          .setLabel('⏮ Début')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled || page === 0),
+        new ButtonBuilder()
+          .setCustomId('hist_last')
+          .setLabel('Fin ⏭')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled || page >= totalPages - 1),
+      );
+
+      let currentPage = 0;
+      const msg = await message.channel.send({
+        embeds: [buildEmbed(currentPage)],
+        components: totalPages > 1 ? [buildRow(currentPage)] : [],
+      });
+
+      if (totalPages <= 1) return;
+
+      const collector = msg.createMessageComponentCollector({
+        filter: i => i.user.id === message.author.id,
+        time: 60_000,
+      });
+
+      collector.on('collect', async interaction => {
+        if (interaction.customId === 'hist_prev')  currentPage = Math.max(0, currentPage - 1);
+        if (interaction.customId === 'hist_next')  currentPage = Math.min(totalPages - 1, currentPage + 1);
+        if (interaction.customId === 'hist_first') currentPage = 0;
+        if (interaction.customId === 'hist_last')  currentPage = totalPages - 1;
+
+        await interaction.update({
+          embeds: [buildEmbed(currentPage)],
+          components: [buildRow(currentPage)],
+        });
+      });
+
+      collector.on('end', () => {
+        msg.edit({ components: [buildRow(currentPage, true)] }).catch(() => {});
+      });
+
+      return;
     }
 
     // ── !ia <question> ─────────────────────────────────────────────────────────
