@@ -1,8 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const OpenAI = require('openai');
-const IaConfig = require('../database/models/IaConfig');
-const IaUsage  = require('../database/models/IaUsage');
+const IaConfig   = require('../database/models/IaConfig');
+const IaUsage    = require('../database/models/IaUsage');
+const Team       = require('../database/models/Team');
+const Match      = require('../database/models/Match');
+const Tournament = require('../database/models/Tournament');
 
 let openrouter = null;
 function getOpenRouter() {
