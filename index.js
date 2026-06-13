@@ -10,6 +10,9 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const { setupErrorHandler, logError } = require('./utils/errorHandler');
 const { setupMaintenanceGuard } = require('./utils/maintenanceGuard');
+const BotInstance = require('./database/models/BotInstance');
+const crypto = require('crypto');
+const INSTANCE_ID = crypto.randomBytes(6).toString('hex');
 const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
@@ -39,8 +42,38 @@ client.setMaxListeners(100);
 setupErrorHandler(client);
 setupMaintenanceGuard(client);
 
-client.once('clientReady', () => {
+client.once('clientReady', async () => {
   console.log(`🔥 SUPREMYX connecté en tant que ${client.user.tag}`);
+
+  // ── Détection d'instances multiples ────────────────────────────────────────
+  try {
+    const recent = await BotInstance.find({
+      instanceId: { $ne: INSTANCE_ID },
+      heartbeat:  { $gte: new Date(Date.now() - 20000) }
+    }).lean();
+
+    if (recent.length > 0) {
+      console.warn('⚠️  ATTENTION : Une autre instance du bot semble active (même token).');
+      console.warn('⚠️  Cela provoque des réponses en double. Arrête l\'autre instance.');
+      recent.forEach(r => console.warn(`   → Instance ${r.instanceId} | PID ${r.pid} | démarrée ${r.startedAt}`));
+    }
+
+    await BotInstance.findOneAndUpdate(
+      { instanceId: INSTANCE_ID },
+      { pid: process.pid, heartbeat: new Date(), startedAt: new Date() },
+      { upsert: true }
+    );
+
+    setInterval(async () => {
+      await BotInstance.findOneAndUpdate(
+        { instanceId: INSTANCE_ID },
+        { heartbeat: new Date() }
+      ).catch(() => {});
+    }, 10000);
+
+  } catch (e) {
+    console.error('[BotInstance] Erreur détection:', e.message);
+  }
   startReminder(client);
   console.log('⏰ Système de rappels activé');
   startAutomod(client);

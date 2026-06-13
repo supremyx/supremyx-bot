@@ -1,7 +1,22 @@
 const MaintenanceConfig = require('../database/models/MaintenanceConfig');
 
+// ── Cache maintenance par serveur ─────────────────────────────────────────────
 const cache = new Map();
 
+// ── Déduplication des messages ────────────────────────────────────────────────
+// Bloque le traitement d'un même message plusieurs fois dans le même processus.
+// Protège aussi contre les doubles événements Discord (reconnexion gateway).
+const processedIds = new Set();
+const DEDUP_TTL_MS = 8000;
+
+function isDuplicate(messageId) {
+  if (processedIds.has(messageId)) return true;
+  processedIds.add(messageId);
+  setTimeout(() => processedIds.delete(messageId), DEDUP_TTL_MS);
+  return false;
+}
+
+// ── Exports maintenance ───────────────────────────────────────────────────────
 async function loadCache(guildId) {
   const doc = await MaintenanceConfig.findOne({ guildId }).lean();
   if (doc) cache.set(guildId, { active: doc.active, message: doc.message });
@@ -36,6 +51,7 @@ async function setMessage(guildId, message) {
   return doc;
 }
 
+// ── Setup du guard (patch client.emit) ────────────────────────────────────────
 function setupMaintenanceGuard(client) {
   MaintenanceConfig.find({ active: true }).lean().then(docs => {
     for (const doc of docs) {
@@ -44,9 +60,18 @@ function setupMaintenanceGuard(client) {
   }).catch(() => {});
 
   const originalEmit = client.emit.bind(client);
+
   client.emit = function (event, ...args) {
     if (event === 'messageCreate') {
       const message = args[0];
+
+      // ── Déduplication ─────────────────────────────────────────────────────
+      if (message?.id && isDuplicate(message.id)) {
+        console.warn(`[dedup] Message ${message.id} ignoré (doublon détecté).`);
+        return true;
+      }
+
+      // ── Blocage maintenance ───────────────────────────────────────────────
       if (
         message?.guild &&
         !message?.author?.bot &&
@@ -62,6 +87,7 @@ function setupMaintenanceGuard(client) {
         }
       }
     }
+
     return originalEmit(event, ...args);
   };
 }
