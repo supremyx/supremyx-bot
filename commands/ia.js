@@ -315,6 +315,97 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
+    // ── !ia rapport <joueur> ─────────────────────────────────────────────────
+    if (sub === 'rapport') {
+      const cd = checkCooldown(message.author.id, 'ia-rapport', 30);
+      if (cd) return replyCooldown(message, cd, 'ia-rapport');
+
+      const playerName = args.slice(1).join(' ').trim();
+      if (!playerName) return message.reply('Usage : `!ia rapport <nom_du_joueur>`');
+
+      const guildId = message.guild.id;
+      const stat    = await PlayerStat.findOne({
+        guildId,
+        displayName: new RegExp(`^${playerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+      });
+      if (!stat) return message.reply(`❌ Joueur **${playerName}** introuvable sur ce serveur.`);
+
+      const thinking = await message.channel.send(`🤖 Analyse du rapport de performance pour **${stat.displayName}**...`);
+
+      const history = stat.history ?? [];
+      const n       = stat.totalMatches || 1;
+      const avgKills = (stat.totalKills / n).toFixed(2);
+
+      // Top 3 meilleures performances
+      const sorted  = [...history].sort((a, b) => b.kills - a.kills);
+      const top3    = sorted.slice(0, 3).map(m =>
+        `${m.kills} kills · #${m.teamPlacement}${m.tournamentName ? ` (${m.tournamentName})` : ''}`
+      );
+
+      // Top 3 pires performances
+      const worst3  = sorted.slice(-3).reverse().map(m =>
+        `${m.kills} kills · #${m.teamPlacement}${m.tournamentName ? ` (${m.tournamentName})` : ''}`
+      );
+
+      // Tendance récente (5 derniers vs 5 précédents)
+      const recent  = history.slice(-5);
+      const prev5   = history.slice(-10, -5);
+      const recentAvg = recent.length  ? (recent.reduce((a, m) => a + m.kills, 0) / recent.length).toFixed(1) : 0;
+      const prevAvg   = prev5.length   ? (prev5.reduce((a,   m) => a + m.kills, 0) / prev5.length).toFixed(1) : null;
+      const trendText = prevAvg !== null
+        ? `Moy 5 derniers : ${recentAvg} kills vs 5 précédents : ${prevAvg} kills`
+        : `Moy 5 derniers matchs : ${recentAvg} kills`;
+
+      // Constance (écart-type)
+      const mean   = stat.totalKills / n;
+      const stdDev = history.length > 1
+        ? Math.sqrt(history.reduce((sum, m) => sum + Math.pow(m.kills - mean, 2), 0) / history.length).toFixed(1)
+        : '—';
+
+      // Tournois joués
+      const tourneyCount = new Set(history.map(m => m.tournamentName).filter(Boolean)).size;
+
+      const context = [
+        `Joueur : ${stat.displayName} | Équipe : ${stat.teamName}`,
+        `Matchs joués : ${stat.totalMatches} | Total kills : ${stat.totalKills} | Meilleur match : ${stat.bestKills} kills`,
+        `Moyenne kills/match : ${avgKills} | Écart-type (constance) : ${stdDev}`,
+        `Tournois disputés : ${tourneyCount}`,
+        `Tendance : ${trendText}`,
+        `Top 3 performances : ${top3.join(' / ') || '—'}`,
+        `3 pires performances : ${worst3.join(' / ') || '—'}`,
+      ].join('\n');
+
+      const answer = await iaCall(
+        'Tu es un coach esport professionnel qui rédige des rapports de performance détaillés et personnalisés pour des joueurs de gaming compétitif. Tu analyses les données statistiques de manière objective et bienveillante, en encourageant le joueur tout en étant honnête sur ses points faibles. Tu réponds exclusivement en français.',
+        `Voici les données statistiques du joueur :\n${context}\n\nRédige un rapport de performance structuré avec les sections suivantes :\n1. 🎯 **Profil global** — résumé en 2-3 phrases\n2. 💪 **Points forts** — ce que le joueur fait bien\n3. 📉 **Axes d'amélioration** — ses faiblesses identifiées avec des données précises\n4. 🔥 **Pics de performance** — ses meilleurs matchs et ce qu'ils révèlent\n5. 📈 **Tendance actuelle** — progression ou régression récente\n6. 🎓 **Conseils personnalisés** — 2-3 recommandations concrètes`,
+        thinking
+      );
+      if (!answer) return;
+
+      // Découper si nécessaire (>4000 chars)
+      const chunks = answer.match(/[\s\S]{1,3900}/g) ?? [answer];
+
+      const embed = new EmbedBuilder()
+        .setColor(0xFF8C00)
+        .setAuthor({ name: `📋 Rapport de performance — ${stat.displayName}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(chunks[0])
+        .addFields(
+          { name: '📊 Stats clés', value: [`🔫 **${stat.totalKills}** kills au total`, `⭐ Meilleur : **${stat.bestKills}** kills`, `📈 Moy : **${avgKills}** kills/match`].join('\n'), inline: true },
+          { name: '🎮 Expérience', value: [`**${stat.totalMatches}** matchs joués`, `**${tourneyCount}** tournoi(s)`, `Constance : σ **${stdDev}**`].join('\n'), inline: true },
+        )
+        .setFooter({ text: `Rapport IA · Équipe ${stat.teamName} · Demandé par ${message.author.username}` })
+        .setTimestamp();
+
+      await thinking.edit({ content: '', embeds: [embed] });
+
+      for (let i = 1; i < chunks.length; i++) {
+        await message.channel.send({
+          embeds: [new EmbedBuilder().setColor(0xFF8C00).setDescription(chunks[i])],
+        });
+      }
+      return;
+    }
+
     // ── !ia historique <joueur> ───────────────────────────────────────────────
     if (sub === 'historique') {
       const cd = checkCooldown(message.author.id, 'ia-historique', 10);
