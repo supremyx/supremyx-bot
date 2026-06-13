@@ -100,6 +100,7 @@ require('./commands/ia')(client);
 // --- Aide ---
 require('./commands/aide')(client);
 require('./commands/aidestaff')(client);
+require('./commands/repertoire')(client);
 
 // --- Erreurs ---
 require('./commands/erreurs')(client);
