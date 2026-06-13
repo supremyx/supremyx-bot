@@ -41,7 +41,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "comparaison", label: "Comparer",     icon: "⚔️" },
   { key: "stats",       label: "Stats",        icon: "📊" },
   { key: "moderation",  label: "Modération",   icon: "🛡️" },
-  { key: "botstats",    label: "Bot Stats",    icon: "🤖" },
+  { key: "botstats",    label: "Stats Bot",    icon: "🤖" },
   { key: "logs",        label: "Logs",         icon: "📋" },
 ];
 
