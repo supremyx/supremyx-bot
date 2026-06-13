@@ -8,7 +8,7 @@ process.on('uncaughtException', (err) => {
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
-const { setupErrorHandler } = require('./utils/errorHandler');
+const { setupErrorHandler, logError } = require('./utils/errorHandler');
 const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
@@ -66,6 +66,9 @@ require('./commands/ia')(client);
 require('./commands/aide')(client);
 require('./commands/aidestaff')(client);
 
+// --- Erreurs ---
+require('./commands/erreurs')(client);
+
 // --- Utilitaires ---
 require('./commands/ping')(client);
 require('./commands/status')(client);
@@ -75,7 +78,6 @@ const { startApiServer } = require('./api/server');
 startApiServer();
 require('./commands/changelog')(client);
 require('./commands/botstats')(client);
-require('./commands/commandes')(client);
 require('./utils/commandTracker')(client);
 
 // --- Annonces ---
@@ -159,8 +161,6 @@ require('./commands/rankroles')(client);
 
 // --- Config ---
 require('./commands/configbot')(client);
-require('./commands/setchannel')(client);
-require('./commands/voirconfig')(client);
 
 // --- Blacklist ---
 require('./commands/blacklist')(client);
@@ -227,23 +227,5 @@ require('./commands/report')(client);
 
 // --- Roster équipes ---
 require('./commands/roster')(client);
-
-// --- Stats avancées ---
-require('./commands/statsplus')(client);
-
-// --- Équipes avancées ---
-require('./commands/equipesplus')(client);
-
-// --- Tournois avancés ---
-require('./commands/tournoiplus')(client);
-
-// --- Modération avancée ---
-require('./commands/moderationplus')(client);
-
-// --- Gestion XP ---
-require('./commands/xpmanage')(client);
-
-// --- Utilitaires avancés ---
-require('./commands/utilitairesplus')(client);
 
 client.login(process.env.TOKEN);

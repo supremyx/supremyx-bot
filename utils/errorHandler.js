@@ -1,11 +1,37 @@
 const { EmbedBuilder } = require('discord.js');
-const { getLogChannelId } = require('./channelConfig');
+const ErrorLog = require('../database/models/ErrorLog');
+
+function extractCommand(stack) {
+  if (!stack) return null;
+  const match = stack.match(/commands[\\/](\w+)\.js/);
+  return match ? `!${match[1]}` : null;
+}
+
+async function logError({ source = 'unhandledRejection', error, context = {} }) {
+  const err = error instanceof Error ? error : new Error(String(error));
+  const command = context.command || extractCommand(err.stack);
+
+  try {
+    await ErrorLog.create({
+      source,
+      command,
+      errorMessage: err.message?.slice(0, 512) || String(err).slice(0, 512),
+      stack: err.stack?.slice(0, 2000) || null,
+      guildId: context.guildId || null,
+      guildName: context.guildName || null,
+      userId: context.userId || null,
+      userTag: context.userTag || null,
+      channelId: context.channelId || null,
+    });
+  } catch (dbErr) {
+    console.error('[errorHandler] Impossible de sauvegarder en DB:', dbErr.message);
+  }
+}
 
 function setupErrorHandler(client) {
-  async function sendErrorLog(title, error) {
-    const channelId = getLogChannelId();
+  async function sendDiscordAlert(title, error) {
+    const channelId = process.env.LOG_CHANNEL_ID;
     if (!channelId) return;
-
     const channel = client.channels.cache.get(channelId);
     if (!channel) return;
 
@@ -24,25 +50,24 @@ function setupErrorHandler(client) {
     await channel.send({ embeds: [embed] }).catch(() => {});
   }
 
-  // Erreur Discord (ex: permissions manquantes, message supprimé, etc.)
   client.on('error', (error) => {
     console.error('❌ Erreur Discord client:', error);
-    sendErrorLog('Erreur Discord Client', error);
+    logError({ source: 'discordError', error });
+    sendDiscordAlert('Erreur Discord Client', error);
   });
 
-  // Promesse rejetée non gérée (ex: DB timeout, fetch échoué)
   process.on('unhandledRejection', (reason) => {
     console.error('❌ Promesse rejetée non gérée:', reason);
-    sendErrorLog('Promesse rejetée non gérée', reason);
+    logError({ source: 'unhandledRejection', error: reason });
+    sendDiscordAlert('Promesse rejetée non gérée', reason);
   });
 
-  // Exception non capturée (ex: bug inattendu dans une commande)
   process.on('uncaughtException', (error) => {
     console.error('❌ Exception non capturée:', error);
-    sendErrorLog('Exception non capturée', error);
+    logError({ source: 'uncaughtException', error });
+    sendDiscordAlert('Exception non capturée', error);
   });
 
-  // Arrêt propre — ferme la connexion MongoDB avant de quitter
   async function gracefulShutdown(signal) {
     console.log(`⚠️ Signal ${signal} reçu — arrêt propre en cours...`);
     try {
@@ -59,4 +84,4 @@ function setupErrorHandler(client) {
   process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
 }
 
-module.exports = { setupErrorHandler };
+module.exports = { setupErrorHandler, logError };
