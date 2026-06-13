@@ -75,6 +75,7 @@ const { startApiServer } = require('./api/server');
 startApiServer();
 require('./commands/changelog')(client);
 require('./commands/botstats')(client);
+require('./commands/commandes')(client);
 require('./utils/commandTracker')(client);
 
 // --- Annonces ---
