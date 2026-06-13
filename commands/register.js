@@ -6,6 +6,8 @@ module.exports = (client) => {
     try {
     if (!message.content.startsWith('!enregistrer')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');

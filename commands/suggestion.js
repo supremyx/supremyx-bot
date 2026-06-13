@@ -7,6 +7,8 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     // --- !setsuggestion #channel ---
     if (content.startsWith('!configsuggestion')) {

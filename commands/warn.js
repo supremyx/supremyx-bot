@@ -7,6 +7,8 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!avertir') && !message.content.startsWith('!avertissements') && !message.content.startsWith('!supprimerwarn')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = message.content.split(' ');
@@ -54,10 +56,10 @@ module.exports = (client) => {
         .setColor(totalWarns >= 3 ? 0xED4245 : 0xFEE75C)
         .addFields(
           { name: '🎯 Cible', value: target, inline: true },
-          { name: '⚠️ Total avertissements', value: `${totalWarns}`, inline: true },
+          { name: '⚠️ Total warns', value: `${totalWarns}`, inline: true },
           { name: '📝 Raison', value: reason }
         )
-        .setFooter({ text: `Avertissement par ${message.author.tag}` })
+        .setFooter({ text: `Warn par ${message.author.tag}` })
         .setTimestamp();
 
       if (totalWarns >= 3) {
@@ -84,7 +86,7 @@ module.exports = (client) => {
           .setColor(0xFEE75C)
           .addFields(
             { name: '📝 Raison', value: reason },
-            { name: '⚠️ Total avertissements', value: `${totalWarns}` }
+            { name: '⚠️ Total warns', value: `${totalWarns}` }
           )
           .setFooter({ text: `Par ${message.author.tag}` })
           .setTimestamp();

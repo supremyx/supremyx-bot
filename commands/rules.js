@@ -16,6 +16,8 @@ module.exports = (client) => {
       !content.startsWith('!effacerregles')
     ) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');

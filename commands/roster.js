@@ -65,24 +65,26 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!liste')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.slice('!liste'.length).trim().split(/\s+/);
     const sub = args[0]?.toLowerCase();
 
     // --- !liste <équipe> — afficher le roster ---
-    if (!sub || (!['ajouter', 'retirer', 'role', 'note', 'vider', 'liste'].includes(sub) && sub)) {
+    if (!sub || (!['add', 'del', 'role', 'note', 'clear', 'list'].includes(sub) && sub)) {
       const teamName = args.join(' ').trim();
       if (!teamName) {
         return message.reply(
           '**Usage :**\n' +
           '`!liste <équipe>` — Afficher le roster\n' +
-          '`!liste ajouter <équipe> @user <rôle> [note]` — Ajouter *(staff)*\n' +
-          '`!liste retirer <équipe> @user` — Retirer *(staff)*\n' +
+          '`!liste add <équipe> @user <rôle> [note]` — Ajouter *(staff)*\n' +
+          '`!liste del <équipe> @user` — Retirer *(staff)*\n' +
           '`!liste role <équipe> @user <rôle>` — Changer le rôle *(staff)*\n' +
           '`!liste note <équipe> @user <note>` — Ajouter une note *(staff)*\n' +
-          '`!liste vider <équipe>` — Vider le roster *(staff)*\n' +
-          '`!liste liste` — Tous les rosters enregistrés\n\n' +
+          '`!liste clear <équipe>` — Vider le roster *(staff)*\n' +
+          '`!liste list` — Tous les rosters enregistrés\n\n' +
           `**Rôles disponibles :** ${VALID_ROLES.join(', ')}`
         );
       }
@@ -95,8 +97,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !liste liste ---
-    if (sub === 'liste') {
+    // --- !liste list ---
+    if (sub === 'list') {
       const rosters = await Roster.find({ guildId: message.guild.id });
       if (!rosters.length) return message.reply('❌ Aucun roster enregistré.');
 
@@ -113,23 +115,23 @@ module.exports = (client) => {
     // --- Staff-only commands from here ---
     if (!isStaff) return message.reply('⛔ Staff uniquement.');
 
-    // --- !liste ajouter <équipe> @user <rôle> [note] ---
-    if (sub === 'ajouter') {
+    // --- !liste add <équipe> @user <rôle> [note] ---
+    if (sub === 'add') {
       const mention = message.mentions.members.first();
-      if (!mention) return message.reply('Usage : `!liste ajouter <équipe> @user <rôle> [note]`');
+      if (!mention) return message.reply('Usage : `!liste add <équipe> @user <rôle> [note]`');
 
-      // Team name is everything between "ajouter" and the mention
-      const rawContent = content.slice(content.toLowerCase().indexOf('!liste ajouter') + '!liste ajouter'.length).trim();
+      // Team name is everything between "add" and the mention
+      const rawContent = content.slice(content.toLowerCase().indexOf('!liste add') + '!liste add'.length).trim();
       const mentionPattern = /<@!?\d+>/;
       const mentionMatch = rawContent.match(mentionPattern);
-      if (!mentionMatch) return message.reply('Usage : `!liste ajouter <équipe> @user <rôle> [note]`');
+      if (!mentionMatch) return message.reply('Usage : `!liste add <équipe> @user <rôle> [note]`');
 
       const teamName = rawContent.slice(0, rawContent.indexOf(mentionMatch[0])).trim();
       const afterMention = rawContent.slice(rawContent.indexOf(mentionMatch[0]) + mentionMatch[0].length).trim().split(/\s+/);
       const ingameRole = normalizeRole(afterMention[0]);
       const note = afterMention.slice(1).join(' ').trim();
 
-      if (!teamName) return message.reply('Usage : `!liste ajouter <équipe> @user <rôle> [note]`');
+      if (!teamName) return message.reply('Usage : `!liste add <équipe> @user <rôle> [note]`');
       if (!ingameRole) return message.reply(`❌ Rôle invalide. Choisissez parmi : ${VALID_ROLES.join(', ')}`);
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
@@ -159,17 +161,17 @@ module.exports = (client) => {
       return message.reply(`✅ <@${mention.id}> ajouté au roster de **${team.name}** en tant que **${ROLE_ICONS[ingameRole]} ${ingameRole}**.`);
     }
 
-    // --- !liste retirer <équipe> @user ---
-    if (sub === 'retirer') {
+    // --- !liste del <équipe> @user ---
+    if (sub === 'del') {
       const mention = message.mentions.members.first();
-      if (!mention) return message.reply('Usage : `!liste retirer <équipe> @user`');
+      if (!mention) return message.reply('Usage : `!liste del <équipe> @user`');
 
-      const rawContent = content.slice(content.toLowerCase().indexOf('!liste retirer') + '!liste retirer'.length).trim();
+      const rawContent = content.slice(content.toLowerCase().indexOf('!liste del') + '!liste del'.length).trim();
       const mentionPattern = /<@!?\d+>/;
       const mentionMatch = rawContent.match(mentionPattern);
       const teamName = rawContent.slice(0, rawContent.indexOf(mentionMatch[0])).trim();
 
-      if (!teamName) return message.reply('Usage : `!liste retirer <équipe> @user`');
+      if (!teamName) return message.reply('Usage : `!liste del <équipe> @user`');
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
@@ -191,7 +193,7 @@ module.exports = (client) => {
     // --- !liste role <équipe> @user <rôle> ---
     if (sub === 'role') {
       const mention = message.mentions.members.first();
-      if (!mention) return message.reply('Usage : `!liste role <équipe> @user <nouveau-rôle>`');
+      if (!mention) return message.reply('Usage : `!liste role <équipe> @user <rôle>`');
 
       const rawContent = content.slice(content.toLowerCase().indexOf('!liste role') + '!liste role'.length).trim();
       const mentionPattern = /<@!?\d+>/;
@@ -249,10 +251,10 @@ module.exports = (client) => {
       return message.reply(`✅ Note mise à jour pour <@${mention.id}> dans **${team.name}**.`);
     }
 
-    // --- !liste vider <équipe> ---
-    if (sub === 'vider') {
+    // --- !liste clear <équipe> ---
+    if (sub === 'clear') {
       const teamName = args.slice(1).join(' ').trim();
-      if (!teamName) return message.reply('Usage : `!liste vider <équipe>`');
+      if (!teamName) return message.reply('Usage : `!liste clear <équipe>`');
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);

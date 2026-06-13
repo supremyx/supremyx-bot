@@ -14,6 +14,8 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!rolereaction')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     if (!isStaff) return message.reply('Staff uniquement');
@@ -21,8 +23,8 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !reactionrole ajouter #channel <messageId> <emoji> @role [label] ---
-    if (sub === 'ajouter') {
+    // --- !reactionrole add #channel <messageId> <emoji> @role [label] ---
+    if (sub === 'add') {
       const targetChannel = message.mentions.channels.first();
       const msgId = targetChannel ? args[3] : args[2];
       const emoji = targetChannel ? args[4] : args[3];
@@ -32,8 +34,8 @@ module.exports = (client) => {
 
       if (!msgId || !emoji || !role || !targetChannel)
         return message.reply(
-          'Usage : `!rolereaction ajouter #salon <messageId> <emoji> @role [label]`\n' +
-          'Exemple : `!rolereaction ajouter #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
+          'Usage : `!reactionrole add #salon <messageId> <emoji> @role [label]`\n' +
+          'Exemple : `!reactionrole add #général 123456789 🎮 @Joueur Rôle joueur`\n\n' +
           'Astuce : active le mode développeur Discord pour copier l\'ID d\'un message.'
         );
 
@@ -78,13 +80,13 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !reactionrole retirer <messageId> <emoji> ---
-    if (sub === 'retirer' || sub === 'supprimer') {
+    // --- !reactionrole remove <messageId> <emoji> ---
+    if (sub === 'remove' || sub === 'del') {
       const msgId = args[2];
       const emoji = args[3];
 
       if (!msgId || !emoji)
-        return message.reply('Usage : `!rolereaction retirer <messageId> <emoji>`');
+        return message.reply('Usage : `!reactionrole remove <messageId> <emoji>`');
 
       const emojiStr = emojiKey(emoji);
       const deleted = await ReactionRole.findOneAndDelete({ messageId: msgId, emoji: emojiStr });
@@ -95,12 +97,12 @@ module.exports = (client) => {
       return message.reply(`✅ Reaction-role **${emoji}** supprimé.`);
     }
 
-    // --- !reactionrole liste ---
-    if (!sub || sub === 'liste') {
+    // --- !reactionrole list ---
+    if (!sub || sub === 'list') {
       const entries = await ReactionRole.find({ guildId: message.guild.id }).sort({ createdAt: -1 });
 
       if (!entries.length)
-        return message.reply('Aucun reaction-role configuré. Utilise `!rolereaction ajouter` pour en créer un.');
+        return message.reply('Aucun reaction-role configuré. Utilise `!reactionrole add` pour en créer un.');
 
       const embed = new EmbedBuilder()
         .setTitle(`🎭 Reaction-roles — ${entries.length} entrée(s)`)
@@ -119,10 +121,10 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !reactionrole vider <messageId> --- remove all for a message
-    if (sub === 'vider') {
+    // --- !reactionrole clear <messageId> --- remove all for a message
+    if (sub === 'clear') {
       const msgId = args[2];
-      if (!msgId) return message.reply('Usage : `!rolereaction vider <messageId>`');
+      if (!msgId) return message.reply('Usage : `!reactionrole clear <messageId>`');
 
       const result = await ReactionRole.deleteMany({ messageId: msgId });
       if (!result.deletedCount) return message.reply('❌ Aucun reaction-role sur ce message.');
@@ -132,11 +134,11 @@ module.exports = (client) => {
     }
 
     message.reply(
-      '**Commandes `!rolereaction` :**\n' +
-      '`!rolereaction ajouter #salon <msgId> <emoji> @role [label]` — Configurer\n' +
-      '`!rolereaction retirer <msgId> <emoji>` — Supprimer\n' +
-      '`!rolereaction vider <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
-      '`!rolereaction liste` — Voir tous les reaction-roles'
+      '**Commandes `!reactionrole` :**\n' +
+      '`!reactionrole add <msgId> <emoji> @role [label]` — Configurer\n' +
+      '`!reactionrole remove <msgId> <emoji>` — Supprimer\n' +
+      '`!reactionrole clear <msgId>` — Supprimer tous les reaction-roles d\'un message\n' +
+      '`!reactionrole list` — Voir tous les reaction-roles'
     );
   });
 };

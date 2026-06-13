@@ -4,6 +4,7 @@ const { EmbedBuilder } = require('discord.js');
 
 // Track announced birthdays per day: "userId-guildId-YYYY-MM-DD"
 const announcedToday = new Set();
+let lastCleanupDate = new Date().toDateString();
 
 function getTodayKey(userId, guildId) {
   const d = new Date();
@@ -11,7 +12,16 @@ function getTodayKey(userId, guildId) {
   return `${userId}-${guildId}-${dateStr}`;
 }
 
+function cleanupIfNewDay() {
+  const today = new Date().toDateString();
+  if (today !== lastCleanupDate) {
+    announcedToday.clear();
+    lastCleanupDate = today;
+  }
+}
+
 async function checkBirthdays(client) {
+  cleanupIfNewDay();
   const now = new Date();
   const day = now.getDate();
   const month = now.getMonth() + 1;

@@ -9,6 +9,8 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!sondage')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.slice('!sondage'.length).trim();
@@ -109,8 +111,8 @@ async function closeSondage(client, id) {
         }).join('\n\n')
       )
       .addFields(
-        { name: '🗳️ Total des votes', value: `${total}`, inline: true },
-        { name: '🏆 Gagnant', value: winner.count > 0 ? winner.option : 'Aucun vote enregistré', inline: true }
+        { name: '🗳️ Total votes', value: `${total}`, inline: true },
+        { name: '🏆 Gagnant', value: winner.count > 0 ? winner.option : 'Aucun vote', inline: true }
       )
       .setFooter({ text: `Sondage clôturé • Créé par ${sondage.createdBy}` })
       .setTimestamp();

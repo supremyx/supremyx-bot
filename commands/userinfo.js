@@ -11,6 +11,8 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!infouser')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const target = message.mentions.members.first() || message.member;
     const user = target.user;

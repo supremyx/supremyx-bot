@@ -22,6 +22,8 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!logs')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('Staff uniquement');
@@ -29,8 +31,8 @@ module.exports = (client) => {
     const args = content.split(' ').slice(1);
     const sub = args[0]?.toLowerCase();
 
-    // --- !logs vider ---
-    if (sub === 'vider') {
+    // --- !log clear ---
+    if (sub === 'clear') {
       const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
       await message.reply('⚠️ Cette action effacera **tout l\'historique** des logs. Réponds `CONFIRMER` dans les 20 secondes.');
       try {
@@ -42,8 +44,8 @@ module.exports = (client) => {
       }
     }
 
-    // --- !logs statistiques ---
-    if (sub === 'statistiques') {
+    // --- !log stats ---
+    if (sub === 'stats') {
       const total = await StaffLogEntry.countDocuments();
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayCount = await StaffLogEntry.countDocuments({ createdAt: { $gte: today } });
@@ -68,8 +70,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !logs aujourdhui ---
-    if (sub === 'aujourdhui') {
+    // --- !log today ---
+    if (sub === 'today') {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const entries = await StaffLogEntry.find({ createdAt: { $gte: today } }).sort({ createdAt: -1 }).limit(20);
 
