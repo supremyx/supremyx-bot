@@ -9,6 +9,7 @@ process.on('uncaughtException', (err) => {
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 const { setupErrorHandler, logError } = require('./utils/errorHandler');
+const { setupMaintenanceGuard } = require('./utils/maintenanceGuard');
 const { startReminder } = require('./utils/reminder');
 const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
@@ -36,6 +37,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 client.setMaxListeners(100);
 setupErrorHandler(client);
+setupMaintenanceGuard(client);
 
 client.once('clientReady', () => {
   console.log(`🔥 SUPREMYX connecté en tant que ${client.user.tag}`);
@@ -68,6 +70,9 @@ require('./commands/aidestaff')(client);
 
 // --- Erreurs ---
 require('./commands/erreurs')(client);
+
+// --- Maintenance ---
+require('./commands/maintenance')(client);
 
 // --- Utilitaires ---
 require('./commands/ping')(client);
