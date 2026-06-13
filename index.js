@@ -228,4 +228,22 @@ require('./commands/report')(client);
 // --- Roster équipes ---
 require('./commands/roster')(client);
 
+// --- Stats avancées ---
+require('./commands/statsplus')(client);
+
+// --- Équipes avancées ---
+require('./commands/equipesplus')(client);
+
+// --- Tournois avancés ---
+require('./commands/tournoiplus')(client);
+
+// --- Modération avancée ---
+require('./commands/moderationplus')(client);
+
+// --- Gestion XP ---
+require('./commands/xpmanage')(client);
+
+// --- Utilitaires avancés ---
+require('./commands/utilitairesplus')(client);
+
 client.login(process.env.TOKEN);

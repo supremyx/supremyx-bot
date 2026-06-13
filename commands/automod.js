@@ -47,8 +47,37 @@ module.exports = (client) => {
         logStaffAction(client, `⛔ **Automod désactivé** | Par : ${message.author.tag}`);
         return message.reply('⛔ Détection de mots interdits **désactivée**.');
       }
-      // Status
-      return message.reply(`Automod est actuellement **${config.enabled ? 'activé ✅' : 'désactivé ⛔'}**.\nUtilise \`!automod activer\` ou \`!automod désactiver\`.`);
+      // !automod statut — statut détaillé
+      if (sub === 'statut') {
+        const wordCount = await BadWord.countDocuments();
+        const embed = new EmbedBuilder()
+          .setColor(config.enabled ? 0x57F287 : 0xED4245)
+          .setTitle('🛡️ Statut Automod')
+          .addFields(
+            { name: 'État', value: config.enabled ? '✅ **Activé**' : '⛔ **Désactivé**', inline: true },
+            { name: 'Mots interdits', value: `**${wordCount}** entrée(s)`, inline: true },
+            { name: 'Commandes', value: '`!automod activer` / `!automod désactiver`\n`!automod test <message>` — tester un message\n`!mots` — voir la liste', inline: false },
+          )
+          .setTimestamp();
+        return message.channel.send({ embeds: [embed] });
+      }
+
+      // !automod test <message> — tester si un message serait filtré
+      if (sub === 'test') {
+        const testMsg = args.slice(2).join(' ').toLowerCase().trim();
+        if (!testMsg) return message.reply('Usage : `!automod test <message à tester>`');
+
+        const words = await BadWord.find().lean();
+        const triggered = words.filter(w => testMsg.includes(w.word.toLowerCase()));
+
+        if (triggered.length) {
+          return message.reply(`🚫 Ce message **serait filtré** — ${triggered.length} mot(s) interdit(s) détecté(s) : ${triggered.map(w => `\`${w.word}\``).join(', ')}`);
+        }
+        return message.reply('✅ Ce message **ne serait pas filtré** — aucun mot interdit détecté.');
+      }
+
+      // Status simple
+      return message.reply(`Automod est actuellement **${config.enabled ? 'activé ✅' : 'désactivé ⛔'}**.\nUtilise \`!automod activer\` ou \`!automod désactiver\`.\nStatut détaillé : \`!automod statut\``);
     }
 
     // --- !mots --- list all words
