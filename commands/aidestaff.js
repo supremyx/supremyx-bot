@@ -326,10 +326,23 @@ module.exports = (client) => {
     }
 
     // ── Mode menu ───────────────────────────────────────────────────────────
-    await message.channel.send({
+    const sent = await message.channel.send({
       embeds: [buildOverviewEmbed(client)],
       components: [buildRow(message.author.id)],
     });
+
+    setTimeout(async () => {
+      try {
+        const expiredRow = new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`aidestaff_cat:${message.author.id}`)
+            .setPlaceholder('⏱️ Menu expiré — retape !aidestaff pour en ouvrir un nouveau')
+            .setDisabled(true)
+            .addOptions([{ label: 'Expiré', value: 'expired' }])
+        );
+        await sent.edit({ components: [expiredRow] });
+      } catch {}
+    }, 5 * 60 * 1000);
   });
 
   // ── Interaction menu ───────────────────────────────────────────────────────
