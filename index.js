@@ -74,6 +74,9 @@ require('./commands/erreurs')(client);
 // --- Maintenance ---
 require('./commands/maintenance')(client);
 
+// --- Diffusion ---
+require('./commands/diffuser')(client);
+
 // --- Utilitaires ---
 require('./commands/ping')(client);
 require('./commands/status')(client);
