@@ -24,7 +24,7 @@ function normalizeRole(str) {
 }
 
 async function getRoster(guildId, teamName) {
-  return Roster.findOne({ guildId, teamName: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+  return Roster.findOne({ guildId, teamName: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
 }
 
 function buildRosterEmbed(roster, teamName) {
@@ -90,7 +90,7 @@ module.exports = (client) => {
         );
       }
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);
@@ -135,7 +135,7 @@ module.exports = (client) => {
       if (!teamName) return message.reply('Usage : `!liste add <équipe> @user <rôle> [note]`');
       if (!ingameRole) return message.reply(`❌ Rôle invalide. Choisissez parmi : ${VALID_ROLES.join(', ')}`);
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await Roster.findOneAndUpdate(
@@ -174,7 +174,7 @@ module.exports = (client) => {
 
       if (!teamName) return message.reply('Usage : `!liste del <équipe> @user`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);
@@ -206,7 +206,7 @@ module.exports = (client) => {
       if (!teamName) return message.reply('Usage : `!liste role <équipe> @user <rôle>`');
       if (!ingameRole) return message.reply(`❌ Rôle invalide. Choisissez parmi : ${VALID_ROLES.join(', ')}`);
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);
@@ -236,7 +236,7 @@ module.exports = (client) => {
 
       if (!teamName || !note) return message.reply('Usage : `!liste note <équipe> @user <note>`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);
@@ -257,7 +257,7 @@ module.exports = (client) => {
       const teamName = args.slice(1).join(' ').trim();
       if (!teamName) return message.reply('Usage : `!liste clear <équipe>`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       const roster = await getRoster(message.guild.id, team.name);

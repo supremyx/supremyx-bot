@@ -544,6 +544,11 @@ module.exports = (client) => {
     try {
       const userId = message.author.id;
       if (!conversations.has(userId)) {
+        // Evict oldest conversation if the Map grows too large (memory guard)
+        if (conversations.size >= 200) {
+          const oldestKey = conversations.keys().next().value;
+          conversations.delete(oldestKey);
+        }
         conversations.set(userId, [
           {
             role: 'system',

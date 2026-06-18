@@ -1,5 +1,6 @@
 const Team = require('../database/models/Team');
 const Blacklist = require('../database/models/Blacklist');
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -15,7 +16,7 @@ module.exports = (client) => {
     const name = message.content.split(' ').slice(1).join(' ').trim();
     if (!name) return message.reply('Usage : `!enregistrer <nom équipe>`');
 
-    const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const blacklisted = await Blacklist.findOne({ target: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
     if (blacklisted) {
       return message.reply(`🚫 **${name}** est dans la blacklist et ne peut pas être inscrit.\nRaison : *${blacklisted.reason}*`);
     }

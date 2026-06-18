@@ -17,7 +17,7 @@ module.exports = (client) => {
       const name = message.content.split(' ').slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!desenregistrer <nom équipe>`');
 
-      const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
       if (!team) return message.reply('Équipe inconnue');
 
       const matchCount = await Match.countDocuments({ team: team.name });

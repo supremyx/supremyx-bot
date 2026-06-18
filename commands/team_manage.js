@@ -25,10 +25,10 @@ module.exports = (client) => {
         return message.reply('Usage : `!renommer <ancien nom> | <nouveau nom>`');
 
       const [oldName, newName] = parts;
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${oldName}$`, 'i') } });
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(oldName)}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${oldName}** introuvable.`);
 
-      const alreadyExists = await Team.findOne({ name: { $regex: new RegExp(`^${newName}$`, 'i') } });
+      const alreadyExists = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(newName)}$`, 'i') } });
       if (alreadyExists) return message.reply(`❌ Une équipe nommée **${newName}** existe déjà.`);
 
       const previousName = team.name;
@@ -37,7 +37,7 @@ module.exports = (client) => {
 
       // Update all matches referencing old name
       await Match.updateMany({ team: previousName }, { $set: { team: newName } });
-      await Lineup.findOneAndUpdate({ team: { $regex: new RegExp(`^${oldName}$`, 'i') } }, { team: newName });
+      await Lineup.findOneAndUpdate({ team: { $regex: new RegExp(`^${escapeRegex(oldName)}$`, 'i') } }, { team: newName });
 
       logStaffAction(client, `✏️ **Rename** — \`${previousName}\` → \`${newName}\` | Par : ${message.author.tag}`);
       return message.reply(`✅ Équipe renommée : **${previousName}** → **${newName}** (historique mis à jour).`);
@@ -54,8 +54,8 @@ module.exports = (client) => {
 
       const [srcName, dstName] = parts;
       const [src, dst] = await Promise.all([
-        Team.findOne({ name: { $regex: new RegExp(`^${srcName}$`, 'i') } }),
-        Team.findOne({ name: { $regex: new RegExp(`^${dstName}$`, 'i') } })
+        Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(srcName)}$`, 'i') } }),
+        Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(dstName)}$`, 'i') } })
       ]);
 
       if (!src) return message.reply(`❌ Équipe **${srcName}** introuvable.`);
@@ -85,7 +85,7 @@ module.exports = (client) => {
 
       if (!playersRaw) {
         // View lineup
-        const lineup = await Lineup.findOne({ team: { $regex: new RegExp(`^${teamName}$`, 'i') } });
+        const lineup = await Lineup.findOne({ team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
         if (!lineup || !lineup.players.length)
           return message.reply(`Aucune composition définie pour **${teamName}**.`);
 
@@ -106,7 +106,7 @@ module.exports = (client) => {
       if (!players.length) return message.reply('❌ Aucun joueur valide fourni.');
 
       await Lineup.findOneAndUpdate(
-        { team: { $regex: new RegExp(`^${teamName}$`, 'i') } },
+        { team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } },
         { team: teamName, players, updatedBy: message.author.tag },
         { upsert: true, new: true }
       );

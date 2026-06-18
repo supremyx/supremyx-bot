@@ -22,7 +22,7 @@ module.exports = (client) => {
       const name = args.slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!serie <nom équipe>`');
 
-      const matches = await Match.find({ team: { $regex: new RegExp(`^${name}$`, 'i') } }).sort({ createdAt: -1 });
+      const matches = await Match.find({ team: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } }).sort({ createdAt: -1 });
       if (!matches.length) return message.reply(`Aucun match trouvé pour **${name}**.`);
 
       const config = await Config.findOne() || { pointSystem: new Map([['1',12],['2',9],['3',7],['4',5],['5',4],['6',3],['7',2],['8',1]]) };
@@ -84,7 +84,7 @@ module.exports = (client) => {
       const name = args.slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!regularite <nom équipe>`');
 
-      const matches = await Match.find({ team: { $regex: new RegExp(`^${name}$`, 'i') } });
+      const matches = await Match.find({ team: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
       if (matches.length < 2) return message.reply(`Il faut au moins 2 matchs pour calculer la régularité de **${name}**.`);
 
       const pts = matches.map(m => m.points);
@@ -123,8 +123,8 @@ module.exports = (client) => {
       const team2 = args.slice(vsIndex + 1).join(' ').trim();
 
       const [m1, m2] = await Promise.all([
-        Match.find({ team: { $regex: new RegExp(`^${team1}$`, 'i') } }).sort({ createdAt: -1 }),
-        Match.find({ team: { $regex: new RegExp(`^${team2}$`, 'i') } }).sort({ createdAt: -1 })
+        Match.find({ team: { $regex: new RegExp(`^${escapeRegex(team1)}$`, 'i') } }).sort({ createdAt: -1 }),
+        Match.find({ team: { $regex: new RegExp(`^${escapeRegex(team2)}$`, 'i') } }).sort({ createdAt: -1 })
       ]);
 
       if (!m1.length || !m2.length)

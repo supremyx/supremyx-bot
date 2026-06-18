@@ -3,20 +3,22 @@ const AutomodConfig = require('../database/models/AutomodConfig');
 const { EmbedBuilder } = require('discord.js');
 const { getLogChannelId } = require('./channelConfig');
 
-// Cache words in memory, refreshed every 5 min
-let cachedWords = null;
-let cacheTime = 0;
+// Per-guild word cache: guildId → { words: string[], time: number }
+const wordCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
-async function getWords() {
-  if (cachedWords && Date.now() - cacheTime < 5 * 60 * 1000) return cachedWords;
-  const entries = await BadWord.find();
-  cachedWords = entries.map(e => e.word.toLowerCase());
-  cacheTime = Date.now();
-  return cachedWords;
+async function getWords(guildId) {
+  const cached = wordCache.get(guildId);
+  if (cached && Date.now() - cached.time < CACHE_TTL) return cached.words;
+  const entries = await BadWord.find({ guildId });
+  const words = entries.map(e => e.word.toLowerCase());
+  wordCache.set(guildId, { words, time: Date.now() });
+  return words;
 }
 
-function invalidateCache() {
-  cachedWords = null;
+function invalidateCache(guildId) {
+  if (guildId) wordCache.delete(guildId);
+  else wordCache.clear();
 }
 
 function normalize(text) {
@@ -41,12 +43,14 @@ async function startAutomod(client) {
   client.on('messageCreate', async message => {
     if (message.author.bot) return;
     if (message.author.id === client.user?.id) return;
+    if (!message.guild) return;
 
     try {
-      const config = await AutomodConfig.findOne();
+      const guildId = message.guild.id;
+      const config = await AutomodConfig.findOne({ guildId });
       if (config && !config.enabled) return;
 
-      const words = await getWords();
+      const words = await getWords(guildId);
       if (!words.length) return;
 
       const matches = findMatches(message.content, words);
@@ -79,7 +83,7 @@ async function startAutomod(client) {
         .setFooter({ text: `ID message : ${message.id}` })
         .setTimestamp();
 
-      logChannel.send({ embeds: [embed] });
+      await logChannel.send({ embeds: [embed] }).catch(() => {});
     } catch {
       // Silent fail
     }
