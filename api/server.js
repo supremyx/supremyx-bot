@@ -62,6 +62,9 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5000',
 ];
 
+// Trust the Replit / reverse-proxy layer so rate-limit can read the real client IP
+app.set('trust proxy', 1);
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true); // server-to-server / curl
