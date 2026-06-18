@@ -166,7 +166,7 @@ router.get('/ranking/:team', async (req, res) => {
 router.get('/schedule', async (req, res) => {
   try {
     const filter = { date: { $gte: new Date() }, completed: false };
-    if (req.query.past === 'true') delete filter.date;
+    if (req.query.past === 'true') { delete filter.date; delete filter.completed; }
 
     const matches = await Schedule.find(filter).sort({ date: 1 }).lean();
     return res.json({

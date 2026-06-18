@@ -72,6 +72,7 @@ module.exports = (client) => {
     if (!content.startsWith('!event')) return;
     if (!message.guild) return;
 
+    if (!message.member) return;
     const isStaff = message.member.permissions.has('Administrator');
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();

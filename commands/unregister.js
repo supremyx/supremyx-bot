@@ -1,6 +1,7 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { staffLog } = require('../utils/staffLog');
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {

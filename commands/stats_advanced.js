@@ -1,6 +1,7 @@
 const Match = require('../database/models/Match');
 const Config = require('../database/models/Config');
 const { EmbedBuilder } = require('discord.js');
+const { escapeRegex } = require('../utils/lib');
 
 function stdDev(values) {
   if (!values.length) return 0;

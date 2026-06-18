@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const Roster = require('../database/models/Roster');
 const Team = require('../database/models/Team');
 const { logStaffAction } = require('../utils/staffLog');
+const { escapeRegex } = require('../utils/lib');
 
 const VALID_ROLES = ['IGL', 'Fragger', 'Support', 'Sniper', 'Entry', 'Flex', 'Coach', 'Remplaçant'];
 

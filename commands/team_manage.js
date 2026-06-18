@@ -3,6 +3,7 @@ const Match = require('../database/models/Match');
 const Lineup = require('../database/models/Lineup');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
