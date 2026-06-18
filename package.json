@@ -22,6 +22,7 @@
     "drizzle-zod": "^0.8.3",
     "esbuild": "^0.28.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "mongoose": "^8.24.0",
     "openai": "^4.104.0",
     "p-limit": "^7.3.0",
@@ -39,6 +40,9 @@
     "husky": "^9.1.7"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["core-js", "esbuild"]
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild"
+    ]
   }
 }

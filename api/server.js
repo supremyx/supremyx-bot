@@ -18,8 +18,36 @@ const IaUsage       = require('../database/models/IaUsage');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
+const rateLimit = require('express-rate-limit');
 const app  = express();
 const PORT = 3000;
+
+// ─── Rate limiters ───────────────────────────────────────────────────────────
+// Requests with a valid BOT_API_KEY bypass all limits (internal bot calls)
+const skipIfAuthenticated = (req) => {
+  const key = req.headers['x-api-key'] || req.query.key;
+  return !!key && key === process.env.BOT_API_KEY;
+};
+
+// Public read endpoints: 60 req / min / IP
+const publicLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipIfAuthenticated,
+  message: { error: 'Trop de requêtes — réessayez dans une minute.' },
+});
+
+// Heavy / detail endpoints (DB-intensive): 20 req / min / IP
+const detailLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipIfAuthenticated,
+  message: { error: 'Trop de requêtes — réessayez dans une minute.' },
+});
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -59,6 +87,9 @@ function requireApiKey(req, res, next) {
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 const router = express.Router();
+
+// Apply global rate limit to all public routes (60 req/min/IP)
+router.use(publicLimiter);
 
 // ── GET /health ───────────────────────────────────────────────────────────────
 router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'SUPREMYX', ts: new Date() }));
@@ -112,7 +143,7 @@ router.get('/ranking', async (req, res) => {
 });
 
 // ── GET /ranking/:team ────────────────────────────────────────────────────────
-router.get('/ranking/:team', async (req, res) => {
+router.get('/ranking/:team', detailLimiter, async (req, res) => {
   try {
     const escapedTeam = req.params.team.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const team = await Team.findOne({
@@ -259,7 +290,7 @@ router.get('/players', async (req, res) => {
 });
 
 // ── GET /players/:name ────────────────────────────────────────────────────────
-router.get('/players/:name', async (req, res) => {
+router.get('/players/:name', detailLimiter, async (req, res) => {
   try {
     const escapedName = req.params.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const stats = await PlayerStat.find({
@@ -315,7 +346,7 @@ router.get('/rosters', async (req, res) => {
 });
 
 // ── GET /rosters/:team ────────────────────────────────────────────────────────
-router.get('/rosters/:team', async (req, res) => {
+router.get('/rosters/:team', detailLimiter, async (req, res) => {
   try {
     const escapedRosterTeam = req.params.team.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const roster = await Roster.findOne({
@@ -367,7 +398,7 @@ router.get('/logs', async (req, res) => {
 });
 
 // ── GET /tournaments ──────────────────────────────────────────────────────────
-router.get('/tournaments/:id', async (req, res) => {
+router.get('/tournaments/:id', detailLimiter, async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id))
       return res.status(400).json({ error: `ID de tournoi invalide : ${req.params.id}` });
