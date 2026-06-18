@@ -31,8 +31,8 @@ module.exports = (client) => {
     const args = content.split(' ').slice(1);
     const sub = args[0]?.toLowerCase();
 
-    // --- !log clear ---
-    if (sub === 'clear') {
+    // --- !logs vider ---
+    if (sub === 'vider') {
       const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
       await message.reply('⚠️ Cette action effacera **tout l\'historique** des logs. Réponds `CONFIRMER` dans les 20 secondes.');
       try {
@@ -44,7 +44,7 @@ module.exports = (client) => {
       }
     }
 
-    // --- !log stats ---
+    // --- !logs stats ---
     if (sub === 'stats') {
       const total = await StaffLogEntry.countDocuments();
       const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -61,8 +61,8 @@ module.exports = (client) => {
         .setTitle('📊 Statistiques des logs staff')
         .setColor(0x5865F2)
         .addFields(
-          { name: '📋 Total', value: `${total}`, inline: true },
-          { name: "📅 Aujourd'hui", value: `${todayCount}`, inline: true },
+          { name: '📋 Total',         value: `${total}`,      inline: true },
+          { name: "📅 Aujourd'hui",   value: `${todayCount}`, inline: true },
           { name: '🗂️ Par catégorie', value: catRows || 'Aucune donnée' }
         )
         .setTimestamp();
@@ -70,8 +70,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !log today ---
-    if (sub === 'today') {
+    // --- !logs aujourdhui ---
+    if (sub === 'aujourdhui') {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const entries = await StaffLogEntry.find({ createdAt: { $gte: today } }).sort({ createdAt: -1 }).limit(20);
 
@@ -92,7 +92,7 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !log <catégorie> [page] OR !log [page] ---
+    // --- !logs <catégorie> [page] OR !logs [page] ---
     const CATEGORIES = ['match', 'modération', 'tournoi', 'données', 'config', 'ticket', 'rang', 'trophée', 'événement', 'équipe', 'général'];
     let category = null;
     let page = 1;
@@ -103,7 +103,7 @@ module.exports = (client) => {
     } else if (sub && !isNaN(parseInt(sub))) {
       page = parseInt(sub);
     } else if (sub) {
-      // Keyword search
+      // Recherche par mot-clé
       const keyword = args.join(' ');
       const entries = await StaffLogEntry.find({
         message: { $regex: new RegExp(keyword, 'i') }
@@ -126,13 +126,13 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // Default: paginated list
-    const filter = category ? { category } : {};
-    const total = await StaffLogEntry.countDocuments(filter);
+    // Par défaut : liste paginée
+    const filterQuery = category ? { category } : {};
+    const total = await StaffLogEntry.countDocuments(filterQuery);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
     page = Math.min(Math.max(1, page), totalPages);
 
-    const entries = await StaffLogEntry.find(filter)
+    const entries = await StaffLogEntry.find(filterQuery)
       .sort({ createdAt: -1 })
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE);
