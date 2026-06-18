@@ -18,8 +18,8 @@ module.exports = (client) => {
 
     try {
 
-      // --- !maintenance on [message personnalisé] ---
-      if (sub === 'on') {
+      // --- !maintenance activer [message personnalisé] ---
+      if (sub === 'activer') {
         const customMsg = args.slice(1).join(' ').trim() || undefined;
         const doc = await setMaintenance(
           guildId, true, customMsg,
@@ -39,9 +39,9 @@ module.exports = (client) => {
         return message.channel.send({ embeds: [embed] });
       }
 
-      // --- !maintenance off ---
-      if (sub === 'off') {
-        const doc = await setMaintenance(guildId, false);
+      // --- !maintenance desactiver ---
+      if (sub === 'desactiver') {
+        await setMaintenance(guildId, false);
         const embed = new EmbedBuilder()
           .setTitle('✅ Maintenance désactivée')
           .setColor(0x57F287)
@@ -60,8 +60,8 @@ module.exports = (client) => {
         return message.reply(`✅ Message de maintenance mis à jour :\n> ${doc.message}`);
       }
 
-      // --- !maintenance status ---
-      if (!sub || sub === 'status') {
+      // --- !maintenance statut ---
+      if (!sub || sub === 'statut') {
         let state = getCached(guildId);
         if (!state) state = await loadCache(guildId);
 
@@ -80,14 +80,14 @@ module.exports = (client) => {
           .setTitle('🛠️ Statut de la maintenance')
           .setColor(active ? 0xFEE75C : 0x57F287)
           .addFields(
-            { name: '📌 État', value: active ? '🔴 **En maintenance**' : '🟢 **Normal**', inline: true },
-            { name: '📢 Message', value: `> ${msg}`, inline: false },
+            { name: '📌 État',    value: active ? '🔴 **En maintenance**' : '🟢 **Normal**', inline: true },
+            { name: '📢 Message', value: `> ${msg}`,                                         inline: false },
             ...(active && doc?.startedTag ? [
               { name: '👤 Activée par', value: doc.startedTag, inline: true },
-              { name: '🕐 Depuis', value: since, inline: true }
+              { name: '🕐 Depuis',      value: since,          inline: true }
             ] : [])
           )
-          .setFooter({ text: '!maintenance on | off | message <texte>' })
+          .setFooter({ text: '!maintenance activer | desactiver | message <texte>' })
           .setTimestamp();
 
         return message.channel.send({ embeds: [embed] });
@@ -95,10 +95,10 @@ module.exports = (client) => {
 
       return message.reply(
         '**Commandes `!maintenance` :**\n' +
-        '`!maintenance on [message]` — Activer (message optionnel)\n' +
-        '`!maintenance off` — Désactiver\n' +
+        '`!maintenance activer [message]` — Activer (message optionnel)\n' +
+        '`!maintenance desactiver` — Désactiver\n' +
         '`!maintenance message <texte>` — Changer le message\n' +
-        '`!maintenance status` — Voir l\'état actuel'
+        '`!maintenance statut` — Voir l\'état actuel'
       );
 
     } catch (err) {
