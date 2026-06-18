@@ -27,9 +27,9 @@ module.exports = (client) => {
 
       // --- !erreurs stats ---
       if (sub === 'stats') {
-        const total    = await ErrorLog.countDocuments();
+        const total      = await ErrorLog.countDocuments();
         const unresolved = await ErrorLog.countDocuments({ resolved: false });
-        const today    = new Date(); today.setHours(0, 0, 0, 0);
+        const today      = new Date(); today.setHours(0, 0, 0, 0);
         const todayCount = await ErrorLog.countDocuments({ createdAt: { $gte: today } });
 
         const bySrc = await ErrorLog.aggregate([
@@ -58,7 +58,7 @@ module.exports = (client) => {
                 `> Aujourd'hui : **${todayCount}**`
               ].join('\n')
             },
-            { name: '🗂️ Par type', value: srcRows, inline: true },
+            { name: '🗂️ Par type',         value: srcRows, inline: true },
             { name: '🔧 Commandes fautives', value: cmdRows, inline: true }
           )
           .setFooter({ text: 'SUPREMYX • Logs d\'erreurs' })
@@ -67,10 +67,10 @@ module.exports = (client) => {
         return message.channel.send({ embeds: [embed] });
       }
 
-      // --- !erreurs resolve <id> ---
-      if (sub === 'resolve') {
+      // --- !erreurs resoudre <id> ---
+      if (sub === 'resoudre') {
         const id = args[1];
-        if (!id) return message.reply('Usage : `!erreurs resolve <id>`');
+        if (!id) return message.reply('Usage : `!erreurs resoudre <id>`');
 
         const entry = id.length === 24
           ? await ErrorLog.findByIdAndUpdate(id, { resolved: true }, { new: true }).catch(() => null)
@@ -85,8 +85,8 @@ module.exports = (client) => {
         return message.reply(`✅ Erreur **#${entry._id.toString().slice(-5)}** marquée comme résolue.`);
       }
 
-      // --- !erreurs clear ---
-      if (sub === 'clear') {
+      // --- !erreurs vider ---
+      if (sub === 'vider') {
         const filter = m => m.author.id === message.author.id && m.content === 'CONFIRMER';
         await message.reply('⚠️ Réponds `CONFIRMER` dans les 20 secondes pour effacer **tout** l\'historique des erreurs.');
         try {
@@ -107,15 +107,15 @@ module.exports = (client) => {
         command:            'command'
       };
 
-      let filter  = {};
-      let page    = 1;
+      let filter   = {};
+      let page     = 1;
       let srcLabel = null;
 
       if (sub && SOURCES.includes(sub)) {
         filter   = { source: sourceMap[sub] };
         srcLabel = SOURCE_LABELS[sourceMap[sub]];
         page     = parseInt(args[1]) || 1;
-      } else if (sub === 'unresolved') {
+      } else if (sub === 'nonresolues') {
         filter   = { resolved: false };
         srcLabel = '🔴 Non résolues';
         page     = parseInt(args[1]) || 1;
@@ -125,11 +125,11 @@ module.exports = (client) => {
         return message.reply(
           '**Commandes `!erreurs` :**\n' +
           '`!erreurs` — Dernières erreurs (paginé)\n' +
-          '`!erreurs unresolved` — Erreurs non résolues\n' +
+          '`!erreurs nonresolues` — Erreurs non résolues\n' +
           '`!erreurs command` — Erreurs de commandes\n' +
           '`!erreurs stats` — Statistiques globales\n' +
-          '`!erreurs resolve <id>` — Marquer comme résolue\n' +
-          '`!erreurs clear` — Effacer tout l\'historique'
+          '`!erreurs resoudre <id>` — Marquer comme résolue\n' +
+          '`!erreurs vider` — Effacer tout l\'historique'
         );
       }
 
@@ -163,7 +163,7 @@ module.exports = (client) => {
         const resolvedTag = e.resolved ? ' ✅' : '';
 
         embed.addFields({
-          name: `\`#${id}\` ${src}${cmd}${resolvedTag} — ${fmt(e.createdAt)}`,
+          name:  `\`#${id}\` ${src}${cmd}${resolvedTag} — ${fmt(e.createdAt)}`,
           value: `\`\`\`${e.errorMessage.slice(0, 200)}\`\`\`${guild}${user}`
         });
       }
