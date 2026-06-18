@@ -270,4 +270,10 @@ require('./commands/report')(client);
 // --- Roster équipes ---
 require('./commands/roster')(client);
 
+// --- Profil joueur ---
+require('./commands/profil')(client);
+
+// --- Objectifs d'équipe ---
+require('./commands/objectif')(client);
+
 client.login(process.env.TOKEN);
