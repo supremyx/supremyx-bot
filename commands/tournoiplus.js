@@ -193,45 +193,6 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ── !matchs [tournoi] ──────────────────────────────────────────────────────
-    if (cmd === '!matchs') {
-      const cd = checkCooldown(message.author.id, 'matchs', 10);
-      if (cd) return replyCooldown(message, cd, 'matchs');
-
-      const tournName = args.slice(1).join(' ').trim();
-      let matches;
-
-      if (tournName) {
-        const tourn = await Tournament.findOne({ name: new RegExp(`^${escRe(tournName)}$`, 'i') });
-        if (!tourn) return message.reply(`❌ Tournoi **${tournName}** introuvable.`);
-        matches = await Match.find({ tournamentId: tourn._id.toString() }).sort({ createdAt: -1 });
-      } else {
-        matches = await Match.find().sort({ createdAt: -1 }).limit(25);
-      }
-
-      if (!matches.length) return message.reply('❌ Aucun match trouvé.');
-
-      const lines = matches.map((m, i) =>
-        `\`${String(i + 1).padStart(2)}\` **${m.team}** · #${m.placement} · ${m.kills}k · ${m.points}pts${m.tournamentName ? ` · *${m.tournamentName}*` : ''}`
-      );
-
-      const chunks = [];
-      let cur = '';
-      for (const l of lines) {
-        if ((cur + '\n' + l).length > 3800) { chunks.push(cur); cur = l; }
-        else { cur = cur ? cur + '\n' + l : l; }
-      }
-      if (cur) chunks.push(cur);
-
-      for (let i = 0; i < chunks.length; i++) {
-        const embed = new EmbedBuilder()
-          .setColor(0xFF8C00)
-          .setAuthor({ name: tournName ? `⚽ Matchs — ${tournName}` : `⚽ ${matches.length} derniers matchs`, iconURL: client.user.displayAvatarURL() })
-          .setDescription(chunks[i])
-          .setFooter({ text: `SUPREMYX Esports · Page ${i + 1}/${chunks.length}` })
-          .setTimestamp();
-        await message.channel.send({ embeds: [embed] });
-      }
-    }
+    // !matchs est géré par commands/matchs.js
   });
 };

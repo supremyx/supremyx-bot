@@ -282,4 +282,22 @@ require('./commands/lineup')(client);
 // --- Absences joueurs ---
 require('./commands/absence')(client);
 
+// --- Stats avancées (moyennes, tendance, podium, résumé) ---
+require('./commands/statsplus')(client);
+
+// --- Équipes avancées (equipes, freeagents, transfert, capitaine, comparerjoueur) ---
+require('./commands/equipesplus')(client);
+
+// --- Modération avancée (casier, rapport, topwarn) ---
+require('./commands/moderationplus')(client);
+
+// --- Gestion XP (donnerxp, retirerxp, progression) ---
+require('./commands/xpmanage')(client);
+
+// --- Tournois avancés (vainqueurs, prochainmatch, annulermatch, saisoncourante, classementsaison) ---
+require('./commands/tournoiplus')(client);
+
+// --- Utilitaires avancés (countdown, uptime, memoire, lienbot) ---
+require('./commands/utilitairesplus')(client);
+
 client.login(process.env.TOKEN);
