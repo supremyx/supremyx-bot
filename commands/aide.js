@@ -173,7 +173,7 @@ function buildMainEmbed() {
         inline: true,
       }))
     )
-    .setFooter({ text: 'SUPREMYX CI' })
+    .setFooter({ text: 'SUPREMYX Esports'})
     .setTimestamp();
 }
 
