@@ -276,4 +276,10 @@ require('./commands/profil')(client);
 // --- Objectifs d'équipe ---
 require('./commands/objectif')(client);
 
+// --- Lineup d'équipe ---
+require('./commands/lineup')(client);
+
+// --- Absences joueurs ---
+require('./commands/absence')(client);
+
 client.login(process.env.TOKEN);

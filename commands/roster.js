@@ -74,7 +74,7 @@ module.exports = (client) => {
     const sub = args[0]?.toLowerCase();
 
     // --- !liste <équipe> — afficher le roster ---
-    if (!sub || (!['ajouter', 'retirer', 'role', 'note', 'vider', 'liste'].includes(sub) && sub)) {
+    if (!sub || (!['ajouter', 'retirer', 'role', 'note', 'vider', 'liste', 'capitaine'].includes(sub) && sub)) {
       const teamName = args.join(' ').trim();
       if (!teamName) {
         return message.reply(
@@ -85,6 +85,7 @@ module.exports = (client) => {
           '`!liste role <équipe> @user <rôle>` — Changer le rôle *(staff)*\n' +
           '`!liste note <équipe> @user <note>` — Ajouter une note *(staff)*\n' +
           '`!liste vider <équipe>` — Vider le roster *(staff)*\n' +
+          '`!liste capitaine <équipe> @user` — Désigner le capitaine (IGL) *(staff)*\n' +
           '`!liste liste` — Tous les rosters enregistrés\n\n' +
           `**Rôles disponibles :** ${VALID_ROLES.join(', ')}`
         );
@@ -96,6 +97,42 @@ module.exports = (client) => {
       const roster = await getRoster(message.guild.id, team.name);
       const embed = buildRosterEmbed(roster, team.name);
       return message.channel.send({ embeds: [embed] });
+    }
+
+    // --- !liste capitaine <équipe> @user — désigner le capitaine (IGL) ---
+    if (sub === 'capitaine') {
+      if (!isStaff) return message.reply('⛔ Staff uniquement.');
+
+      const mention = message.mentions.members.first();
+      if (!mention) return message.reply('Usage : `!liste capitaine <équipe> @user`');
+
+      const rawContent = content.slice(content.toLowerCase().indexOf('!liste capitaine') + '!liste capitaine'.length).trim();
+      const mentionPattern = /<@!?\d+>/;
+      const mentionMatch   = rawContent.match(mentionPattern);
+      if (!mentionMatch) return message.reply('Usage : `!liste capitaine <équipe> @user`');
+
+      const teamName = rawContent.slice(0, rawContent.indexOf(mentionMatch[0])).trim();
+      if (!teamName) return message.reply('Usage : `!liste capitaine <équipe> @user`');
+
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
+      if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
+
+      const roster = await getRoster(message.guild.id, team.name);
+      if (!roster) return message.reply(`❌ Aucun roster pour **${team.name}**.`);
+
+      const member = roster.members.find(m => m.userId === mention.id);
+      if (!member) return message.reply(`❌ <@${mention.id}> n'est pas dans le roster de **${team.name}**.`);
+
+      // Retirer le rôle IGL des autres membres
+      for (const m of roster.members) {
+        if (m.userId !== mention.id && m.role === 'IGL') m.role = 'Flex';
+      }
+      member.role = 'IGL';
+      roster.updatedAt = new Date();
+      await roster.save();
+
+      logStaffAction(client, `👑 **Capitaine** — \`${mention.user.tag}\` désigné IGL de **${team.name}** | Par : ${message.author.tag}`);
+      return message.reply(`✅ <@${mention.id}> est maintenant le **capitaine (IGL)** de **${team.name}**.`);
     }
 
     // --- !liste liste ---
