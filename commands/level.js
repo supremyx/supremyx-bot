@@ -55,6 +55,21 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
+    // --- !niveau reinitialiser @membre (staff) ---
+    if (content.startsWith('!niveau reinitialiser') || content.startsWith('!niveau réinitialiser')) {
+      if (!isStaff) return message.reply('⛔ Staff uniquement.');
+      const target = message.mentions.members.first();
+      if (!target) return message.reply('Usage : `!niveau reinitialiser @membre`');
+
+      await XpEntry.findOneAndUpdate(
+        { guildId: message.guild.id, userId: target.user.id },
+        { xp: 0, level: 0 },
+        { upsert: true }
+      );
+      logStaffAction(client, `📈 **XP réinitialisé** — \`${target.user.tag}\` | Par : ${message.author.tag}`);
+      return message.reply(`✅ XP et niveau de <@${target.id}> remis à zéro.`);
+    }
+
     // --- !level [@user] ---
     if (content.startsWith('!niveau')) {
       const cd = checkCooldown(message.author.id, 'level', 5);

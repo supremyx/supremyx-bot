@@ -323,6 +323,45 @@ module.exports = (client) => {
     }
 
     // =========================================================
+    // !retireruser @user — remove a member from the current ticket (staff)
+    // =========================================================
+    if (cmd === '!retireruser') {
+      if (!isStaff) return message.reply('Staff uniquement');
+      const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
+      if (!ticket) return;
+
+      const target = message.mentions.members.first();
+      if (!target) return message.reply('Usage : `!retireruser @user`');
+      if (target.id === ticket.userId) return message.reply('❌ Tu ne peux pas retirer le créateur du ticket.');
+
+      await message.channel.permissionOverwrites.edit(target.id, {
+        ViewChannel: false,
+        SendMessages: false,
+        ReadMessageHistory: false
+      });
+
+      logStaffAction(client, `🎫 **Ticket removeuser** — ${target.user.tag} retiré | Par : ${message.author.tag}`);
+      return message.reply(`✅ **${target.user.username}** a été retiré du ticket.`);
+    }
+
+    // =========================================================
+    // !renommerticket <titre> — rename the current ticket channel (staff)
+    // =========================================================
+    if (cmd === '!renommerticket') {
+      if (!isStaff) return message.reply('Staff uniquement');
+      const ticket = await Ticket.findOne({ channelId: message.channel.id, closed: false });
+      if (!ticket) return;
+
+      const newName = args.slice(1).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32);
+      if (!newName) return message.reply('Usage : `!renommerticket <nouveau-titre>`');
+
+      await message.channel.setName(newName).catch(() => null);
+
+      logStaffAction(client, `🎫 **Ticket renommé** → \`${newName}\` | Par : ${message.author.tag}`);
+      return message.reply(`✅ Salon renommé : **${newName}**`);
+    }
+
+    // =========================================================
     // !adduser @user — add a member to the current ticket (staff)
     // =========================================================
     if (cmd === '!ajouteruser') {

@@ -239,6 +239,66 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
+    // ─── !calendrier prochain ─────────────────────────────────────
+    if (sub === 'prochain') {
+      const now  = new Date();
+      const next = await Schedule.findOne({ date: { $gte: now } }).sort({ date: 1 });
+      if (!next) return message.reply('📅 Aucun match planifié prochainement.');
+
+      const teamsStr = next.teams.length ? next.teams.join(' vs ') : 'Équipes non précisées';
+      const msLeft   = next.date - now;
+      const hLeft    = Math.floor(msLeft / 3600000);
+      const countdown = hLeft < 1
+        ? '⚡ Dans moins d\'une heure'
+        : hLeft < 24 ? `⏰ Dans **${hLeft}h**` : `📆 Dans **${Math.floor(hLeft / 24)}j**`;
+
+      const embed = new EmbedBuilder()
+        .setTitle('📅 Prochain match')
+        .setColor(0xFEE75C)
+        .addFields(
+          { name: '📆 Date',    value: `${formatDate(next.date)} à **${formatTime(next.date)}**`, inline: false },
+          { name: '🎮 Équipes', value: teamsStr,  inline: true },
+          { name: '⏱️ Compte à rebours', value: countdown, inline: true }
+        );
+
+      if (next.note)           embed.addFields({ name: '📝 Note',    value: next.note,             inline: false });
+      if (next.tournamentName) embed.addFields({ name: '🏁 Tournoi', value: next.tournamentName,   inline: false });
+      embed.setFooter({ text: `ID : ${next._id}` }).setTimestamp();
+
+      return message.channel.send({ embeds: [embed] });
+    }
+
+    // ─── !calendrier equipe <nom> ─────────────────────────────────
+    if (sub === 'equipe' || sub === 'équipe') {
+      const teamName = args.slice(1).join(' ').trim();
+      if (!teamName) return message.reply('Usage : `!calendrier equipe <nom>`');
+
+      const now      = new Date();
+      const allNext  = await Schedule.find({ date: { $gte: now } }).sort({ date: 1 });
+      const matches  = allNext.filter(s =>
+        s.teams.some(t => t.toLowerCase().includes(teamName.toLowerCase()))
+      );
+
+      if (!matches.length)
+        return message.reply(`📅 Aucun match à venir pour **${teamName}**.`);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`📅 Matchs à venir — ${teamName}`)
+        .setColor(0xFEE75C)
+        .setTimestamp();
+
+      for (const s of matches.slice(0, 8)) {
+        const teamsStr = s.teams.join(' vs ');
+        const note     = s.note ? `\n📝 ${s.note}` : '';
+        embed.addFields({
+          name:  `${formatDate(s.date)} à ${formatTime(s.date)}`,
+          value: `🎮 ${teamsStr}${note}\n\`ID: ${s._id}\``
+        });
+      }
+
+      return message.channel.send({ embeds: [embed] });
+    }
+
     // ─── Aide ─────────────────────────────────────────────────────
     return message.reply([
       '**Commandes `!calendrier` :**',
@@ -250,6 +310,8 @@ module.exports = (client) => {
       '`!calendrier salon #salon` — Définir le salon des rappels *(staff)*',
       '`!calendrier rappel <activer|desactiver> [24h|1h|15m]` — Gérer les rappels *(staff)*',
       '`!calendrier statut` — Voir la configuration *(staff)*',
+      '`!calendrier prochain` — Voir le prochain match uniquement',
+      '`!calendrier equipe <nom>` — Matchs à venir d\'une équipe',
     ].join('\n'));
   });
 };

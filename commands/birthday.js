@@ -80,6 +80,42 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
+    // --- !anniversaire prochains [N] ---
+    if (sub === 'prochains') {
+      const days = Math.min(parseInt(args[2]) || 30, 90);
+      const all  = await Birthday.find({ guildId: message.guild.id });
+      if (!all.length) return message.reply('Aucun anniversaire enregistré.');
+
+      const today = new Date();
+      const year  = today.getFullYear();
+
+      const upcoming = all
+        .map(b => {
+          let next = new Date(year, b.month - 1, b.day);
+          if (next < today) next = new Date(year + 1, b.month - 1, b.day);
+          const diffDays = Math.floor((next - today) / 86400000);
+          return { b, next, diffDays };
+        })
+        .filter(x => x.diffDays <= days)
+        .sort((a, z) => a.diffDays - z.diffDays);
+
+      if (!upcoming.length)
+        return message.reply(`Aucun anniversaire dans les **${days}** prochains jours.`);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🎂 Prochains anniversaires — ${days} jours`)
+        .setColor(0xFEE75C)
+        .setDescription(
+          upcoming.map(({ b, next, diffDays }) => {
+            const label = diffDays === 0 ? "**Aujourd'hui !** 🎉" : `dans **${diffDays}j**`;
+            return `• <@${b.userId}> — **${String(b.day).padStart(2,'0')}/${String(b.month).padStart(2,'0')}** (${label})`;
+          }).join('\n')
+        )
+        .setTimestamp();
+
+      return message.channel.send({ embeds: [embed] });
+    }
+
     // --- !anniversaire vérifier [@user] ---
     if (sub === 'vérifier' || sub === 'verifier') {
       const target = message.mentions.users.first() || message.author;
@@ -93,6 +129,7 @@ module.exports = (client) => {
       '`!anniversaire définir DD/MM` — Enregistrer ton anniversaire\n' +
       '`!anniversaire définir DD/MM/YYYY` — Avec l\'année\n' +
       '`!anniversaire liste` — Voir tous les anniversaires\n' +
+      '`!anniversaire prochains [N]` — Prochains anniversaires sur N jours (défaut 30)\n' +
       '`!anniversaire vérifier [@user]` — Vérifier un anniversaire\n' +
       '`!anniversaire supprimer` — Supprimer ton anniversaire\n' +
       '`!setanniversaire #salon` — Configurer le salon d\'annonce *(staff)*'
