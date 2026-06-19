@@ -8,6 +8,7 @@ module.exports = (client) => {
     const isUnlock = content === '!deverrouiller' || content.startsWith('!deverrouiller ');
     if (!isLock && !isUnlock) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
     if (!message.member?.permissions.has('Administrator')) return message.reply('Staff uniquement');
 
     const target = message.mentions.channels.first() || message.channel;

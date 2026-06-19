@@ -14,6 +14,8 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!antispam')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
 
     const isStaff = message.member.permissions.has('Administrator');
     if (!isStaff) return message.reply('Staff uniquement');

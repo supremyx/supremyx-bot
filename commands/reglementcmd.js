@@ -84,6 +84,7 @@ module.exports = (client) => {
     const isCmd = CMDS.some(c => content === c || content.startsWith(c + ' '));
     if (!isCmd) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
 
     const isStaff = message.member?.permissions.has('Administrator');
     const prefix = CMDS.find(c => content === c || content.startsWith(c + ' '));
