@@ -1,156 +1,302 @@
-const { EmbedBuilder } = require('discord.js');
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+} = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
-module.exports = (client) => {
-  client.on('messageCreate', async message => {
-    if (!message.guild) return;
-    if (message.author.bot) return;
-    if (message.content.trim() !== '!aide') return;
+// ─── Données par catégorie ────────────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id: 'stats',
+    label: 'Stats & Équipes',
+    emoji: '📊',
+    color: 0x5865F2,
+    commands: [
+      { label: '!stats <équipe>',         description: 'Résumé complet des performances',             subs: [] },
+      { label: '!equipe <nom>',           description: 'Fiche détaillée d\'une équipe',               subs: [] },
+      { label: '!equipes',               description: 'Liste de toutes les équipes',                  subs: [] },
+      { label: '!classement',            description: 'Classement général des équipes',               subs: [] },
+      { label: '!top [N]',               description: 'Top N équipes (défaut : 10)',                  subs: [] },
+      { label: '!comparer <T1> vs <T2>', description: 'Comparer deux équipes côte à côte',            subs: [] },
+      { label: '!historique <équipe>',   description: 'Historique de tous les matchs d\'une équipe',  subs: [] },
+      { label: '!matchs',                description: 'Statistiques globales (matchs, kills, records)',subs: [] },
+      { label: '!recherche <nom>',       description: 'Rechercher une équipe ou un joueur',           subs: [] },
+      { label: '!freeagents',            description: 'Joueurs sans équipe disponibles',              subs: [] },
+    ],
+  },
+  {
+    id: 'joueurs',
+    label: 'Joueurs & Roster',
+    emoji: '🎮',
+    color: 0x57F287,
+    commands: [
+      { label: '!profil [@membre]',            description: 'Fiche complète : XP, équipe, stats, warns', subs: [] },
+      { label: '!statsjoueur <nom>',           description: 'Stats détaillées d\'un joueur',             subs: [] },
+      { label: '!classjoueurs',               description: 'Classement des joueurs par kills',          subs: [] },
+      { label: '!matchjoueur <nom>',           description: 'Détail des matchs d\'un joueur',            subs: [] },
+      { label: '!liste <équipe>',              description: 'Afficher le roster d\'une équipe',          subs: [] },
+      { label: '!lineup <équipe>',             description: 'Voir le lineup de match d\'une équipe',     subs: [] },
+      { label: '!absence declarer [raison]',   description: 'Déclarer son absence au prochain match',   subs: ['declarer [raison] — Déclarer', 'annuler — Annuler son absence', 'liste <équipe> — Absences d\'une équipe'] },
+      { label: '!objectif <équipe>',           description: 'Voir l\'objectif de saison d\'une équipe',  subs: [] },
+      { label: '!transfert <joueur>',          description: 'Voir l\'historique des transferts',         subs: [] },
+      { label: '!capitaine <équipe>',          description: 'Voir le capitaine (IGL) d\'une équipe',     subs: [] },
+      { label: '!comparerjoueur <J1> vs <J2>', description: 'Comparer deux joueurs',                    subs: [] },
+    ],
+  },
+  {
+    id: 'tournois',
+    label: 'Tournois & Saisons',
+    emoji: '🏆',
+    color: 0xFEE75C,
+    commands: [
+      { label: '!tournois',              description: 'Liste de tous les tournois',                        subs: [] },
+      { label: '!detailtournoi <nom>',   description: 'Classement et détails d\'un tournoi',              subs: [] },
+      { label: '!inscrire <équipe>',     description: 'Inscrire son équipe à un tournoi ouvert',          subs: [] },
+      { label: '!tableau',               description: 'Tableau des phases éliminatoires',                  subs: [] },
+      { label: '!saisons',               description: 'Historique des saisons et vainqueurs',             subs: [] },
+      { label: '!palmares',              description: 'Palmarès général',                                  subs: [] },
+      { label: '!mvp',                   description: 'MVP actuel (meilleur ratio kills/match)',           subs: [] },
+      { label: '!mvpsaison',             description: 'MVP de toutes les saisons passées',                subs: [] },
+    ],
+  },
+  {
+    id: 'profil',
+    label: 'Profil & XP',
+    emoji: '📈',
+    color: 0xEB459E,
+    commands: [
+      { label: '!niveau [@membre]',  description: 'Niveau XP et barre de progression',         subs: [] },
+      { label: '!classniveau',       description: 'Classement XP Top 10 du serveur',            subs: [] },
+      { label: '!classxp',           description: 'Alias de !classniveau',                      subs: [] },
+      { label: '!infouser [@membre]',description: 'Infos Discord, niveau, sanctions',           subs: [] },
+      { label: '!inforole @role',    description: 'Détails d\'un rôle Discord',                 subs: [] },
+      { label: '!serveur',           description: 'Informations sur le serveur',                subs: [] },
+      { label: '!ping',              description: 'Latence du bot',                              subs: [] },
+      { label: '!status',            description: 'Statut du bot et aperçu des tournois',       subs: [] },
+      { label: '!uptime',            description: 'Temps de fonctionnement du bot',             subs: [] },
+    ],
+  },
+  {
+    id: 'ia',
+    label: 'Intelligence Artificielle',
+    emoji: '🤖',
+    color: 0x5865F2,
+    commands: [
+      { label: '!ia <question>',       description: 'Poser une question à l\'IA SUPREMYX',      subs: [] },
+      { label: '!ia analyser',         description: 'Analyse IA d\'une équipe',                  subs: ['analyser <équipe> — Analyse complète'] },
+      { label: '!ia predire',          description: 'Prédiction IA pour un affrontement',        subs: ['predire <T1> <T2> — Prédiction de match'] },
+      { label: '!ia conseil',          description: 'Conseil coaching personnalisé',             subs: [] },
+      { label: '!ia resume',           description: 'Résumé IA des performances d\'une équipe', subs: ['resume <équipe> — Résumé'] },
+      { label: '!ia rapport',          description: 'Rapport IA complet d\'une équipe',          subs: ['rapport <équipe> — Rapport détaillé'] },
+      { label: '!ia historique',       description: 'Historique de la conversation IA',          subs: [] },
+      { label: '!ia reinitialiser',    description: 'Réinitialiser la conversation IA',          subs: [] },
+      { label: '!ia modeles',          description: 'Liste des modèles IA disponibles',          subs: [] },
+      { label: '!ia modele <alias>',   description: 'Changer de modèle IA',                     subs: [] },
+      { label: '!ia statistiques',     description: 'Statistiques d\'utilisation de l\'IA',      subs: [] },
+    ],
+  },
+  {
+    id: 'calendrier',
+    label: 'Calendrier & Événements',
+    emoji: '📅',
+    color: 0xFEE75C,
+    commands: [
+      { label: '!calendrier',              description: 'Liste les prochains matchs planifiés',       subs: ['prochain — Voir le prochain match', 'equipe <nom> — Matchs d\'une équipe'] },
+      { label: '!calendrier prochain',     description: 'Affiche uniquement le prochain match',       subs: [] },
+      { label: '!calendrier equipe <nom>', description: 'Matchs à venir d\'une équipe spécifique',   subs: [] },
+      { label: '!event creer',             description: 'Créer un événement RSVP',                    subs: ['creer <titre> | <desc> | <date> — Créer', 'liste — Voir les événements', 'participants <id> — Voir participants'] },
+      { label: '!rappel <durée> <texte>',  description: 'Se créer un rappel personnel',               subs: [] },
+    ],
+  },
+  {
+    id: 'outils',
+    label: 'Outils & Utilitaires',
+    emoji: '🛠️',
+    color: 0x57F287,
+    commands: [
+      { label: '!absent [message]',              description: 'Passer en mode AFK',                           subs: [] },
+      { label: '!anniversaire definir <JJ/MM>',  description: 'Enregistrer sa date d\'anniversaire',         subs: ['definir <JJ/MM[/AAAA]> — Enregistrer', 'supprimer — Supprimer', 'liste — Voir tous', 'prochains [N] — Prochain N jours', 'verifier [@user] — Vérifier'] },
+      { label: '!pileface',                      description: 'Lancer une pièce',                             subs: [] },
+      { label: '!dés',                           description: 'Lancer un dé à 6 faces',                       subs: [] },
+      { label: '!vote <question>',               description: 'Créer un sondage rapide par réactions',        subs: [] },
+    ],
+  },
+  {
+    id: 'communaute',
+    label: 'Communauté',
+    emoji: '📬',
+    color: 0xEB459E,
+    commands: [
+      { label: '!suggestion <texte>',    description: 'Envoyer une suggestion au staff',         subs: [] },
+      { label: '!signaler <problème>',   description: 'Signaler un problème au staff',           subs: [] },
+      { label: '!ticket [type]',         description: 'Ouvrir un ticket de support',             subs: ['support — Ticket technique', 'signalement — Signaler', 'candidature — Postuler au staff', 'panneau — Panneau d\'ouverture (staff)'] },
+      { label: '!sanctions [@membre]',   description: 'Voir ses propres sanctions',              subs: [] },
+      { label: '!avertissements',        description: 'Voir l\'historique de ses avertissements',subs: [] },
+      { label: '!regles',                description: 'Afficher les règles du serveur',           subs: [] },
+    ],
+  },
+  {
+    id: 'avance',
+    label: 'Stats Avancées',
+    emoji: '🔢',
+    color: 0x5865F2,
+    commands: [
+      { label: '!serie <équipe>',            description: 'Série de victoires/défaites en cours',    subs: [] },
+      { label: '!regularite <équipe>',       description: 'Régularité sur les derniers matchs',      subs: [] },
+      { label: '!faceatface <T1> <T2>',      description: 'Historique face à face entre 2 équipes',  subs: [] },
+      { label: '!calculer <équipe>',         description: 'Points moyens par match',                 subs: [] },
+      { label: '!moyenne <équipe>',          description: 'Moyenne détaillée sur N matchs',          subs: [] },
+      { label: '!tendance <équipe>',         description: 'Tendance hausse/baisse des performances', subs: [] },
+      { label: '!podium',                    description: 'Top 3 toutes statistiques confondues',    subs: [] },
+      { label: '!vainqueurs',               description: 'Vainqueurs de chaque tournoi passé',       subs: [] },
+      { label: '!prochainmatch',             description: 'Prochain match du tournoi actif',         subs: [] },
+    ],
+  },
+];
 
-    const cd = checkCooldown(message.author.id, 'aide', 10);
-    if (cd) return replyCooldown(message, cd, 'aide');
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function buildMainEmbed() {
+  return new EmbedBuilder()
+    .setColor(0xFF8C00)
+    .setAuthor({ name: 'SUPREMYX — Aide Communauté' })
+    .setDescription(
+      'Choisis une **catégorie** ci-dessous pour voir les commandes disponibles.\n' +
+      '> `< >` paramètre obligatoire · `[ ]` paramètre optionnel\n> Tape `!aidestaff` si tu fais partie du staff.'
+    )
+    .addFields(
+      CATEGORIES.map(cat => ({
+        name: `${cat.emoji} ${cat.label}`,
+        value: `${cat.commands.length} commande(s)`,
+        inline: true,
+      }))
+    )
+    .setFooter({ text: 'SUPREMYX CI' })
+    .setTimestamp();
+}
 
-    const COLOR  = 0xFF8C00;
-    const FOOTER = { text: 'SUPREMYX CI · Tape !aidestaff si tu es staff · < > obligatoire · [ ] optionnel' };
-
-    // ── Embed 1 : Compétitif ──────────────────────────────────────────────────
-    const embed1 = new EmbedBuilder()
-      .setColor(COLOR)
-      .setAuthor({ name: 'SUPREMYX — Aide générale', iconURL: client.user.displayAvatarURL() })
-      .setDescription('Toutes les commandes disponibles pour la communauté.')
-      .addFields(
-        {
-          name: '📊 Statistiques & Équipes',
-          value: [
-            '`!stats <équipe>` — Résumé complet des performances d\'une équipe',
-            '`!equipe <nom>` — Fiche détaillée d\'une équipe',
-            '`!equipes` — Liste de toutes les équipes enregistrées',
-            '`!classement` — Classement général des équipes',
-            '`!top [N]` — Top N équipes (défaut : 10)',
-            '`!comparer <T1> vs <T2>` — Comparer deux équipes',
-            '`!historique <équipe>` — Historique de tous les matchs d\'une équipe',
-            '`!matchs` — Statistiques globales (total matchs, kills, records)',
-            '`!recherche <nom>` — Rechercher une équipe ou un joueur',
-            '`!freeagents` — Liste des joueurs sans équipe disponibles',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🎮 Joueurs & Roster',
-          value: [
-            '`!profil [@membre]` — Fiche complète d\'un joueur (XP, équipe, stats, warns)',
-            '`!statsjoueur <nom>` — Stats détaillées d\'un joueur (kills, matchs)',
-            '`!classjoueurs` — Classement des meilleurs joueurs par kills',
-            '`!matchjoueur <nom>` — Détail des matchs d\'un joueur',
-            '`!liste <équipe>` — Roster / composition d\'une équipe',
-            '`!objectif <équipe>` — Voir l\'objectif de saison d\'une équipe',
-            '`!transfert <joueur> <équipe>` — Voir les transferts d\'un joueur',
-            '`!capitaine <équipe>` — Voir le capitaine d\'une équipe',
-            '`!comparerjoueur <J1> vs <J2>` — Comparer deux joueurs',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🏆 Tournois & Saisons',
-          value: [
-            '`!tournois` — Liste de tous les tournois',
-            '`!detailtournoi <nom>` — Classement et détails d\'un tournoi',
-            '`!inscrire <équipe>` — Inscrire son équipe à un tournoi ouvert',
-            '`!tableau` — Tableau des phases éliminatoires du tournoi en cours',
-            '`!saisons` — Historique des saisons et vainqueurs',
-            '`!palmares` — Palmarès général',
-            '`!mvp` — MVP actuel (meilleur ratio kills/match)',
-            '`!mvpsaison` — MVP de toutes les saisons passées',
-          ].join('\n'),
-          inline: false,
-        }
-      );
-
-    // ── Embed 2 : Profil, IA, Utilitaires ─────────────────────────────────────
-    const embed2 = new EmbedBuilder()
-      .setColor(COLOR)
-      .addFields(
-        {
-          name: '📈 Profil & Progression',
-          value: [
-            '`!niveau [@membre]` — Niveau XP et barre de progression',
-            '`!classniveau` · `!classxp` — Classement XP Top 10 du serveur',
-            '`!infouser [@membre]` — Infos Discord, niveau, sanctions d\'un membre',
-            '`!inforole @role` — Détails d\'un rôle Discord',
-            '`!serveur` — Informations sur le serveur',
-            '`!ping` — Latence du bot',
-            '`!status` — Statut du bot et aperçu des tournois',
-            '`!uptime` — Temps de fonctionnement du bot',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🤖 Intelligence Artificielle',
-          value: [
-            '`!ia <question>` — Poser une question à l\'IA SUPREMYX',
-            '`!ia analyser <équipe>` — Analyse IA d\'une équipe',
-            '`!ia predire <T1> <T2>` — Prédiction IA pour un affrontement',
-            '`!ia conseil` — Conseil coaching personnalisé',
-            '`!ia resume <équipe>` — Résumé IA des performances',
-            '`!ia rapport <équipe>` — Rapport IA complet',
-            '`!ia reinitialiser` — Réinitialiser la conversation IA',
-            '`!ia modeles` — Liste des modèles IA disponibles',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📅 Calendrier & Événements',
-          value: [
-            '`!calendrier` — Voir les prochains matchs planifiés',
-            '`!event creer <titre> | <desc> | <date>` — Créer un événement RSVP',
-            '`!event liste` — Liste des événements en cours',
-            '`!event participants <id>` — Voir les participants d\'un événement',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🛠️ Outils & Utilitaires',
-          value: [
-            '`!rappel <durée> <texte>` — Se créer un rappel (ex : `!rappel 2h match ce soir`)',
-            '`!absent [message]` — Passer en mode AFK',
-            '`!anniversaire definir <JJ/MM/AAAA>` — Enregistrer sa date d\'anniversaire',
-            '`!anniversaire supprimer` — Supprimer sa date d\'anniversaire',
-            '`!pileface` — Lancer une pièce',
-            '`!dés` — Lancer un dé à 6 faces',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📬 Communauté & Signalements',
-          value: [
-            '`!suggestion <texte>` — Envoyer une suggestion au staff',
-            '`!signaler <problème>` — Signaler un problème au staff',
-            '`!ticket` — Ouvrir un ticket de support',
-            '`!vote <question> | <opt1> | <opt2>` — Créer un sondage rapide',
-            '`!sanctions [@membre]` — Voir ses sanctions (ou celles d\'un membre)',
-            '`!avertissements [@membre]` — Voir l\'historique des avertissements',
-            '`!regles` — Afficher les règles du serveur',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🔢 Statistiques avancées',
-          value: [
-            '`!serie <équipe>` — Série de victoires/défaites en cours',
-            '`!regularite <équipe>` — Régularité sur les derniers matchs',
-            '`!faceatface <T1> <T2>` — Historique face à face entre deux équipes',
-            '`!calculer <équipe>` — Points moyens par match',
-            '`!moyenne <équipe>` — Moyenne détaillée sur N matchs',
-            '`!tendance <équipe>` — Tendance (hausse/baisse) des performances',
-            '`!podium` — Top 3 toutes statistiques confondues',
-          ].join('\n'),
-          inline: false,
-        }
+function buildButtonRows() {
+  const rows = [];
+  for (let i = 0; i < CATEGORIES.length; i += 5) {
+    const chunk = CATEGORIES.slice(i, i + 5);
+    const row = new ActionRowBuilder().addComponents(
+      chunk.map(cat =>
+        new ButtonBuilder()
+          .setCustomId(`aide_btn_${cat.id}`)
+          .setLabel(cat.label)
+          .setEmoji(cat.emoji)
+          .setStyle(ButtonStyle.Secondary)
       )
-      .setFooter(FOOTER)
-      .setTimestamp();
+    );
+    rows.push(row);
+  }
+  return rows;
+}
 
-    await message.channel.send({ embeds: [embed1] });
-    await message.channel.send({ embeds: [embed2] });
+function buildSelectMenu(cat) {
+  const options = cat.commands.map((cmd, idx) => ({
+    label: cmd.label.slice(0, 100),
+    description: cmd.description.slice(0, 100),
+    value: `${cat.id}_${idx}`,
+  }));
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(`aide_sel_${cat.id}`)
+    .setPlaceholder(`Sélectionne une commande — ${cat.label}`)
+    .addOptions(options);
+
+  return new ActionRowBuilder().addComponents(menu);
+}
+
+function buildCategoryEmbed(cat) {
+  const lines = cat.commands.map(cmd => `\`${cmd.label}\` — ${cmd.description}`);
+  return new EmbedBuilder()
+    .setColor(cat.color)
+    .setTitle(`${cat.emoji} ${cat.label}`)
+    .setDescription(lines.join('\n'))
+    .setFooter({ text: 'Sélectionne une commande dans le menu pour plus de détails' });
+}
+
+function buildCommandEmbed(cat, cmdIdx) {
+  const cmd = cat.commands[cmdIdx];
+  if (!cmd) return null;
+
+  const embed = new EmbedBuilder()
+    .setColor(cat.color)
+    .setTitle(`\`${cmd.label}\``)
+    .setDescription(cmd.description);
+
+  if (cmd.subs && cmd.subs.length) {
+    embed.addFields({
+      name: '🔹 Sous-commandes',
+      value: cmd.subs.map(s => `\`${s}\``).join('\n'),
+    });
+  }
+
+  embed.setFooter({ text: `${cat.emoji} ${cat.label} · < > obligatoire · [ ] optionnel` });
+  return embed;
+}
+
+// ─── Module ───────────────────────────────────────────────────────────────────
+module.exports = (client) => {
+
+  // !aide → message principal avec boutons
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (message.content.trim() !== '!aide') return;
+
+      const cd = checkCooldown(message.author.id, 'aide', 10);
+      if (cd) return replyCooldown(message, cd, 'aide');
+
+      await message.channel.send({
+        embeds: [buildMainEmbed()],
+        components: buildButtonRows(),
+      });
+    } catch (err) {
+      console.error('[aide messageCreate]', err);
+    }
+  });
+
+  // Interactions : boutons + menus déroulants
+  client.on('interactionCreate', async interaction => {
+    try {
+      // ── Clic bouton catégorie ────────────────────────────────────────────
+      if (interaction.isButton() && interaction.customId.startsWith('aide_btn_')) {
+        const catId = interaction.customId.replace('aide_btn_', '');
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (!cat) return;
+
+        await interaction.reply({
+          ephemeral: true,
+          embeds: [buildCategoryEmbed(cat)],
+          components: [buildSelectMenu(cat)],
+        });
+        return;
+      }
+
+      // ── Sélection commande dans le menu ───────────────────────────────────
+      if (interaction.isStringSelectMenu() && interaction.customId.startsWith('aide_sel_')) {
+        const catId = interaction.customId.replace('aide_sel_', '');
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (!cat) return;
+
+        const value = interaction.values[0]; // e.g. "stats_2"
+        const idx = parseInt(value.split('_').pop());
+        const embed = buildCommandEmbed(cat, idx);
+        if (!embed) return;
+
+        await interaction.update({
+          embeds: [embed],
+          components: [buildSelectMenu(cat)],
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('[aide interactionCreate]', err);
+    }
   });
 };
