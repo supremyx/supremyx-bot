@@ -124,6 +124,7 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (content !== '!lien' && !content.startsWith('!lien ')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
     if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))

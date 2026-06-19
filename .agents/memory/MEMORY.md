@@ -1,4 +1,6 @@
-- [DM Guard pattern](dm-guard-pattern.md) — every command file needs `if (!message.guild) return;` before any `message.member` access; all 53 files are now covered.
+- [DM Guard pattern](dm-guard-pattern.md) — every command file needs `if (!message.guild) return;`, `if (message.author.bot) return;`, and `if (!message.member) return;` before accessing `message.member.permissions`; all files are now covered.
+- [Unregistered command modules](unregistered-modules.md) — new command files must be explicitly `require()`d in `index.js`; 6 files (statsplus, equipesplus, moderationplus, xpmanage, tournoiplus, utilitairesplus) were silently dead until registered.
+- [Duplicate messageCreate handler](duplicate-handler.md) — when two files handle the same command (e.g. `!matchs` in both `matchs.js` and `tournoiplus.js`), both fire independently causing double replies; always remove the duplicate.
 - [API regex injection](api-regex-injection.md) — `req.params.*` must be escaped before use in `new RegExp()`; fixed in `/ranking/:team`, `/players/:name`, `/rosters/:team` in `api/server.js`.
 - [eventcmd race condition](eventcmd-race.md) — event join/decline must use `$pull` then `$addToSet` (atomic), reload doc after update; never mutate in-memory array + `.save()` under concurrent reactions.
 - [reactionrole channel scan](reactionrole-channel.md) — never scan all guild channels to find a message; require `#channel` mention in the command and fetch from that channel directly.
