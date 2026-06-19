@@ -261,7 +261,7 @@ module.exports = (client) => {
         try {
           await sent.edit({
             embeds: [
-              buildMainEmbed().setFooter({ text: 'SUPREMYX CI · ⏱️ Menu expiré — relance !aide pour un nouveau menu.' }),
+              buildMainEmbed().setFooter({ text: 'SUPREMYX Esports · ⏱️ Menu expiré — relance !aide pour un nouveau menu.' }),
             ],
             components: [],
           });
