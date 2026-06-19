@@ -60,6 +60,7 @@ const CATEGORIES = [
       { label: '!palmares',              description: 'Palmarès général',                                  subs: [] },
       { label: '!mvp',                   description: 'MVP actuel (meilleur ratio kills/match)',           subs: [] },
       { label: '!mvpsaison',             description: 'MVP de toutes les saisons passées',                subs: [] },
+      { label: '!trophees <équipe>',     description: 'Voir tous les trophées obtenus par une équipe',    subs: [] },
     ],
   },
   {
@@ -121,7 +122,6 @@ const CATEGORIES = [
       { label: '!anniversaire definir <JJ/MM>',  description: 'Enregistrer sa date d\'anniversaire',         subs: ['definir <JJ/MM[/AAAA]> — Enregistrer', 'supprimer — Supprimer', 'liste — Voir tous', 'prochains [N] — Prochain N jours', 'verifier [@user] — Vérifier'] },
       { label: '!pileface',                      description: 'Lancer une pièce',                             subs: [] },
       { label: '!dés',                           description: 'Lancer un dé à 6 faces',                       subs: [] },
-      { label: '!vote <question>',               description: 'Créer un sondage rapide par réactions',        subs: [] },
     ],
   },
   {
