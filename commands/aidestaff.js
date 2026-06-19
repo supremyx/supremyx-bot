@@ -181,7 +181,7 @@ const STAFF_CATEGORIES = [
       { label: '!gitpush',                 description: 'Pousser le code vers GitHub',                    subs: [] },
       { label: '!gitstatus',               description: 'Voir le statut du dépôt Git',                    subs: [] },
       { label: '!memoire',                 description: 'Voir l\'utilisation mémoire du bot',              subs: [] },
-      { label: '!uptime',                  description: 'Voir le temps de fonctionnement',                subs: [] },
+      { label: '!tempsenligne',             description: 'Voir le temps de fonctionnement',                subs: [] },
     ],
   },
   {

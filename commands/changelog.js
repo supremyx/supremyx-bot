@@ -58,8 +58,8 @@ module.exports = (client) => {
     if (!message.member) return;
 
     const content = message.content.trim();
-    const isJournal   = content.startsWith('!journal');
-    const isChangelog  = content.startsWith('!changelog');
+    const isJournal    = content.startsWith('!journal');
+    const isChangelog  = content.startsWith('!misesajour') || content.startsWith('!changelog');
     if (!isJournal && !isChangelog) return;
 
     if (!message.member.permissions.has('Administrator'))
@@ -111,7 +111,7 @@ module.exports = (client) => {
       return;
     }
 
-    // ── !changelog — API GitHub ───────────────────────────────────────────────
+    // ── !misesajour — API GitHub ──────────────────────────────────────────────
     const args = content.split(' ');
     const n = Math.min(Math.max(parseInt(args[1]) || 10, 1), 25);
 

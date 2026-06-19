@@ -48,13 +48,13 @@ module.exports = (client) => {
     const args    = content.split(/\s+/);
     const cmd     = args[0].toLowerCase();
 
-    // ── !countdown <date> [événement] ─────────────────────────────────────────
-    if (cmd === '!countdown') {
-      const cd = checkCooldown(message.author.id, 'countdown', 10);
-      if (cd) return replyCooldown(message, cd, 'countdown');
+    // ── !rebours <date> [événement] ───────────────────────────────────────────
+    if (cmd === '!rebours' || cmd === '!countdown') {
+      const cd = checkCooldown(message.author.id, 'rebours', 10);
+      if (cd) return replyCooldown(message, cd, 'rebours');
 
-      const rest = content.slice('!countdown'.length).trim();
-      if (!rest) return message.reply('Usage : `!countdown <DD/MM/YYYY [HH:MM]> [nom de l\'événement]`\nEx : `!countdown 25/12/2026 14:00 Finale du tournoi`');
+      const rest = content.slice(cmd.length).trim();
+      if (!rest) return message.reply('Usage : `!rebours <DD/MM/YYYY [HH:MM]> [nom de l\'événement]`\nEx : `!rebours 25/12/2026 14:00 Finale du tournoi`');
 
       // Séparer date et label
       const parts = rest.split(' ');
@@ -88,17 +88,17 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ── !uptime ────────────────────────────────────────────────────────────────
-    if (cmd === '!uptime') {
-      const cd = checkCooldown(message.author.id, 'uptime', 10);
-      if (cd) return replyCooldown(message, cd, 'uptime');
+    // ── !tempsenligne ─────────────────────────────────────────────────────────
+    if (cmd === '!tempsenligne' || cmd === '!uptime') {
+      const cd = checkCooldown(message.author.id, 'tempsenligne', 10);
+      if (cd) return replyCooldown(message, cd, 'tempsenligne');
 
       const uptimeMs   = Date.now() - BOT_START;
       const nodeUptime = process.uptime() * 1000;
 
       const embed = new EmbedBuilder()
         .setColor(0x57F287)
-        .setAuthor({ name: '🟢 Uptime — SUPREMYX Bot', iconURL: client.user.displayAvatarURL() })
+        .setAuthor({ name: '🟢 Temps en ligne — SUPREMYX Bot', iconURL: client.user.displayAvatarURL() })
         .addFields(
           { name: '⏱️ En ligne depuis', value: `**${fmtUptime(uptimeMs)}**`, inline: true },
           { name: '🖥️ Processus Node.js', value: `**${fmtUptime(nodeUptime)}**`, inline: true },

@@ -4,7 +4,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!note') && !content.startsWith('!notes') && !content.startsWith('!delnote')) return;
+    if (!content.startsWith('!note') && !content.startsWith('!notes') && !content.startsWith('!supprimenote') && !content.startsWith('!delnote')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -72,10 +72,10 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !delnote <id> ---
-    if (cmd === '!delnote') {
+    // --- !supprimenote <id> ---
+    if (cmd === '!supprimenote' || cmd === '!delnote') {
       const id = args[1];
-      if (!id) return message.reply('Usage : `!delnote <id>`\nL\'ID est visible dans `!notes`.');
+      if (!id) return message.reply('Usage : `!supprimenote <id>`\nL\'ID est visible dans `!notes`.');
 
       let deleted = null;
       if (id.length === 24) {

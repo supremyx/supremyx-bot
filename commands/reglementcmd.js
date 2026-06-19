@@ -57,7 +57,7 @@ function buildEmbeds(doc) {
   }
 
   if (embeds.length === 1) {
-    header.setDescription((doc.intro ? doc.intro + '\n\n' : '') + '*Aucune section définie. Utilise `!règlement section add <emoji> <titre>`.*');
+    header.setDescription((doc.intro ? doc.intro + '\n\n' : '') + '*Aucune section définie. Utilise `!règlement section ajouter <emoji> <titre>`.*');
   }
 
   return embeds;

@@ -75,8 +75,8 @@ const CATEGORIES = [
       { label: '!inforole @role',    description: 'Détails d\'un rôle Discord',                 subs: [] },
       { label: '!serveur',           description: 'Informations sur le serveur',                subs: [] },
       { label: '!ping',              description: 'Latence du bot',                              subs: [] },
-      { label: '!status',            description: 'Statut du bot et aperçu des tournois',       subs: [] },
-      { label: '!uptime',            description: 'Temps de fonctionnement du bot',             subs: [] },
+      { label: '!statut',            description: 'Statut du bot et aperçu des tournois',       subs: [] },
+      { label: '!tempsenligne',      description: 'Temps de fonctionnement du bot',             subs: [] },
     ],
   },
   {
