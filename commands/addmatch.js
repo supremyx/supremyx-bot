@@ -12,6 +12,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!ajoutermatch')) return;
     if (!message.guild) return;
+    if (message.author.bot) return;
     if (!message.member) return;
 
     try {

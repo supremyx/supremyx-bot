@@ -12,6 +12,7 @@ module.exports = (client) => {
     const args = content.split(' ');
     const cmd = args[0].toLowerCase();
     if (!message.guild) return;
+    if (message.author.bot) return;
     if (!message.member) return;
     const isStaff = message.member.permissions.has('Administrator');
 

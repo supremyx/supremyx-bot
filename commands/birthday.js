@@ -8,6 +8,7 @@ module.exports = (client) => {
     try {
     const content = message.content.trim();
     if (!message.guild) return;
+    if (message.author.bot) return;
     const isStaff = message.member?.permissions.has('Administrator') ?? false;
 
     // --- !setbirthday #channel ---
