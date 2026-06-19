@@ -42,6 +42,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.guild) return;
     if (message.author.bot) return;
+    if (!message.member) return;
 
     const content = message.content.trim();
     const args    = content.split(/\s+/);

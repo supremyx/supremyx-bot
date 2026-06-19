@@ -31,6 +31,7 @@ module.exports = (client) => {
     if (!message.content.startsWith('!resultats')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
+    if (!message.member) return;
 
     const content = message.content.trim();
     const args    = content.split(' ').slice(1);
