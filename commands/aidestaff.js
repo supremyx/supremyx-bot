@@ -1,298 +1,350 @@
-const { EmbedBuilder } = require('discord.js');
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+} = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
-module.exports = (client) => {
-  client.on('messageCreate', async message => {
-    if (!message.guild) return;
-    if (!message.member) return;
-    if (message.author.bot) return;
-    if (message.content.trim() !== '!aidestaff') return;
+// ─── Données par catégorie ────────────────────────────────────────────────────
+const STAFF_CATEGORIES = [
+  {
+    id: 'matchs',
+    label: 'Gestion des Matchs',
+    emoji: '⚽',
+    color: 0x57F287,
+    commands: [
+      { label: '!ajoutermatch <équipe> <placement> <kills>', description: 'Enregistrer un résultat de match',          subs: [] },
+      { label: '!reinitialiser',                             description: 'Remettre tous les scores à zéro',           subs: [] },
+      { label: '!resultats salon #salon',                    description: 'Configurer le salon des résultats auto',    subs: ['salon #salon — Config salon', 'statut <activer|desactiver> — Toggle', 'depuis <jours> — Résultats des N derniers jours'] },
+      { label: '!exporter [json|csv|texte]',                 description: 'Exporter toutes les données',               subs: [] },
+      { label: '!sauvegarde',                                description: 'Créer une sauvegarde JSON complète',        subs: [] },
+      { label: '!restaurer',                                 description: 'Restaurer depuis une sauvegarde',           subs: [] },
+      { label: '!annulermatch <id>',                         description: 'Annuler un match enregistré',               subs: [] },
+    ],
+  },
+  {
+    id: 'tournois',
+    label: 'Tournois',
+    emoji: '🏆',
+    color: 0xFEE75C,
+    commands: [
+      { label: '!nouveautournoi <nom>',       description: 'Créer un nouveau tournoi',                  subs: [] },
+      { label: '!finertournoi',               description: 'Terminer le tournoi actif',                 subs: [] },
+      { label: '!supprimertournoi <nom>',     description: 'Supprimer un tournoi',                      subs: [] },
+      { label: '!tableau',                    description: 'Générer le bracket (jusqu\'à 32 équipes)',  subs: [] },
+      { label: '!trophee <icône> <équipe>',   description: 'Attribuer un trophée à une équipe',         subs: [] },
+      { label: '!trophees <équipe>',          description: 'Voir tous les trophées d\'une équipe',      subs: [] },
+      { label: '!inscription ouvrir',         description: 'Ouvrir les inscriptions au tournoi',        subs: ['ouvrir — Ouvrir', 'fermer — Fermer', 'liste — Équipes inscrites', 'valider <équipe> — Valider', 'refuser <équipe> — Refuser', 'max <N> — Nombre max', 'salon #salon — Salon dépôt', 'annonces #salon — Salon annonces', 'reinitialiser — Réinitialiser'] },
+    ],
+  },
+  {
+    id: 'equipes',
+    label: 'Équipes & Joueurs',
+    emoji: '👥',
+    color: 0x5865F2,
+    commands: [
+      { label: '!enregistrer <nom>',           description: 'Enregistrer une équipe',                            subs: [] },
+      { label: '!desenregistrer <nom>',        description: 'Supprimer une équipe et son historique',            subs: [] },
+      { label: '!renommer <ancien> <nouveau>', description: 'Renommer une équipe',                               subs: [] },
+      { label: '!fusionner <T1> <T2>',         description: 'Fusionner deux équipes',                            subs: [] },
+      { label: '!composition <équipe> <J1,…>', description: 'Définir la composition d\'une équipe',              subs: [] },
+      { label: '!liste ajouter',               description: 'Ajouter un joueur au roster',                       subs: ['ajouter <équipe> @user <rôle> [note] — Ajouter', 'retirer <équipe> @user — Retirer', 'role <équipe> @user <rôle> — Changer rôle', 'note <équipe> @user <note> — Ajouter note', 'vider <équipe> — Vider roster', 'capitaine <équipe> @user — Désigner IGL'] },
+      { label: '!lineup definir',              description: 'Définir le lineup de match d\'une équipe',          subs: ['definir <équipe> <J1,J2,...> — Définir', 'effacer <équipe> — Effacer', 'liste — Tous les lineups'] },
+      { label: '!objectif definir',            description: 'Définir l\'objectif de saison d\'une équipe',       subs: ['definir <équipe> <texte> — Définir', 'supprimer <équipe> — Supprimer', 'liste — Tous les objectifs'] },
+      { label: '!absence effacer @membre',     description: 'Gérer les absences des joueurs',                    subs: ['effacer @membre — Effacer une absence', 'toutes — Voir toutes les absences'] },
+      { label: '!resetjoueur <nom>',           description: 'Remettre les stats d\'un joueur à zéro',           subs: [] },
+      { label: '!donnerxp @membre <quantité>', description: 'Donner de l\'XP à un membre',                      subs: [] },
+      { label: '!retirerxp @membre <qté>',     description: 'Retirer de l\'XP à un membre',                     subs: [] },
+      { label: '!niveau reinitialiser @membre',description: 'Remettre XP et niveau d\'un membre à zéro',        subs: [] },
+    ],
+  },
+  {
+    id: 'saisons',
+    label: 'Saisons',
+    emoji: '📅',
+    color: 0xEB459E,
+    commands: [
+      { label: '!nouvellesaison <nom>',          description: 'Démarrer une nouvelle saison',                      subs: [] },
+      { label: '!finersaison',                   description: 'Clore la saison et archiver les stats',             subs: [] },
+      { label: '!setrecompense <rang> @role',    description: 'Rôle Discord selon le rang au classement',          subs: [] },
+      { label: '!lierequipe <équipe> @role',     description: 'Associer un rôle Discord à une équipe',            subs: [] },
+      { label: '!syncrangs',                     description: 'Synchroniser tous les rôles de rang',               subs: [] },
+      { label: '!recompenses',                   description: 'Voir toutes les récompenses configurées',           subs: [] },
+      { label: '!supprimerrecompense <rang>',    description: 'Supprimer une récompense de rang',                  subs: [] },
+    ],
+  },
+  {
+    id: 'communication',
+    label: 'Communication',
+    emoji: '📢',
+    color: 0xFEE75C,
+    commands: [
+      { label: '!annonce <message>',          description: 'Envoyer une annonce dans le salon configuré',  subs: [] },
+      { label: '!dire <message>',             description: 'Faire parler le bot dans le salon courant',    subs: [] },
+      { label: '!vote <question>',            description: 'Sondage rapide par réactions',                 subs: [] },
+      { label: '!sondage',                    description: 'Sondage avancé (multiples options, timed)',    subs: [] },
+      { label: '!concours <durée> <prix>',    description: 'Lancer un giveaway',                          subs: [] },
+      { label: '!diffuser <message>',         description: 'Diffuser dans plusieurs salons',               subs: ['ajouter #salon — Ajouter salon', 'retirer #salon — Retirer salon', 'liste — Voir salons', 'aperçu — Prévisualiser'] },
+      { label: '!setmessagejour <texte>',     description: 'Définir le message du jour automatique',      subs: [] },
+      { label: '!messagejour',                description: 'Afficher le message du jour actuel',           subs: [] },
+      { label: '!planifier creer',            description: 'Créer un message planifié',                    subs: ['creer — Créer', 'liste — Voir messages', 'supprimer <id> — Supprimer', 'modifier <id> — Modifier', 'tester <id> — Tester'] },
+      { label: '!lien #salon | Titre | Desc', description: 'Publier un embed dans un salon',              subs: ['preview | … — Prévisualiser', 'panneau | … — Embed avec boutons', 'list [#salon] — Lister', 'edit … — Modifier'] },
+    ],
+  },
+  {
+    id: 'config',
+    label: 'Config Serveur',
+    emoji: '⚙️',
+    color: 0x5865F2,
+    commands: [
+      { label: '!config',                      description: 'Voir/modifier la configuration du bot',              subs: [] },
+      { label: '!setpoints <placement>',        description: 'Configurer le barème de points',                    subs: [] },
+      { label: '!bienvenue definir',            description: 'Configurer le message de bienvenue',                subs: ['definir <message> — Définir message', 'salon #salon — Salon', 'tester — Tester', 'activer / desactiver — Toggle'] },
+      { label: '!rolesauto definir @role',      description: 'Configurer le rôle automatique à l\'arrivée',      subs: ['definir @role — Définir rôle', 'activer / desactiver — Toggle'] },
+      { label: '!rolereaction ajouter',         description: 'Configurer les reaction-roles',                     subs: ['ajouter #salon <msgId> <emoji> @role — Ajouter', 'retirer <msgId> <emoji> — Supprimer', 'liste — Voir tout', 'vider <msgId> — Vider message'] },
+      { label: '!setanniversaire #salon',       description: 'Salon des annonces d\'anniversaire',                subs: [] },
+      { label: '!setchannelniveau #salon',      description: 'Salon des montées de niveau XP',                    subs: [] },
+      { label: '!calendrier salon #salon',      description: 'Config des rappels de matchs',                      subs: ['salon #salon — Salon rappels', 'rappel <activer|desactiver> [24h|1h|15m] — Toggle rappels', 'statut — Voir config', 'ajouter <DD/MM/YYYY> <HH:MM> <eq1,eq2> [note] — Ajouter', 'modifier <id> <DD/MM/YYYY> <HH:MM> — Modifier', 'supprimer <id> — Supprimer', 'vider — Supprimer passés'] },
+      { label: '!setdelai <commande> <sec>',    description: 'Modifier le cooldown d\'une commande',              subs: ['delais — Voir tous les cooldowns', 'suppdelai <commande> — Réinitialiser'] },
+    ],
+  },
+  {
+    id: 'moderation',
+    label: 'Modération',
+    emoji: '🛡️',
+    color: 0xED4245,
+    commands: [
+      { label: '!effacer <1-100>',             description: 'Supprimer en masse des messages',                 subs: [] },
+      { label: '!lenteur <0-21600>',           description: 'Activer le mode lent (secondes)',                 subs: [] },
+      { label: '!sourdine @membre <durée>',    description: 'Mettre un membre en sourdine',                    subs: [] },
+      { label: '!retablir @membre',            description: 'Retirer la sourdine',                             subs: [] },
+      { label: '!verrouiller',                 description: 'Verrouiller le salon pour @everyone',             subs: [] },
+      { label: '!deverrouiller',               description: 'Déverrouiller le salon',                          subs: [] },
+      { label: '!avertir @membre <raison>',    description: 'Avertir un membre (escalade automatique)',        subs: [] },
+      { label: '!supprimerwarn @membre [id]',  description: 'Retirer un avertissement',                        subs: [] },
+      { label: '!avertissements @membre',      description: 'Voir l\'historique des warns',                    subs: [] },
+      { label: '!punition @membre <type>',     description: 'Sanction directe (warn/mute/kick/ban)',           subs: [] },
+      { label: '!sanctions @membre',           description: 'Voir le casier d\'un membre',                     subs: [] },
+      { label: '!effaceractions @membre',      description: 'Effacer toutes les sanctions',                    subs: [] },
+      { label: '!casier @membre',              description: 'Casier judiciaire complet',                       subs: [] },
+      { label: '!rapport',                     description: 'Rapport hebdomadaire de modération',              subs: [] },
+      { label: '!topwarn',                     description: 'Top 10 membres les plus sanctionnés',             subs: [] },
+    ],
+  },
+  {
+    id: 'escalade',
+    label: 'Escalade & Filtres',
+    emoji: '⚖️',
+    color: 0xED4245,
+    commands: [
+      { label: '!escalade',                       description: 'Voir les règles d\'escalade automatique',      subs: ['activer / desactiver — Toggle', 'configurer <warns> <action> [durée] — Configurer règle', 'supprimer <warns> — Supprimer règle', 'reinitialiser — Réinitialiser'] },
+      { label: '!listenoiree ajouter <nom>',      description: 'Gérer la blacklist des pseudos',               subs: ['ajouter <nom> — Ajouter', 'retirer <nom> — Retirer', 'liste — Voir', 'verifier <nom> — Vérifier'] },
+      { label: '!automod activer',                description: 'Activer/désactiver le filtre de mots',         subs: ['activer / desactiver — Toggle', 'statut — Voir statut', 'test <texte> — Tester'] },
+      { label: '!mots ajouter <mot>',             description: 'Gérer les mots interdits',                     subs: ['ajouter <mot> — Ajouter', 'retirer <mot> — Retirer', 'defaut — Restaurer défaut', 'vider — Tout supprimer'] },
+      { label: '!antispam activer',               description: 'Configurer l\'anti-spam',                      subs: ['activer / desactiver — Toggle', 'configurer <msgs> <secondes> — Configurer seuils'] },
+    ],
+  },
+  {
+    id: 'tickets',
+    label: 'Tickets & Règlement',
+    emoji: '🎫',
+    color: 0x57F287,
+    commands: [
+      { label: '!configticket rolstaff',        description: 'Configurer le système de tickets',          subs: ['rolstaff @role — Rôle staff', 'transcription #salon — Salon transcriptions', 'categorie <id> — Catégorie Discord'] },
+      { label: '!ticket panneau',               description: 'Afficher le panneau d\'ouverture',           subs: [] },
+      { label: '!tickets',                      description: 'Voir tous les tickets ouverts',              subs: [] },
+      { label: '!prendre',                      description: 'Prendre en charge le ticket actuel',         subs: [] },
+      { label: '!resoudre',                     description: 'Marquer le ticket comme résolu',             subs: [] },
+      { label: '!fermer',                       description: 'Fermer le ticket actuel',                    subs: [] },
+      { label: '!ajouteruser @membre',          description: 'Ajouter un membre au ticket',               subs: [] },
+      { label: '!retireruser @membre',          description: 'Retirer un membre du ticket',               subs: [] },
+      { label: '!renommerticket <titre>',       description: 'Renommer le salon du ticket',               subs: [] },
+      { label: '!reglement titre <texte>',      description: 'Configurer le règlement avancé',            subs: ['titre <texte> — Titre', 'intro <texte> — Introduction', 'section <nom> — Ajouter section', 'ajouter <section> <texte> — Règle', 'modifier <section> <num> <texte> — Modifier', 'supprimer <section> <num> — Supprimer', 'publier — Publier', 'actualiser — Mettre à jour', 'reinitialiser — Réinitialiser'] },
+      { label: '!ajouterregle <texte>',         description: 'Ajouter une règle simple',                  subs: ['ajouterregle <texte> — Ajouter', 'modifierregle <num> <texte> — Modifier', 'supprimerregle <num> — Supprimer', 'deplacerregle <de> <vers> — Déplacer', 'effacerregles — Tout supprimer', 'setregles — Config salon+auteur'] },
+    ],
+  },
+  {
+    id: 'systeme',
+    label: 'Système & Logs',
+    emoji: '🔧',
+    color: 0x5865F2,
+    commands: [
+      { label: '!statsbot',                description: 'Statistiques d\'utilisation du bot',              subs: [] },
+      { label: '!commandes',              description: 'Classement des commandes les plus utilisées',      subs: [] },
+      { label: '!logs',                    description: 'Historique des actions staff',                    subs: ['vider — Effacer', 'stats — Stats par catégorie', 'aujourdhui — Logs du jour'] },
+      { label: '!journal [N]',             description: 'N derniers commits Git (changelog)',              subs: [] },
+      { label: '!tableaudebord',           description: 'Tableau de bord web',                             subs: [] },
+      { label: '!note <équipe> <texte>',   description: 'Note interne sur une équipe',                    subs: ['note <équipe> <texte> — Ajouter', 'notes <équipe> — Voir', 'delnote <équipe> <id> — Supprimer'] },
+      { label: '!mp @membre <message>',    description: 'Envoyer un DM via le bot',                       subs: [] },
+      { label: '!gitpush',                 description: 'Pousser le code vers GitHub',                    subs: [] },
+      { label: '!gitstatus',               description: 'Voir le statut du dépôt Git',                    subs: [] },
+      { label: '!memoire',                 description: 'Voir l\'utilisation mémoire du bot',              subs: [] },
+      { label: '!uptime',                  description: 'Voir le temps de fonctionnement',                subs: [] },
+    ],
+  },
+  {
+    id: 'erreurs',
+    label: 'Erreurs & Maintenance',
+    emoji: '🚨',
+    color: 0xED4245,
+    commands: [
+      { label: '!erreurs',                        description: 'Dernières erreurs du bot (paginé)',         subs: ['nonresolues — Erreurs non résolues', 'stats — Statistiques globales', 'resoudre <id> — Marquer résolue', 'vider — Effacer tout'] },
+      { label: '!maintenance activer [message]', description: 'Activer le mode maintenance',               subs: ['activer [message] — Activer', 'desactiver — Désactiver', 'message <texte> — Changer message', 'statut — Voir état'] },
+      { label: '!lienbot',                        description: 'Lien d\'invitation du bot',                subs: [] },
+    ],
+  },
+];
 
-    if (!message.member.permissions.has('Administrator'))
-      return message.reply('⛔ Cette commande est réservée au staff.');
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function buildMainEmbed() {
+  return new EmbedBuilder()
+    .setColor(0xED4245)
+    .setAuthor({ name: 'SUPREMYX — Aide Staff' })
+    .setDescription(
+      '🔐 Toutes les commandes ci-dessous **requièrent la permission Administrateur**.\n' +
+      'Choisis une catégorie pour voir les commandes et sous-commandes disponibles.\n' +
+      '> `< >` paramètre obligatoire · `[ ]` paramètre optionnel'
+    )
+    .addFields(
+      STAFF_CATEGORIES.map(cat => ({
+        name: `${cat.emoji} ${cat.label}`,
+        value: `${cat.commands.length} commande(s)`,
+        inline: true,
+      }))
+    )
+    .setFooter({ text: 'SUPREMYX CI · Staff uniquement' })
+    .setTimestamp();
+}
 
-    const cd = checkCooldown(message.author.id, 'aidestaff', 10);
-    if (cd) return replyCooldown(message, cd, 'aidestaff');
-
-    const COLOR  = 0xED4245;
-    const FOOTER = { text: 'SUPREMYX CI · Toutes ces commandes requièrent la permission Administrateur · < > obligatoire · [ ] optionnel' };
-
-    // ── Embed 1 : Gestion compétitive ─────────────────────────────────────────
-    const embed1 = new EmbedBuilder()
-      .setColor(COLOR)
-      .setAuthor({ name: 'SUPREMYX — Aide Staff', iconURL: client.user.displayAvatarURL() })
-      .setDescription('Inventaire complet des commandes réservées au staff.')
-      .addFields(
-        {
-          name: '⚽ Gestion des Matchs',
-          value: [
-            '`!ajoutermatch <équipe> <placement> <kills>` — Enregistrer un résultat de match',
-            '`!reinitialiser` — Remettre tous les scores à zéro',
-            '`!resultats salon #salon` — Configurer le salon des résultats automatiques',
-            '`!resultats statut <activer|desactiver>` — Activer/désactiver les annonces auto',
-            '`!resultats depuis <jours>` — Voir les résultats des N derniers jours',
-            '`!exporter [json|csv|texte]` — Exporter toutes les données',
-            '`!sauvegarde` — Créer une sauvegarde JSON complète',
-            '`!restaurer` — Restaurer depuis une sauvegarde',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🏆 Tournois',
-          value: [
-            '`!nouveautournoi <nom>` — Créer un nouveau tournoi',
-            '`!finertournoi` — Terminer le tournoi actif',
-            '`!supprimertournoi <nom>` — Supprimer un tournoi',
-            '`!tableau` — Générer le bracket du tournoi (jusqu\'à 32 équipes)',
-            '`!trophee <icône> <équipe> <titre> | <desc>` — Attribuer un trophée',
-            '`!trophees <équipe>` — Voir tous les trophées d\'une équipe',
-            '`!inscription ouvrir` — Ouvrir les inscriptions au tournoi',
-            '`!inscription fermer` — Fermer les inscriptions',
-            '`!inscription liste` — Voir les équipes inscrites',
-            '`!inscription valider <équipe>` — Valider l\'inscription d\'une équipe',
-            '`!inscription refuser <équipe>` — Refuser l\'inscription d\'une équipe',
-            '`!inscription max <N>` — Définir le nombre max d\'équipes',
-            '`!inscription salon #salon` — Salon de dépôt des inscriptions',
-            '`!inscription annonces #salon` — Salon des annonces d\'inscription',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '👥 Gestion des Équipes & Joueurs',
-          value: [
-            '`!enregistrer <nom>` — Enregistrer une équipe manuellement',
-            '`!desenregistrer <nom>` — Supprimer une équipe et son historique',
-            '`!renommer <ancien> <nouveau>` — Renommer une équipe',
-            '`!fusionner <T1> <T2>` — Fusionner deux équipes',
-            '`!composition <équipe> <J1,J2,...>` — Définir la composition d\'une équipe',
-            '`!liste ajouter <équipe> @user <rôle> [note]` — Ajouter au roster',
-            '`!liste retirer <équipe> @user` — Retirer du roster',
-            '`!liste role <équipe> @user <rôle>` — Changer le rôle dans le roster',
-            '`!liste note <équipe> @user <note>` — Ajouter une note sur un joueur',
-            '`!liste vider <équipe>` — Vider le roster d\'une équipe',
-            '`!objectif definir <équipe> <texte>` — Définir l\'objectif de saison',
-            '`!objectif supprimer <équipe>` — Supprimer l\'objectif',
-            '`!resetjoueur <nom>` — Remettre les stats d\'un joueur à zéro',
-            '`!donnerxp @membre <quantité>` — Donner de l\'XP à un membre',
-            '`!retirerxp @membre <quantité>` — Retirer de l\'XP à un membre',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📅 Saisons',
-          value: [
-            '`!nouvellesaison <nom>` — Démarrer une nouvelle saison',
-            '`!finersaison` — Clore la saison actuelle et archiver les stats',
-            '`!setrecompense <rang> @role` — Rôle Discord selon le rang au classement',
-            '`!lierequipe <équipe> @role` — Associer un rôle Discord à une équipe',
-            '`!syncrangs` — Synchroniser tous les rôles de rang',
-            '`!recompenses` — Voir toutes les récompenses configurées',
-            '`!supprimerrecompense <rang>` — Supprimer une récompense de rang',
-          ].join('\n'),
-          inline: false,
-        }
-      );
-
-    // ── Embed 2 : Communication & Config ──────────────────────────────────────
-    const embed2 = new EmbedBuilder()
-      .setColor(COLOR)
-      .addFields(
-        {
-          name: '📢 Annonces & Communication',
-          value: [
-            '`!annonce <message>` — Envoyer une annonce dans le salon configuré',
-            '`!dire <message>` — Faire parler le bot dans le salon courant',
-            '`!vote <question> | <opt1> | <opt2>` — Sondage rapide par réactions',
-            '`!sondage` — Sondage staff avancé (multiples options, timed)',
-            '`!concours <durée> <prix>` — Lancer un giveaway',
-            '`!diffuser <message>` — Diffuser dans plusieurs salons',
-            '`!diffuser ajouter #salon` — Ajouter un salon de diffusion',
-            '`!diffuser retirer #salon` — Retirer un salon de diffusion',
-            '`!diffuser liste` — Voir les salons de diffusion',
-            '`!diffuser aperçu` — Prévisualiser la diffusion',
-            '`!setmessagejour <texte>` — Définir le message du jour automatique',
-            '`!messagejour` — Afficher le message du jour actuel',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🔗 Embeds & Liens',
-          value: [
-            '`!lien #salon | Titre | Desc | couleur` — Publier un embed',
-            '`!lien preview | #salon | Titre | Desc | couleur` — Prévisualiser',
-            '`!lien panneau | #salon | Titre | Desc | couleur` — Embed avec boutons',
-            '`!lienlist [#salon]` — Lister les embeds du bot dans un salon',
-            '`!lienedit #salon | ID | Titre | Desc | couleur` — Modifier un embed',
-            '`!messageembed <config>` — Constructeur d\'embed avancé',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '📅 Calendrier & Événements',
-          value: [
-            '`!calendrier ajouter <DD/MM/YYYY> <HH:MM> <eq1,eq2> [note]` — Planifier un match',
-            '`!calendrier modifier <id> <DD/MM/YYYY> <HH:MM>` — Modifier un match',
-            '`!calendrier supprimer <id>` — Supprimer un match',
-            '`!calendrier vider` — Supprimer tous les matchs passés',
-            '`!calendrier salon #salon` — Salon des rappels automatiques',
-            '`!calendrier rappel <activer|desactiver> [24h|1h|15m]` — Gérer les rappels',
-            '`!calendrier statut` — Voir la configuration',
-            '`!event creer <titre> | <desc> | <date>` — Créer un événement RSVP',
-            '`!event annuler <id>` — Annuler un événement',
-            '`!planifier creer` — Créer un message planifié',
-            '`!planifier liste` — Voir les messages planifiés',
-            '`!planifier supprimer <id>` — Supprimer un message planifié',
-            '`!planifier modifier <id>` — Modifier un message planifié',
-            '`!planifier tester <id>` — Tester un message planifié',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '⚙️ Configuration Serveur',
-          value: [
-            '`!config` — Voir/modifier la configuration générale du bot',
-            '`!setpoints <placement> <pts> <kill> <bonus>` — Configurer le système de points',
-            '`!bienvenue definir <message>` — Définir le message de bienvenue',
-            '`!bienvenue salon #salon` — Salon des messages de bienvenue',
-            '`!bienvenue tester` — Tester le message de bienvenue',
-            '`!bienvenue activer / desactiver` — Activer/désactiver',
-            '`!rolesauto definir @role` — Rôle automatique à l\'arrivée',
-            '`!rolesauto activer / desactiver` — Activer/désactiver l\'auto-rôle',
-            '`!rolereaction ajouter #salon <msgId> <emoji> @role` — Configurer un reaction-role',
-            '`!rolereaction retirer <msgId> <emoji>` — Supprimer un reaction-role',
-            '`!rolereaction liste` — Voir tous les reaction-roles',
-            '`!rolereaction vider <msgId>` — Supprimer tous les reaction-roles d\'un message',
-            '`!setanniversaire #salon` — Salon des annonces d\'anniversaire',
-            '`!setchannelniveau #salon` — Salon des montées de niveau XP',
-            '`!salonannonce #salon` — Salon des annonces bot',
-            '`!salonjournaux #salon` — Salon des logs staff',
-          ].join('\n'),
-          inline: false,
-        }
-      );
-
-    // ── Embed 3 : Modération, Système & Logs ──────────────────────────────────
-    const embed3 = new EmbedBuilder()
-      .setColor(COLOR)
-      .addFields(
-        {
-          name: '🛡️ Modération',
-          value: [
-            '`!effacer <1-100>` — Supprimer en masse des messages',
-            '`!lenteur <0-21600>` — Activer le mode lent (secondes)',
-            '`!sourdine @membre <durée_min> [raison]` — Mettre en sourdine',
-            '`!retablir @membre` — Retirer la sourdine',
-            '`!verrouiller` — Verrouiller le salon pour @everyone',
-            '`!deverrouiller` — Déverrouiller le salon',
-            '`!avertir @membre <raison>` — Avertir (escalade automatique)',
-            '`!supprimerwarn @membre [id]` — Retirer un avertissement',
-            '`!avertissements @membre` — Voir l\'historique des warns',
-            '`!punition @membre <warn|mute|kick|ban> [durée] | <raison>` — Sanction directe',
-            '`!sanctions @membre` — Voir le casier d\'un membre',
-            '`!effaceractions @membre` — Effacer toutes les sanctions',
-            '`!casier @membre` — Casier judiciaire complet d\'un membre',
-            '`!rapport` — Rapport hebdomadaire de modération',
-            '`!topwarn` — Top 10 des membres les plus sanctionnés',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '⚖️ Escalade & Blacklist',
-          value: [
-            '`!escalade` — Voir les règles d\'escalade automatique',
-            '`!escalade activer / desactiver` — Activer/désactiver l\'escalade',
-            '`!escalade configurer <warns> <action> [durée]` — Configurer une règle',
-            '`!escalade supprimer <warns>` — Supprimer une règle',
-            '`!escalade reinitialiser` — Réinitialiser aux règles par défaut',
-            '`!listenoiree ajouter <nom>` — Ajouter à la blacklist',
-            '`!listenoiree retirer <nom>` — Retirer de la blacklist',
-            '`!listenoiree liste` — Voir la blacklist',
-            '`!listenoiree verifier <nom>` — Vérifier si un nom est blacklisté',
-            '`!automod activer / desactiver` — Activer/désactiver le filtre',
-            '`!automod statut` — Voir le statut du filtre',
-            '`!automod test <texte>` — Tester le filtre sur un texte',
-            '`!mots ajouter <mot>` — Ajouter un mot interdit',
-            '`!mots retirer <mot>` — Retirer un mot interdit',
-            '`!mots defaut` — Restaurer la liste par défaut',
-            '`!mots vider` — Vider tous les mots interdits',
-            '`!antispam activer / desactiver` — Activer/désactiver l\'anti-spam',
-            '`!antispam configurer <msgs> <secondes>` — Configurer les seuils',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🎫 Tickets & Règlement',
-          value: [
-            '`!configticket rolstaff @role` — Rôle staff pour les tickets',
-            '`!configticket transcription #salon` — Salon des transcriptions',
-            '`!configticket categorie <nom>` — Catégorie des tickets',
-            '`!ticket panneau` — Afficher le panneau d\'ouverture de ticket',
-            '`!tickets` — Voir tous les tickets ouverts',
-            '`!prendre` — Prendre en charge le ticket actuel',
-            '`!resoudre` — Résoudre et fermer le ticket',
-            '`!fermer` — Fermer le ticket (sans résolution)',
-            '`!ajouteruser @membre` — Ajouter un membre au ticket',
-            '`!reglement titre <texte>` — Définir le titre du règlement',
-            '`!reglement intro <texte>` — Définir l\'introduction',
-            '`!reglement section <nom>` — Ajouter une section',
-            '`!reglement ajouter <section> <texte>` — Ajouter une règle',
-            '`!reglement modifier <section> <num> <texte>` — Modifier une règle',
-            '`!reglement supprimer <section> <num>` — Supprimer une règle',
-            '`!reglement publier` — Publier le règlement dans le salon configuré',
-            '`!setregles` — Configurer le salon et l\'auteur du règlement',
-            '`!ajouterregle <texte>` — Ajouter une règle simple',
-            '`!modifierregle <num> <texte>` — Modifier une règle',
-            '`!supprimerregle <num>` — Supprimer une règle',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🔧 Système & Logs',
-          value: [
-            '`!statsbot` — Statistiques d\'utilisation du bot',
-            '`!commandes` — Classement des commandes les plus utilisées',
-            '`!logs` — Historique des actions staff (paginé)',
-            '`!logs vider` — Effacer l\'historique des logs',
-            '`!logs stats` — Statistiques des logs par catégorie',
-            '`!logs aujourdhui` — Logs de la journée',
-            '`!journal [N]` — N derniers commits Git (changelog)',
-            '`!tableaudebord` — Tableau de bord web',
-            '`!note <équipe> <texte>` — Note interne sur une équipe',
-            '`!notes <équipe>` — Voir les notes internes',
-            '`!delnote <équipe> <id>` — Supprimer une note interne',
-            '`!mp @membre <message>` — Envoyer un DM via le bot',
-            '`!setdelai <commande> <secondes>` — Modifier le cooldown d\'une commande',
-            '`!delais` — Voir tous les cooldowns configurés',
-            '`!suppdelai <commande>` — Réinitialiser un cooldown',
-            '`!gitpush` — Pousser le code vers GitHub',
-            '`!gitstatus` — Voir le statut du dépôt Git',
-          ].join('\n'),
-          inline: false,
-        },
-        {
-          name: '🚨 Erreurs & Maintenance',
-          value: [
-            '`!erreurs` — Dernières erreurs du bot (paginé)',
-            '`!erreurs nonresolues` — Erreurs non résolues',
-            '`!erreurs stats` — Statistiques globales des erreurs',
-            '`!erreurs resoudre <id>` — Marquer une erreur comme résolue',
-            '`!erreurs vider` — Effacer tout l\'historique d\'erreurs',
-            '`!maintenance activer [message]` — Activer la maintenance',
-            '`!maintenance desactiver` — Désactiver la maintenance',
-            '`!maintenance message <texte>` — Changer le message de maintenance',
-            '`!maintenance statut` — Voir l\'état actuel de la maintenance',
-            '`!memoire` — Voir l\'utilisation mémoire du bot',
-            '`!uptime` — Voir le temps de fonctionnement',
-            '`!lienbot` — Lien d\'invitation du bot',
-          ].join('\n'),
-          inline: false,
-        }
+function buildButtonRows() {
+  const rows = [];
+  for (let i = 0; i < STAFF_CATEGORIES.length; i += 5) {
+    const chunk = STAFF_CATEGORIES.slice(i, i + 5);
+    const row = new ActionRowBuilder().addComponents(
+      chunk.map(cat =>
+        new ButtonBuilder()
+          .setCustomId(`staff_btn_${cat.id}`)
+          .setLabel(cat.label)
+          .setEmoji(cat.emoji)
+          .setStyle(ButtonStyle.Danger)
       )
-      .setFooter(FOOTER)
-      .setTimestamp();
+    );
+    rows.push(row);
+  }
+  return rows;
+}
 
-    await message.channel.send({ embeds: [embed1] });
-    await message.channel.send({ embeds: [embed2] });
-    await message.channel.send({ embeds: [embed3] });
+function buildSelectMenu(cat) {
+  const options = cat.commands.slice(0, 25).map((cmd, idx) => ({
+    label: cmd.label.slice(0, 100),
+    description: cmd.description.slice(0, 100),
+    value: `${cat.id}_${idx}`,
+  }));
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(`staff_sel_${cat.id}`)
+    .setPlaceholder(`Sélectionne une commande — ${cat.label}`)
+    .addOptions(options);
+
+  return new ActionRowBuilder().addComponents(menu);
+}
+
+function buildCategoryEmbed(cat) {
+  const lines = cat.commands.map(cmd => `\`${cmd.label}\` — ${cmd.description}`);
+  return new EmbedBuilder()
+    .setColor(cat.color)
+    .setTitle(`${cat.emoji} ${cat.label}`)
+    .setDescription(lines.join('\n'))
+    .setFooter({ text: 'Sélectionne une commande dans le menu pour les sous-commandes · Staff uniquement' });
+}
+
+function buildCommandEmbed(cat, cmdIdx) {
+  const cmd = cat.commands[cmdIdx];
+  if (!cmd) return null;
+
+  const embed = new EmbedBuilder()
+    .setColor(cat.color)
+    .setTitle(`\`${cmd.label}\``)
+    .setDescription(cmd.description);
+
+  if (cmd.subs && cmd.subs.length) {
+    embed.addFields({
+      name: '🔹 Sous-commandes',
+      value: cmd.subs.map(s => `\`${s}\``).join('\n'),
+    });
+  }
+
+  embed.setFooter({ text: `${cat.emoji} ${cat.label} · Staff uniquement · < > obligatoire · [ ] optionnel` });
+  return embed;
+}
+
+// ─── Module ───────────────────────────────────────────────────────────────────
+module.exports = (client) => {
+
+  // !aidestaff → message principal avec boutons
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (!message.member) return;
+      if (message.author.bot) return;
+      if (message.content.trim() !== '!aidestaff') return;
+
+      if (!message.member.permissions.has('Administrator'))
+        return message.reply('⛔ Cette commande est réservée au staff.');
+
+      const cd = checkCooldown(message.author.id, 'aidestaff', 10);
+      if (cd) return replyCooldown(message, cd, 'aidestaff');
+
+      await message.channel.send({
+        embeds: [buildMainEmbed()],
+        components: buildButtonRows(),
+      });
+    } catch (err) {
+      console.error('[aidestaff messageCreate]', err);
+    }
+  });
+
+  // Interactions : boutons + menus déroulants
+  client.on('interactionCreate', async interaction => {
+    try {
+      // ── Clic bouton catégorie ────────────────────────────────────────────
+      if (interaction.isButton() && interaction.customId.startsWith('staff_btn_')) {
+        if (!interaction.member?.permissions.has('Administrator')) {
+          return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
+        }
+        const catId = interaction.customId.replace('staff_btn_', '');
+        const cat = STAFF_CATEGORIES.find(c => c.id === catId);
+        if (!cat) return;
+
+        await interaction.reply({
+          ephemeral: true,
+          embeds: [buildCategoryEmbed(cat)],
+          components: [buildSelectMenu(cat)],
+        });
+        return;
+      }
+
+      // ── Sélection commande dans le menu ───────────────────────────────────
+      if (interaction.isStringSelectMenu() && interaction.customId.startsWith('staff_sel_')) {
+        const catId = interaction.customId.replace('staff_sel_', '');
+        const cat = STAFF_CATEGORIES.find(c => c.id === catId);
+        if (!cat) return;
+
+        const value = interaction.values[0]; // e.g. "matchs_2"
+        const idx = parseInt(value.split('_').pop());
+        const embed = buildCommandEmbed(cat, idx);
+        if (!embed) return;
+
+        await interaction.update({
+          embeds: [embed],
+          components: [buildSelectMenu(cat)],
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('[aidestaff interactionCreate]', err);
+    }
   });
 };
