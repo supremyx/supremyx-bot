@@ -297,10 +297,21 @@ module.exports = (client) => {
       const cd = checkCooldown(message.author.id, 'aidestaff', 10);
       if (cd) return replyCooldown(message, cd, 'aidestaff');
 
-      await message.channel.send({
+      const sent = await message.channel.send({
         embeds: [buildMainEmbed()],
         components: buildButtonRows(),
       });
+
+      setTimeout(async () => {
+        try {
+          await sent.edit({
+            embeds: [
+              buildMainEmbed().setFooter({ text: 'SUPREMYX CI · Staff uniquement · ⏱️ Menu expiré — relance !aidestaff pour un nouveau menu.' }),
+            ],
+            components: [],
+          });
+        } catch (_) {}
+      }, 5 * 60 * 1000);
     } catch (err) {
       console.error('[aidestaff messageCreate]', err);
     }
@@ -323,6 +334,19 @@ module.exports = (client) => {
           embeds: [buildCategoryEmbed(cat)],
           components: [buildSelectMenu(cat)],
         });
+
+        setTimeout(async () => {
+          try {
+            await interaction.editReply({
+              embeds: [
+                new EmbedBuilder()
+                  .setColor(0x99AAB5)
+                  .setDescription('⏱️ Ce menu a expiré. Clique à nouveau sur un bouton de catégorie.'),
+              ],
+              components: [],
+            });
+          } catch (_) {}
+        }, 5 * 60 * 1000);
         return;
       }
 
