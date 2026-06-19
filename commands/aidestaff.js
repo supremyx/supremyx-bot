@@ -214,7 +214,7 @@ function buildMainEmbed() {
         inline: true,
       }))
     )
-    .setFooter({ text: 'SUPREMYX CI · Staff uniquement' })
+    .setFooter({ text: 'SUPREMYX Esports · Staff uniquement' })
     .setTimestamp();
 }
 
@@ -306,7 +306,7 @@ module.exports = (client) => {
         try {
           await sent.edit({
             embeds: [
-              buildMainEmbed().setFooter({ text: 'SUPREMYX CI · Staff uniquement · ⏱️ Menu expiré — relance !aidestaff pour un nouveau menu.' }),
+              buildMainEmbed().setFooter({ text: 'SUPREMYX Esports · Staff uniquement · ⏱️ Menu expiré — relance !aidestaff pour un nouveau menu.' }),
             ],
             components: [],
           });
