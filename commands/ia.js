@@ -318,7 +318,10 @@ module.exports = (client) => {
           messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
           max_tokens: 1024,
         });
-        IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: (await getGuildModel(guildId)).alias }).catch(() => {});
+        const { alias: usedAlias } = await getGuildModel(guildId);
+        await IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: usedAlias }).catch(() => {});
+        const newUsed = await getDailyUsage(guildId);
+        checkAndNotifyQuota(guildId, newUsed, quota, client).catch(() => {});
         return res.choices[0]?.message?.content ?? 'Aucune réponse.';
       } catch (err) {
         console.error('[IA contextuell]', err);
@@ -703,13 +706,15 @@ module.exports = (client) => {
       const answer = response.choices[0]?.message?.content || 'Aucune réponse obtenue.';
       history.push({ role: 'assistant', content: answer });
 
-      // Enregistrer l'utilisation
-      IaUsage.create({
-        guildId:    message.guild.id,
+      // Enregistrer l'utilisation et vérifier le quota
+      await IaUsage.create({
+        guildId:    guildId,
         userId:     message.author.id,
         username:   message.author.username,
         modelAlias,
       }).catch(err => console.error('[IA] Erreur tracking:', err));
+      const newUsedMain = await getDailyUsage(guildId);
+      checkAndNotifyQuota(guildId, newUsedMain, quotaMain, client).catch(() => {});
 
       const chunks = answer.match(/[\s\S]{1,4000}/g) || [answer];
 
