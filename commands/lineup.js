@@ -18,11 +18,11 @@ module.exports = (client) => {
     try {
       if (!message.guild)                            return;
       if (message.author.bot)                        return;
-      if (!message.content.startsWith('!lineup'))    return;
+      if (!message.content.startsWith('!composition'))    return;
       if (!message.member)                           return;
 
       const content  = message.content.trim();
-      const args     = content.slice('!lineup'.length).trim().split(/\s+/);
+      const args     = content.slice('!composition'.length).trim().split(/\s+/);
       const sub      = args[0]?.toLowerCase();
       const isStaff  = message.member.permissions.has('Administrator');
 

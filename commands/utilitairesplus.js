@@ -49,7 +49,7 @@ module.exports = (client) => {
     const cmd     = args[0].toLowerCase();
 
     // ── !rebours <date> [événement] ───────────────────────────────────────────
-    if (cmd === '!rebours' || cmd === '!countdown') {
+    if (cmd === '!rebours') {
       const cd = checkCooldown(message.author.id, 'rebours', 10);
       if (cd) return replyCooldown(message, cd, 'rebours');
 
@@ -89,7 +89,7 @@ module.exports = (client) => {
     }
 
     // ── !tempsenligne ─────────────────────────────────────────────────────────
-    if (cmd === '!tempsenligne' || cmd === '!uptime') {
+    if (cmd === '!tempsenligne') {
       const cd = checkCooldown(message.author.id, 'tempsenligne', 10);
       if (cd) return replyCooldown(message, cd, 'tempsenligne');
 

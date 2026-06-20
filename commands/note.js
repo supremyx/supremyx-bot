@@ -4,7 +4,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!note') && !content.startsWith('!notes') && !content.startsWith('!supprimenote') && !content.startsWith('!delnote')) return;
+    if (!content.startsWith('!note') && !content.startsWith('!notes') && !content.startsWith('!supprimenote')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
