@@ -36,18 +36,23 @@ interface Team {
 }
 
 const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
-  { key: "classement",  label: "Classement",  icon: "🏆" },
-  { key: "tournois",    label: "Tournois",     icon: "🎮" },
-  { key: "saisons",     label: "Saisons",      icon: "🗓️" },
-  { key: "joueurs",     label: "Joueurs",      icon: "💀" },
-  { key: "rosters",     label: "Rosters",      icon: "🛡️" },
-  { key: "calendrier",  label: "Calendrier",   icon: "📅" },
-  { key: "resultats",   label: "Résultats",    icon: "🎯" },
-  { key: "comparaison", label: "Comparer",     icon: "⚔️" },
-  { key: "stats",       label: "Stats",        icon: "📊" },
-  { key: "moderation",  label: "Modération",   icon: "🛡️" },
-  { key: "botstats",    label: "Stats Bot",    icon: "🤖" },
-  { key: "logs",        label: "Logs",         icon: "📋" },
+  { key: "classement",   label: "Classement",   icon: "🏆" },
+  { key: "tournois",     label: "Tournois",      icon: "🎮" },
+  { key: "saisons",      label: "Saisons",       icon: "🗓️" },
+  { key: "joueurs",      label: "Joueurs",       icon: "💀" },
+  { key: "rosters",      label: "Rosters",       icon: "🛡️" },
+  { key: "calendrier",   label: "Calendrier",    icon: "📅" },
+  { key: "resultats",    label: "Résultats",     icon: "🎯" },
+  { key: "comparaison",  label: "Comparer",      icon: "⚔️" },
+  { key: "stats",        label: "Stats",         icon: "📊" },
+  { key: "moderation",   label: "Modération",    icon: "🛡️" },
+  { key: "botstats",     label: "Stats Bot",     icon: "🤖" },
+  { key: "ia-analytics", label: "IA Analytics",  icon: "🧠" },
+  { key: "events",       label: "Événements",    icon: "📅" },
+  { key: "tickets",      label: "Tickets",       icon: "🎫" },
+  { key: "birthdays",    label: "Anniversaires", icon: "🎂" },
+  { key: "suggestions",  label: "Suggestions",   icon: "💡" },
+  { key: "logs",         label: "Logs",          icon: "📋" },
 ];
 
 function useBotStatus() {
@@ -291,8 +296,13 @@ export default function App() {
         <ComparisonPage initialA={activeTeam ?? undefined} initialB={compareWith ?? undefined} onBack={() => setPage("classement")} />
       )}
       {page === "saisons"    && <SaisonsPage />}
-      {page === "moderation" && <ModerationPage />}
-      {page === "botstats"   && <BotStatsPage />}
+      {page === "moderation"   && <ModerationPage />}
+      {page === "botstats"     && <BotStatsPage />}
+      {page === "ia-analytics" && <IaAnalyticsPage />}
+      {page === "events"       && <EventsPage />}
+      {page === "tickets"      && <TicketsPage />}
+      {page === "birthdays"    && <BirthdaysPage />}
+      {page === "suggestions"  && <SuggestionsPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>
