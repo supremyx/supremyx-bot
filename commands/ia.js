@@ -249,19 +249,48 @@ module.exports = (client) => {
 
       if (!val) {
         const [quota, used, config] = await Promise.all([getQuota(guildId), getDailyUsage(guildId), IaConfig.findOne({ guildId })]);
+
+        // ── Barre de progression colorée (20 blocs) ──────────────────────────
+        let color, statusLabel, barStr, pctStr, remainStr;
+
+        if (quota === 0) {
+          // Illimité
+          color       = 0x57F287;
+          statusLabel = '✅ Illimité';
+          barStr      = '`' + '█'.repeat(20) + '` ∞';
+          pctStr      = '∞';
+          remainStr   = '∞ restantes';
+        } else {
+          const pct    = used / quota;
+          const filled = Math.min(20, Math.round(pct * 20));
+          barStr = '`' + '█'.repeat(filled) + '░'.repeat(20 - filled) + '`';
+          pctStr = `${Math.round(pct * 100)} %`;
+          const left = Math.max(0, quota - used);
+          remainStr = left === 0 ? '**0** — épuisé ❌' : `**${left}** restante(s)`;
+
+          if (pct < 0.5) {
+            color = 0x57F287; statusLabel = '🟢 Libre';
+          } else if (pct < 0.8) {
+            color = 0xFEE75C; statusLabel = '🟡 Attention';
+          } else if (pct < 1) {
+            color = 0xF1840F; statusLabel = '🟠 Critique';
+          } else {
+            color = 0xED4245; statusLabel = '🔴 Épuisé';
+          }
+        }
+
         const limitText = quota === 0 ? '∞ illimité' : `${quota} / jour`;
-        const bar = quota > 0
-          ? '[' + '█'.repeat(Math.min(10, Math.round((used / quota) * 10))) + '░'.repeat(Math.max(0, 10 - Math.round((used / quota) * 10))) + ']'
-          : null;
-        const alertCh = config?.quotaAlertChannelId ? `<#${config.quotaAlertChannelId}>` : '❌ Non configuré';
+        const alertCh   = config?.quotaAlertChannelId ? `<#${config.quotaAlertChannelId}>` : '❌ Non configuré';
+
         const embed = new EmbedBuilder()
-          .setColor(0xFF8C00)
+          .setColor(color)
           .setTitle('📊 Quota IA — Aujourd\'hui')
+          .setDescription(`${barStr}  **${pctStr}** — ${statusLabel}`)
           .addFields(
-            { name: '✅ Utilisations aujourd\'hui', value: `**${used}**`, inline: true },
-            { name: '🔒 Limite journalière', value: `**${limitText}**`, inline: true },
-            { name: '🔔 Salon d\'alerte', value: alertCh, inline: true },
-            ...(bar ? [{ name: '📈 Progression', value: `${bar} ${used}/${quota}`, inline: false }] : []),
+            { name: '⚡ Utilisé',           value: `**${used}**`,    inline: true },
+            { name: '🔒 Limite / jour',     value: `**${limitText}**`, inline: true },
+            { name: '🎯 Restant',           value: remainStr,          inline: true },
+            { name: '🔔 Salon d\'alerte',   value: alertCh,            inline: false },
           )
           .setFooter({ text: 'Admin : !ia quota <nombre> · !ia quota off · !ia quota reset · !ia quota salon #salon' })
           .setTimestamp();
