@@ -1,9 +1,9 @@
 /**
- * !lineup
- *   !lineup <équipe>                      — voir le lineup
- *   !lineup definir <équipe> <J1,J2,...>  — définir le lineup (staff)
- *   !lineup effacer <équipe>              — effacer (staff)
- *   !lineup liste                         — tous les lineups enregistrés (staff)
+ * !composition
+ *   !composition <équipe>                      — voir la composition
+ *   !composition definir <équipe> <J1,J2,...>  — définir la composition (staff)
+ *   !composition effacer <équipe>              — effacer (staff)
+ *   !composition liste                         — toutes les compositions enregistrées (staff)
  */
 const { EmbedBuilder } = require('discord.js');
 const Lineup = require('../database/models/Lineup');
