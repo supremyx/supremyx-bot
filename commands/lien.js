@@ -314,6 +314,97 @@ module.exports = (client) => {
     await message.reply({ embeds: [list] });
   });
 
+  // ── !liensupprimer ────────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    const content = message.content.trim();
+    if (!content.startsWith('!liensupprimer')) return;
+    if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.member) return;
+
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('⛔ Staff uniquement.');
+
+    const rest = content.slice('!liensupprimer'.length).trim();
+
+    if (!rest || !rest.includes('|')) {
+      return message.reply([
+        '**Usage :** `!liensupprimer #salon | ID_message`',
+        '`!liensupprimer ici | ID_message` — dans le salon courant',
+        '',
+        '**Comment obtenir l\'ID du message :**',
+        'Active le mode développeur Discord *(Paramètres → Apparence → Mode développeur)*',
+        'puis fais clic droit sur le message → **Copier l\'identifiant**.',
+        '',
+        '**Exemple :**',
+        '`!liensupprimer #annonces | 1234567890123456789`',
+        '',
+        '⚠️ Je ne peux supprimer que mes propres messages.',
+      ].join('\n'));
+    }
+
+    const parts = rest.split('|').map(p => p.trim());
+    const channelArg = parts[0];
+    const messageId  = parts[1];
+
+    if (!messageId || !/^\d{15,20}$/.test(messageId))
+      return message.reply('❌ ID de message invalide. Il doit s\'agir d\'un identifiant numérique (ex : `1234567890123456789`).');
+
+    const target = resolveTarget(message, channelArg);
+    if (!target) return message.reply('❌ Salon introuvable. Mentionne-le avec `#salon` ou utilise `ici`.');
+
+    let targetMessage;
+    try {
+      targetMessage = await target.messages.fetch(messageId);
+    } catch {
+      return message.reply(`❌ Message \`${messageId}\` introuvable dans <#${target.id}>. Vérifie l'ID et le salon.`);
+    }
+
+    if (targetMessage.author.id !== client.user.id)
+      return message.reply('⛔ Je ne peux supprimer que **mes propres messages**.');
+
+    if (!targetMessage.embeds.length)
+      return message.reply('⚠️ Ce message ne contient pas d\'embed. Utilise `!liensupprimer` uniquement sur des embeds publiés par le bot.');
+
+    // Prévisualisation + confirmation
+    const preview = targetMessage.embeds[0];
+    const title   = preview.title || '*(sans titre)*';
+    const desc    = preview.description
+      ? preview.description.slice(0, 120).replace(/\n/g, ' ') + (preview.description.length > 120 ? '…' : '')
+      : '*(vide)*';
+    const hasButtons = targetMessage.components.length > 0 ? ' 🔘 *(contient des boutons)*' : '';
+
+    const confirmEmbed = new EmbedBuilder()
+      .setTitle('🗑️ Confirmer la suppression')
+      .setColor(0xED4245)
+      .addFields(
+        { name: '📋 Titre',   value: title, inline: true },
+        { name: '📍 Salon',   value: `<#${target.id}>`, inline: true },
+        { name: '🆔 ID',      value: `\`${messageId}\``, inline: true },
+        { name: '📝 Aperçu',  value: desc + hasButtons },
+      )
+      .setFooter({ text: 'Réagis ✅ pour supprimer, ❌ pour annuler (30s)' });
+
+    const confirmed = await awaitConfirmation(message, confirmEmbed);
+
+    if (!confirmed)
+      return message.channel.send('❌ Suppression annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+    try {
+      await targetMessage.delete();
+    } catch {
+      return message.reply('❌ Impossible de supprimer ce message (permissions manquantes ?).');
+    }
+
+    await message.reply(`✅ Message \`${messageId}\` supprimé dans <#${target.id}>.`);
+
+    await staffLog(client, {
+      action: 'liensupprimer',
+      details: `**Salon :** <#${target.id}>\n**ID :** \`${messageId}\`\n**Titre :** ${title}`,
+      author: message.author.tag
+    });
+  });
+
   // ── !lienedit ─────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
