@@ -98,6 +98,7 @@ const STAFF_CATEGORIES = [
       { label: '!lienbutton #salon | Titre | Desc | Texte >> https://... | couleur', description: 'Publier un embed avec boutons URL cliquables (max 5)', subs: ['preview | … — Prévisualiser avant publication'] },
       { label: '!lienlist [#salon]',                          description: 'Lister les embeds publiés par le bot dans un salon', subs: [] },
       { label: '!lienedit #salon | ID | Titre | Desc | couleur', description: 'Modifier un embed déjà publié par le bot',       subs: ['ici | ID | Titre | Desc | couleur — Modifier dans le salon courant'] },
+      { label: '!liensupprimer #salon | ID_message',         description: 'Supprimer un embed publié par le bot (confirmation requise)', subs: ['ici | ID_message — Supprimer dans le salon courant'] },
       { label: '!messageembed <titre> | <desc> | [couleur] | [image_url] | [footer]', description: 'Poster un embed entièrement personnalisé dans le salon', subs: [] },
       { label: '!retirer <messageId>',                         description: 'Relancer un giveaway (reroll du gagnant)',          subs: [] },
       { label: '!notifequipe <équipe> | <message>',           description: 'Envoyer un DM à tous les membres Discord du roster', subs: [] },
