@@ -91,7 +91,10 @@ const STAFF_CATEGORIES = [
       { label: '!setmessagejour <texte>',     description: 'Définir le message du jour automatique',      subs: [] },
       { label: '!messagejour',                description: 'Afficher le message du jour actuel',           subs: [] },
       { label: '!planifier creer',            description: 'Créer un message planifié',                    subs: ['creer — Créer', 'liste — Voir messages', 'supprimer <id> — Supprimer', 'modifier <id> — Modifier', 'dupliquer <id> — Dupliquer', 'pause <id> — Mettre en pause', 'tester <id> — Tester'] },
-      { label: '!lien #salon | Titre | Desc', description: 'Publier un embed dans un salon',              subs: ['preview | … — Prévisualiser', 'panneau | … — Embed avec boutons', 'list [#salon] — Lister', 'edit … — Modifier'] },
+      { label: '!lien #salon | Titre | Desc | couleur',        description: 'Publier un embed texte dans un salon',          subs: ['preview | #salon | Titre | Desc | couleur — Prévisualiser avant publication', 'ici | Titre | Desc | couleur — Publier dans le salon courant'] },
+      { label: '!lienbutton #salon | Titre | Desc | Texte >> https://... | couleur', description: 'Publier un embed avec boutons URL cliquables (max 5)', subs: ['preview | … — Prévisualiser avant publication'] },
+      { label: '!lienlist [#salon]',                          description: 'Lister les embeds publiés par le bot dans un salon', subs: [] },
+      { label: '!lienedit #salon | ID | Titre | Desc | couleur', description: 'Modifier un embed déjà publié par le bot',       subs: ['ici | ID | Titre | Desc | couleur — Modifier dans le salon courant'] },
     ],
   },
   {
