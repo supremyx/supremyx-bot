@@ -812,6 +812,192 @@ router.get('/events', (req, res) => {
   });
 });
 
+// ─── Modèles supplémentaires ─────────────────────────────────────────────────
+const GuildEvent  = require('../database/models/GuildEvent');
+const Ticket      = require('../database/models/Ticket');
+const Birthday    = require('../database/models/Birthday');
+const Suggestion  = require('../database/models/Suggestion');
+const PerfAlert   = require('../database/models/PerfAlert');
+const Pronostic   = require('../database/models/Pronostic');
+const Disponibilite = require('../database/models/Disponibilite');
+const Poule       = require('../database/models/Poule');
+
+// ── GET /api/guild-events ─────────────────────────────────────────────────────
+router.get('/guild-events', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, limit = 20 } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const events = await GuildEvent.find(filter)
+      .sort({ date: 1 }).limit(Number(limit)).lean();
+    res.json({ events });
+  } catch (err) {
+    console.error('[API /guild-events]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/tickets ──────────────────────────────────────────────────────────
+router.get('/tickets', publicLimiter, async (req, res) => {
+  try {
+    const { status, limit = 50 } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    const tickets = await Ticket.find(filter)
+      .sort({ createdAt: -1 }).limit(Number(limit)).lean();
+    const stats = {
+      open:     await Ticket.countDocuments({ closed: false }),
+      closed:   await Ticket.countDocuments({ closed: true }),
+      claimed:  await Ticket.countDocuments({ claimedBy: { $ne: null }, closed: false }),
+    };
+    res.json({ tickets, stats });
+  } catch (err) {
+    console.error('[API /tickets]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/birthdays ────────────────────────────────────────────────────────
+router.get('/birthdays', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const birthdays = await Birthday.find(filter).sort({ month: 1, day: 1 }).lean();
+
+    // Calcul des prochains anniversaires
+    const now   = new Date();
+    const today = { month: now.getMonth() + 1, day: now.getDate() };
+    const upcoming = birthdays
+      .map(b => {
+        let diff = (b.month - today.month) * 30 + (b.day - today.day);
+        if (diff < 0) diff += 365;
+        return { ...b, daysUntil: diff };
+      })
+      .sort((a, b) => a.daysUntil - b.daysUntil)
+      .slice(0, 30);
+
+    res.json({ birthdays, upcoming });
+  } catch (err) {
+    console.error('[API /birthdays]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/suggestions ──────────────────────────────────────────────────────
+router.get('/suggestions', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, status, limit = 50 } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    if (status)  filter.status  = status;
+    const suggestions = await Suggestion.find(filter)
+      .sort({ createdAt: -1 }).limit(Number(limit)).lean();
+    const stats = {
+      pending:  await Suggestion.countDocuments({ ...filter, status: 'pending' }),
+      accepted: await Suggestion.countDocuments({ ...filter, status: 'accepted' }),
+      refused:  await Suggestion.countDocuments({ ...filter, status: 'refused' }),
+      total:    await Suggestion.countDocuments(guildId ? { guildId } : {}),
+    };
+    res.json({ suggestions, stats });
+  } catch (err) {
+    console.error('[API /suggestions]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/ia/usage ─────────────────────────────────────────────────────────
+router.get('/ia/usage', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, days = 7 } = req.query;
+    const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000);
+    const filter = { usedAt: { $gte: since } };
+    if (guildId) filter.guildId = guildId;
+
+    const all = await IaUsage.find(filter).lean();
+
+    // Activité journalière
+    const dayMap = new Map();
+    for (let i = Number(days) - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      dayMap.set(key, 0);
+    }
+    for (const u of all) {
+      const key = new Date(u.usedAt).toISOString().slice(0, 10);
+      if (dayMap.has(key)) dayMap.set(key, dayMap.get(key) + 1);
+    }
+    const dailyActivity = [...dayMap.entries()].map(([date, count]) => ({ date, count }));
+
+    // Top utilisateurs
+    const userMap = new Map();
+    for (const u of all) {
+      const e = userMap.get(u.userId) || { username: u.username, count: 0 };
+      e.count++;
+      userMap.set(u.userId, e);
+    }
+    const topUsers = [...userMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+
+    // Par modèle
+    const modelMap = new Map();
+    for (const u of all) {
+      const alias = u.modelAlias || 'gpt-4o-mini';
+      modelMap.set(alias, (modelMap.get(alias) || 0) + 1);
+    }
+    const total = all.length;
+    const byModel = [...modelMap.entries()].map(([alias, count]) => ({
+      alias, count, pct: total > 0 ? Math.round((count / total) * 100) : 0,
+    })).sort((a, b) => b.count - a.count);
+
+    // Config quota
+    const cfgFilter = guildId ? { guildId } : {};
+    const config = await IaConfig.findOne(cfgFilter).lean();
+
+    res.json({ total, dailyActivity, topUsers, byModel, quota: config?.dailyQuota ?? 0, days: Number(days) });
+  } catch (err) {
+    console.error('[API /ia/usage]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/pronostics ───────────────────────────────────────────────────────
+router.get('/pronostics', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, limit = 30 } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const pronostics = await Pronostic.find(filter).sort({ createdAt: -1 }).limit(Number(limit)).lean();
+    const correct = pronostics.filter(p => p.correct === true).length;
+    const resolved = pronostics.filter(p => p.correct !== null).length;
+    res.json({ pronostics, stats: { correct, resolved, total: pronostics.length } });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/poules ───────────────────────────────────────────────────────────
+router.get('/poules', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const poules = await Poule.find(filter).sort({ letter: 1 }).lean();
+    res.json({ poules });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/dispos ───────────────────────────────────────────────────────────
+router.get('/dispos', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, teamName } = req.query;
+    const filter = {};
+    if (guildId)  filter.guildId  = guildId;
+    if (teamName) filter.teamName = new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+    const dispos = await Disponibilite.find(filter).sort({ createdAt: -1 }).lean();
+    res.json({ dispos });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
