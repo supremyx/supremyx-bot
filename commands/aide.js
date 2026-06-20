@@ -39,7 +39,7 @@ const CATEGORIES = [
       { label: '!classjoueurs',               description: 'Classement des joueurs par kills',          subs: [] },
       { label: '!matchjoueur <nom>',           description: 'Détail des matchs d\'un joueur',            subs: [] },
       { label: '!liste <équipe>',              description: 'Afficher le roster d\'une équipe',          subs: [] },
-      { label: '!lineup <équipe>',             description: 'Voir le lineup de match d\'une équipe',     subs: [] },
+      { label: '!composition <équipe>',          description: 'Voir la composition de match d\'une équipe',subs: [] },
       { label: '!absence declarer [raison]',   description: 'Déclarer son absence au prochain match',   subs: ['declarer [raison] — Déclarer', 'annuler — Annuler son absence', 'liste <équipe> — Absences d\'une équipe'] },
       { label: '!objectif <équipe>',           description: 'Voir l\'objectif de saison d\'une équipe',  subs: [] },
       { label: '!transfert <joueur>',          description: 'Voir l\'historique des transferts',         subs: [] },
