@@ -674,6 +674,114 @@ module.exports = (client) => {
       return;
     }
 
+    // ── !ia entrainement <équipe> ─────────────────────────────────────────────
+    if (sub === 'entrainement' || sub === 'entraînement') {
+      const teamName = args.slice(1).join(' ').trim();
+      if (!teamName) return message.reply('Usage : `!ia entrainement <équipe>`');
+      const thinking = await message.channel.send('🤖 Génération du plan d\'entraînement...');
+      const team = await Team.findOne({ name: new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (!team) return thinking.edit(`❌ Équipe **${teamName}** introuvable.`);
+      const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 }).limit(10);
+      const n = matches.length || 1;
+      const avgKills = (team.kills / n).toFixed(1);
+      const avgPts   = (team.points / n).toFixed(1);
+      const wr       = (team.wins + team.losses) > 0 ? ((team.wins / (team.wins + team.losses)) * 100).toFixed(0) : 0;
+      const ctx = `Équipe : ${team.name} | WR : ${wr}% | Kills/match : ${avgKills} | Points/match : ${avgPts} | Matchs joués : ${n}\nDerniers matchs : ${matches.map(m => `#${m.placement} ${m.kills}k ${m.points}pts`).join(', ')}`;
+      const answer = await iaCall(
+        'Tu es un coach esport professionnel spécialisé dans les jeux de battle royale compétitif. Tu crées des plans d\'entraînement personnalisés basés sur les statistiques réelles. Tu réponds en français.',
+        `Stats de l\'équipe :\n${ctx}\n\nCrée un plan d\'entraînement sur 1 semaine adapté à ces stats. Identifie les points faibles (ex: placements, agressivité, constance) et propose des exercices spécifiques pour chaque problème. Structure : Lundi à Dimanche avec un focus différent chaque jour.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0x57F287)
+        .setAuthor({ name: `🏋️ Plan d\'entraînement IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Demandé par ${message.author.username} · Basé sur ${n} matchs` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia strategie <T1> vs <T2> ────────────────────────────────────────────
+    if (sub === 'strategie' || sub === 'stratégie') {
+      const rest = args.slice(1).join(' ');
+      const parts = rest.split(/ vs /i);
+      if (parts.length < 2) return message.reply('Usage : `!ia strategie <mon équipe> vs <équipe adverse>`');
+      const thinking = await message.channel.send('🤖 Analyse tactique en cours...');
+      const esc = s => s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const [t1, t2] = await Promise.all([
+        Team.findOne({ name: new RegExp(`^${esc(parts[0])}$`, 'i') }),
+        Team.findOne({ name: new RegExp(`^${esc(parts[1])}$`, 'i') }),
+      ]);
+      if (!t1) return thinking.edit(`❌ Équipe **${parts[0].trim()}** introuvable.`);
+      if (!t2) return thinking.edit(`❌ Équipe **${parts[1].trim()}** introuvable.`);
+      const m1 = await Match.find({ team: t1.name }).sort({ createdAt: -1 }).limit(5);
+      const m2 = await Match.find({ team: t2.name }).sort({ createdAt: -1 }).limit(5);
+      const ctx = `MON ÉQUIPE — ${t1.name} : ${t1.points}pts, ${t1.kills}k, ${t1.wins}V/${t1.losses}D\nForme : ${m1.map(m => `#${m.placement} ${m.kills}k`).join(', ')}\n\nADVERSAIRE — ${t2.name} : ${t2.points}pts, ${t2.kills}k, ${t2.wins}V/${t2.losses}D\nForme : ${m2.map(m => `#${m.placement} ${m.kills}k`).join(', ')}`;
+      const answer = await iaCall(
+        'Tu es un stratège esport expert en battle royale. Tu analyses les forces et faiblesses de deux équipes et tu proposes une stratégie concrète pour battre l\'adversaire. Tu réponds en français.',
+        `Données :\n${ctx}\n\nPropose une stratégie complète pour que **${t1.name}** batte **${t2.name}** : comment exploiter leurs faiblesses, quels playstyles adopter, axes de jeu prioritaires. Sois précis et actionnable.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0xED4245)
+        .setAuthor({ name: `⚔️ Stratégie IA — ${t1.name} contre ${t2.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Demandé par ${message.author.username} · Analyse non garantie` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia bilan [saison] ────────────────────────────────────────────────────
+    if (sub === 'bilan') {
+      const thinking = await message.channel.send('🤖 Rédaction du bilan en cours...');
+      const [tourn, topTeams, allMatches] = await Promise.all([
+        Tournament.findOne({ active: true }),
+        Team.find().sort({ points: -1 }).limit(10),
+        Match.find().sort({ createdAt: -1 }).limit(50),
+      ]);
+      const teamStats = topTeams.map(t => {
+        const ms = allMatches.filter(m => m.team === t.name);
+        const avgK = ms.length ? (ms.reduce((s, m) => s + m.kills, 0) / ms.length).toFixed(1) : '0';
+        return `${t.name}: ${t.points}pts, ${t.kills}k totaux, moy ${avgK}k/match, ${t.wins}V/${t.losses}D`;
+      }).join('\n');
+      const ctx = `Tournoi : ${tourn?.name ?? 'aucun actif'}\nNombre de matchs analysés : ${allMatches.length}\nClassement :\n${teamStats}`;
+      const answer = await iaCall(
+        'Tu es le journaliste sportif officiel de SUPREMYX CI. Tu rédiges des bilans de saison complets et engageants, comme un vrai journal sportif. Tu analyses les performances, identifies les surprises, les déceptions et les équipes en progression. Tu réponds en français.',
+        `Données de la compétition :\n${ctx}\n\nRédige un bilan complet de la saison/tournoi avec : 1) Faits marquants, 2) Équipes en progression, 3) Surprises et déceptions, 4) Records notables, 5) Pronostic pour la suite.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0xFEE75C)
+        .setAuthor({ name: `📰 Bilan IA — ${tourn?.name ?? 'Saison courante'}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Bilan généré par IA · Demandé par ${message.author.username}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia scouting <joueur> ─────────────────────────────────────────────────
+    if (sub === 'scouting') {
+      const playerName = args.slice(1).join(' ').trim();
+      if (!playerName) return message.reply('Usage : `!ia scouting <nom_du_joueur>`');
+      const guildId = message.guild.id;
+      const stat = await PlayerStat.findOne({ guildId, displayName: new RegExp(`^${playerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (!stat) return message.reply(`❌ Joueur **${playerName}** introuvable.`);
+      const thinking = await message.channel.send(`🤖 Rapport de scouting pour **${stat.displayName}** en cours...`);
+      const n = stat.totalMatches || 1;
+      const avgK = (stat.totalKills / n).toFixed(2);
+      const recent = (stat.history ?? []).slice(-5);
+      const avgRecent = recent.length ? (recent.reduce((s, m) => s + m.kills, 0) / recent.length).toFixed(1) : '—';
+      const ctx = `Joueur : ${stat.displayName} | Équipe : ${stat.teamName ?? 'free agent'}\nMatchs : ${stat.totalMatches} | Kills totaux : ${stat.totalKills} | Meilleur : ${stat.bestKills}k\nMoyenne générale : ${avgK}k/match | Moy 5 derniers : ${avgRecent}k/match`;
+      const answer = await iaCall(
+        'Tu es un recruteur esport professionnel. Tu rédiges des fiches de scouting concises pour évaluer si un joueur mérite d\'être recruté dans une équipe compétitive. Tu évalues le potentiel, la régularité et la valeur de marché. Tu réponds en français.',
+        `Données du joueur :\n${ctx}\n\nRédige une fiche de scouting avec : 1) Profil synthétique, 2) Points forts pour le recrutement, 3) Risques/points faibles, 4) Recommandation finale (Recruter/Observer/Passer) avec justification.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0x5865F2)
+        .setAuthor({ name: `🔍 Scouting IA — ${stat.displayName}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Équipe : ${stat.teamName ?? 'free agent'} · Demandé par ${message.author.username}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 
