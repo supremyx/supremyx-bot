@@ -233,6 +233,13 @@ module.exports = (client) => {
         return message.reply('✅ Quota IA **désactivé** — utilisation illimitée.');
       }
 
+      if (val === 'reset') {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const deleted = await IaUsage.deleteMany({ guildId, usedAt: { $gte: start } });
+        return message.reply(`✅ Compteur journalier réinitialisé — **${deleted.deletedCount}** utilisation(s) effacée(s).`);
+      }
+
       const n = parseInt(val, 10);
       if (isNaN(n) || n < 1) {
         return message.reply('❌ Valeur invalide. Utilise un nombre entier positif ou `off`.\nEx : `!ia quota 50`');
