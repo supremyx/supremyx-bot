@@ -51,6 +51,25 @@ async function setGuildModel(guildId, alias) {
   );
 }
 
+async function getDailyUsage(guildId) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  return IaUsage.countDocuments({ guildId, usedAt: { $gte: start } });
+}
+
+async function getQuota(guildId) {
+  const config = await IaConfig.findOne({ guildId });
+  return config?.dailyQuota ?? 0;
+}
+
+async function setQuota(guildId, quota) {
+  await IaConfig.findOneAndUpdate(
+    { guildId },
+    { dailyQuota: quota },
+    { upsert: true, new: true }
+  );
+}
+
 module.exports = (client) => {
 
   client.on('messageCreate', async message => {
@@ -181,17 +200,65 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
+    // ── !ia quota ─────────────────────────────────────────────────────────────
+    if (sub === 'quota') {
+      const guildId = message.guild.id;
+      const val = args[1]?.toLowerCase();
+
+      if (!val) {
+        const [quota, used] = await Promise.all([getQuota(guildId), getDailyUsage(guildId)]);
+        const limitText = quota === 0 ? '∞ illimité' : `${quota} / jour`;
+        const bar = quota > 0
+          ? '[' + '█'.repeat(Math.min(10, Math.round((used / quota) * 10))) + '░'.repeat(Math.max(0, 10 - Math.round((used / quota) * 10))) + ']'
+          : null;
+        const embed = new EmbedBuilder()
+          .setColor(0xFF8C00)
+          .setTitle('📊 Quota IA — Aujourd\'hui')
+          .addFields(
+            { name: '✅ Utilisations aujourd\'hui', value: `**${used}**`, inline: true },
+            { name: '🔒 Limite journalière', value: `**${limitText}**`, inline: true },
+            ...(bar ? [{ name: '📈 Progression', value: `${bar} ${used}/${quota}`, inline: false }] : []),
+          )
+          .setFooter({ text: 'Admin : !ia quota <nombre> pour définir une limite · !ia quota off pour désactiver' })
+          .setTimestamp();
+        return message.reply({ embeds: [embed] });
+      }
+
+      if (!message.member?.permissions.has('Administrator')) {
+        return message.reply('❌ Seuls les administrateurs peuvent modifier le quota IA.');
+      }
+
+      if (val === 'off' || val === '0') {
+        await setQuota(guildId, 0);
+        return message.reply('✅ Quota IA **désactivé** — utilisation illimitée.');
+      }
+
+      const n = parseInt(val, 10);
+      if (isNaN(n) || n < 1) {
+        return message.reply('❌ Valeur invalide. Utilise un nombre entier positif ou `off`.\nEx : `!ia quota 50`');
+      }
+      await setQuota(guildId, n);
+      return message.reply(`✅ Quota IA défini à **${n} utilisations par jour** pour ce serveur.`);
+    }
+
     // ── Helpers IA contextuels ────────────────────────────────────────────────
     async function iaCall(systemPrompt, userPrompt, thinkingMsg) {
       const ai = getOpenRouter();
       if (!ai) { await thinkingMsg.edit('❌ Clé OpenRouter manquante.'); return null; }
-      const { model } = await getGuildModel(message.guild.id);
+      const guildId = message.guild.id;
+      const [quota, used] = await Promise.all([getQuota(guildId), getDailyUsage(guildId)]);
+      if (quota > 0 && used >= quota) {
+        await thinkingMsg.edit(`❌ Quota journalier atteint (**${quota}** utilisations). Reviens demain ou demande à un admin d'augmenter la limite avec \`!ia quota <nombre>\`.`);
+        return null;
+      }
+      const { model } = await getGuildModel(guildId);
       try {
         const res = await ai.chat.completions.create({
           model: model.id,
           messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
           max_tokens: 1024,
         });
+        IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: (await getGuildModel(guildId)).alias }).catch(() => {});
         return res.choices[0]?.message?.content ?? 'Aucune réponse.';
       } catch (err) {
         console.error('[IA contextuell]', err);
@@ -539,7 +606,13 @@ module.exports = (client) => {
       return thinking.edit('❌ La fonctionnalité IA n\'est pas configurée (clé OpenRouter manquante).');
     }
 
-    const { alias: modelAlias, model } = await getGuildModel(message.guild.id);
+    const guildId = message.guild.id;
+    const [quotaMain, usedMain] = await Promise.all([getQuota(guildId), getDailyUsage(guildId)]);
+    if (quotaMain > 0 && usedMain >= quotaMain) {
+      return thinking.edit(`❌ Quota journalier atteint (**${quotaMain}** utilisations). Reviens demain ou demande à un admin d'augmenter la limite avec \`!ia quota <nombre>\`.`);
+    }
+
+    const { alias: modelAlias, model } = await getGuildModel(guildId);
 
     try {
       const userId = message.author.id;
