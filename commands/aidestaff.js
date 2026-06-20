@@ -38,6 +38,13 @@ const STAFF_CATEGORIES = [
       { label: '!trophees <équipe>',          description: 'Voir tous les trophées d\'une équipe',      subs: [] },
       { label: '!inscription ouvrir',         description: 'Ouvrir les inscriptions au tournoi',        subs: ['ouvrir — Ouvrir', 'fermer — Fermer', 'liste — Équipes inscrites', 'valider <équipe> — Valider', 'refuser <équipe> — Refuser', 'max <N> — Nombre max', 'salon #salon — Salon dépôt', 'annonces #salon — Salon annonces', 'reinitialiser — Réinitialiser'] },
       { label: '!event creer <titre> | [desc] | [date]', description: 'Créer un événement RSVP avec réactions ✅/❌', subs: ['creer <titre> | [desc] | [date] — Créer', 'annuler <id> — Annuler un événement'] },
+      { label: '!poule creer <Lettre>: <Eq1,Eq2>', description: 'Créer/gérer un groupe de tournoi (poule)',           subs: ['creer <Lettre>: <Eq1,Eq2,...> — Créer', 'classement <Lettre> — Voir classement', 'resultat <Lettre> — Voir matchs', 'liste — Tous les groupes', 'supprimer <Lettre> — Supprimer'] },
+      { label: '!recap [nom_tournoi]',             description: 'Récapitulatif automatique complet d\'un tournoi',    subs: [] },
+      { label: '!alerteperf <équipe> <seuil> #salon', description: 'Alerte auto quand une équipe franchit un seuil', subs: ['<équipe> <seuil_points> #salon — Points', 'podium <équipe> #salon — Entrée/sortie podium', 'liste — Voir toutes les alertes', 'supprimer <équipe> — Supprimer'] },
+      { label: '!pronostic valider <T1> vs <T2> <vainqueur>', description: 'Valider les pronostics d\'un match',    subs: [] },
+      { label: '!newsletter salon #salon',         description: 'Newsletter hebdo automatique (dimanche 20h)',        subs: ['salon #salon — Configurer', 'activer|desactiver — Toggle', 'tester — Envoyer maintenant', 'statut — Voir config'] },
+      { label: '!xp multiplicateur #salon <val>',  description: 'Multiplicateur XP par salon (0 = désactivé)',       subs: ['multiplicateur #salon <0-10> — Définir', 'multiplicateurs — Voir tous'] },
+      { label: '!dispo effacer @membre',            description: 'Effacer les disponibilités d\'un membre',           subs: ['effacer @membre — Effacer', 'liste <équipe> — Vue équipe'] },
     ],
   },
   {

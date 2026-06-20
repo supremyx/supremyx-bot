@@ -64,6 +64,11 @@ const CATEGORIES = [
       { label: '!mvp',                             description: 'MVP actuel (meilleur ratio kills/match)',                subs: [] },
       { label: '!mvpsaison',                       description: 'MVP de toutes les saisons passées',                     subs: [] },
       { label: '!trophees <équipe>',               description: 'Voir tous les trophées obtenus par une équipe',         subs: [] },
+      { label: '!poule <Lettre>: <Eq1, Eq2, …>', description: 'Créer/gérer un groupe de tournoi (poule A, B, C…)',        subs: ['creer <Lettre>: <Eq1,Eq2> — Créer', 'classement <Lettre> — Classement du groupe', 'resultat <Lettre> — Résultats du groupe', 'liste — Voir tous les groupes'] },
+      { label: '!recap [nom_tournoi]',            description: 'Récapitulatif automatique complet d\'un tournoi',           subs: [] },
+      { label: '!pronostic <T1> vs <T2>',         description: 'Faire un pronostic sur un match à venir',                  subs: ['resultats — Voir ses pronostics', 'classement — Top pronostiqueurs'] },
+      { label: '!scout <joueur>',                 description: 'Fiche de scouting complète d\'un joueur',                  subs: ['<joueur> — Fiche complète', 'comparer <J1> vs <J2> — Comparer deux joueurs'] },
+      { label: '!dispo oui|non|incertain',         description: 'Déclarer sa disponibilité pour le prochain match',         subs: ['oui|non|incertain [raison] — Déclaration générale', 'match <id> <statut> — Pour un match précis', 'liste <équipe> — Vue staff', 'voir — Voir sa dispo actuelle'] },
     ],
   },
   {
