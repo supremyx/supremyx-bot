@@ -37,6 +37,7 @@ const STAFF_CATEGORIES = [
       { label: '!trophee <icône> <équipe>',   description: 'Attribuer un trophée à une équipe',         subs: [] },
       { label: '!trophees <équipe>',          description: 'Voir tous les trophées d\'une équipe',      subs: [] },
       { label: '!inscription ouvrir',         description: 'Ouvrir les inscriptions au tournoi',        subs: ['ouvrir — Ouvrir', 'fermer — Fermer', 'liste — Équipes inscrites', 'valider <équipe> — Valider', 'refuser <équipe> — Refuser', 'max <N> — Nombre max', 'salon #salon — Salon dépôt', 'annonces #salon — Salon annonces', 'reinitialiser — Réinitialiser'] },
+      { label: '!event creer <titre> | [desc] | [date]', description: 'Créer un événement RSVP avec réactions ✅/❌', subs: ['creer <titre> | [desc] | [date] — Créer', 'annuler <id> — Annuler un événement'] },
     ],
   },
   {
@@ -51,7 +52,7 @@ const STAFF_CATEGORIES = [
       { label: '!fusionner <T1> <T2>',         description: 'Fusionner deux équipes',                            subs: [] },
       { label: '!composition <équipe> <J1,…>', description: 'Définir la composition d\'une équipe',              subs: [] },
       { label: '!liste ajouter',               description: 'Ajouter un joueur au roster',                       subs: ['ajouter <équipe> @user <rôle> [note] — Ajouter', 'retirer <équipe> @user — Retirer', 'role <équipe> @user <rôle> — Changer rôle', 'note <équipe> @user <note> — Ajouter note', 'vider <équipe> — Vider roster', 'capitaine <équipe> @user — Désigner IGL'] },
-      { label: '!lineup definir',              description: 'Définir le lineup de match d\'une équipe',          subs: ['definir <équipe> <J1,J2,...> — Définir', 'effacer <équipe> — Effacer', 'liste — Tous les lineups'] },
+      { label: '!composition definir',          description: 'Définir la composition de match d\'une équipe',      subs: ['definir <équipe> <J1,J2,...> — Définir', 'effacer <équipe> — Effacer', 'liste — Toutes les compositions'] },
       { label: '!objectif definir',            description: 'Définir l\'objectif de saison d\'une équipe',       subs: ['definir <équipe> <texte> — Définir', 'supprimer <équipe> — Supprimer', 'liste — Tous les objectifs'] },
       { label: '!absence effacer @membre',     description: 'Gérer les absences des joueurs',                    subs: ['effacer @membre — Effacer une absence', 'toutes — Voir toutes les absences'] },
       { label: '!setlogo <équipe> | <url>',    description: 'Définir le logo/thumbnail d\'une équipe (URL image)', subs: ['<équipe> | supprimer — Retirer le logo'] },
@@ -197,6 +198,8 @@ const STAFF_CATEGORIES = [
       { label: '!gitstatus',               description: 'Voir le statut du dépôt Git',                    subs: [] },
       { label: '!memoire',                 description: 'Voir l\'utilisation mémoire du bot',              subs: [] },
       { label: '!tempsenligne',            description: 'Voir le temps de fonctionnement',                 subs: [] },
+      { label: '!ia modele <alias>',       description: 'Changer le modèle IA actif (admin)',              subs: ['modele <alias> — Changer de modèle', 'modeles — Voir tous les modèles disponibles'] },
+      { label: '!ia quota <valeur>',       description: 'Gérer le quota d\'utilisations IA journalier',   subs: ['quota — Voir le quota actuel', 'quota <nombre> — Fixer la limite', 'quota off — Désactiver (illimité)', 'quota reset — Remettre le compteur à zéro', 'quota salon #salon — Salon d\'alerte'] },
     ],
   },
   {
