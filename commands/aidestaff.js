@@ -172,6 +172,7 @@ const STAFF_CATEGORIES = [
     emoji: '🔧',
     color: 0x5865F2,
     commands: [
+      { label: '!chercher staff <terme>',  description: 'Rechercher une commande staff par mot-clé',       subs: [] },
       { label: '!statsbot',                description: 'Statistiques d\'utilisation du bot',              subs: [] },
       { label: '!commandes',              description: 'Classement des commandes les plus utilisées',      subs: [] },
       { label: '!logs',                    description: 'Historique des actions staff',                    subs: ['vider — Effacer', 'stats — Stats par catégorie', 'aujourdhui — Logs du jour'] },
@@ -315,6 +316,66 @@ module.exports = (client) => {
       }, 5 * 60 * 1000);
     } catch (err) {
       console.error('[aidestaff messageCreate]', err);
+    }
+  });
+
+  // ─── !chercher staff <terme> ──────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (!message.member) return;
+      const content = message.content.trim();
+      if (!content.startsWith('!chercher staff')) return;
+
+      if (!message.member.permissions.has('Administrator'))
+        return message.reply('⛔ Commande réservée au staff.');
+
+      const term = content.slice('!chercher staff'.length).trim().toLowerCase();
+      if (!term) {
+        return message.reply('**Usage :** `!chercher staff <terme>`\nExemple : `!chercher staff inscription`');
+      }
+      if (term.length < 2) {
+        return message.reply('❌ Le terme doit contenir au moins 2 caractères.');
+      }
+
+      const cd = checkCooldown(message.author.id, 'chercher_staff', 5);
+      if (cd) return replyCooldown(message, cd, 'chercher staff');
+
+      const results = [];
+      for (const cat of STAFF_CATEGORIES) {
+        const matches = cat.commands.filter(cmd =>
+          cmd.label.toLowerCase().includes(term) ||
+          cmd.description.toLowerCase().includes(term) ||
+          cmd.subs.some(s => s.toLowerCase().includes(term))
+        );
+        if (matches.length) results.push({ cat, matches });
+      }
+
+      const total = results.reduce((n, r) => n + r.matches.length, 0);
+
+      if (!total) {
+        return message.reply(`🔍 Aucune commande staff trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aidestaff\` pour naviguer par catégorie.`);
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0xED4245)
+        .setAuthor({ name: `🔍 Recherche staff : "${term}"`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(`**${total}** résultat(s) dans ${results.length} catégorie(s) · 🔐 Staff uniquement`)
+        .setFooter({ text: 'SUPREMYX Esports · Staff · < > obligatoire · [ ] optionnel · !aidestaff pour le menu complet' })
+        .setTimestamp();
+
+      for (const { cat, matches } of results) {
+        embed.addFields({
+          name: `${cat.emoji} ${cat.label}`,
+          value: matches.map(cmd => `\`${cmd.label}\` — ${cmd.description}`).join('\n'),
+          inline: false,
+        });
+      }
+
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[chercher staff]', err);
     }
   });
 

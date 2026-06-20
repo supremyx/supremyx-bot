@@ -118,6 +118,7 @@ const CATEGORIES = [
     emoji: '🛠️',
     color: 0x57F287,
     commands: [
+      { label: '!chercher <terme>',              description: 'Rechercher une commande par mot-clé',           subs: [] },
       { label: '!absent [message]',              description: 'Passer en mode AFK',                           subs: [] },
       { label: '!anniversaire definir <JJ/MM>',  description: 'Enregistrer sa date d\'anniversaire',         subs: ['definir <JJ/MM[/AAAA]> — Enregistrer', 'supprimer — Supprimer', 'liste — Voir tous', 'prochains [N] — Prochain N jours', 'verifier [@user] — Vérifier'] },
       { label: '!pileface',                      description: 'Lancer une pièce',                             subs: [] },
@@ -273,6 +274,63 @@ module.exports = (client) => {
       }, 5 * 60 * 1000);
     } catch (err) {
       console.error('[aide messageCreate]', err);
+    }
+  });
+
+  // ─── !chercher <terme> ────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      const content = message.content.trim();
+      if (!content.startsWith('!chercher')) return;
+      if (content.startsWith('!chercher staff')) return; // réservé à aidestaff
+
+      const term = content.slice('!chercher'.length).trim().toLowerCase();
+      if (!term) {
+        return message.reply('**Usage :** `!chercher <terme>`\nExemple : `!chercher tournoi`');
+      }
+      if (term.length < 2) {
+        return message.reply('❌ Le terme doit contenir au moins 2 caractères.');
+      }
+
+      const cd = checkCooldown(message.author.id, 'chercher', 5);
+      if (cd) return replyCooldown(message, cd, 'chercher');
+
+      const results = [];
+      for (const cat of CATEGORIES) {
+        const matches = cat.commands.filter(cmd =>
+          cmd.label.toLowerCase().includes(term) ||
+          cmd.description.toLowerCase().includes(term) ||
+          cmd.subs.some(s => s.toLowerCase().includes(term))
+        );
+        if (matches.length) results.push({ cat, matches });
+      }
+
+      const total = results.reduce((n, r) => n + r.matches.length, 0);
+
+      if (!total) {
+        return message.reply(`🔍 Aucune commande trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aide\` pour naviguer par catégorie.`);
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0xFF8C00)
+        .setAuthor({ name: `🔍 Recherche : "${term}"`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(`**${total}** résultat(s) dans ${results.length} catégorie(s)`)
+        .setFooter({ text: 'SUPREMYX Esports · < > obligatoire · [ ] optionnel · !aide pour le menu complet' })
+        .setTimestamp();
+
+      for (const { cat, matches } of results) {
+        embed.addFields({
+          name: `${cat.emoji} ${cat.label}`,
+          value: matches.map(cmd => `\`${cmd.label}\` — ${cmd.description}`).join('\n'),
+          inline: false,
+        });
+      }
+
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[chercher]', err);
     }
   });
 
