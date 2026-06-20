@@ -300,6 +300,30 @@ require('./commands/tournoiplus')(client);
 // --- Utilitaires avancés (countdown, uptime, memoire, lienbot) ---
 require('./commands/utilitairesplus')(client);
 
+// --- Tournois : Poules ---
+require('./commands/poule')(client);
+
+// --- Pronostics ---
+require('./commands/pronostic')(client);
+
+// --- Récap post-tournoi ---
+require('./commands/recap')(client);
+
+// --- Scouting joueurs ---
+require('./commands/scout')(client);
+
+// --- Disponibilités matchs ---
+require('./commands/dispo')(client);
+
+// --- Alertes de performance ---
+require('./commands/alerteperf')(client);
+
+// --- Multiplicateurs XP par salon ---
+require('./commands/xpmulti')(client);
+
+// --- Newsletter hebdomadaire ---
+require('./commands/newsletter')(client);
+
 // --- Forme récente d'une équipe ---
 require('./commands/formrecente')(client);
 

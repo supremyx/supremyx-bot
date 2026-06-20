@@ -15,11 +15,16 @@ import ComparisonPage from "./pages/ComparisonPage";
 import SaisonsPage from "./pages/SaisonsPage";
 import ModerationPage from "./pages/ModerationPage";
 import BotStatsPage from "./pages/BotStatsPage";
+import IaAnalyticsPage from "./pages/IaAnalyticsPage";
+import EventsPage from "./pages/EventsPage";
+import TicketsPage from "./pages/TicketsPage";
+import BirthdaysPage from "./pages/BirthdaysPage";
+import SuggestionsPage from "./pages/SuggestionsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "events" | "tickets" | "birthdays" | "suggestions";
 
 interface Team {
   rank: number;
