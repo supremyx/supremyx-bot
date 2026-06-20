@@ -7,3 +7,6 @@
 - [birthday date validation](birthday-date.md) — `new Date(year, month-1, day)` and compare back is the correct way to reject invalid combos like 31/02.
 - [botstats per-guild](botstats-guild.md) — all CommandStat queries must filter by `guildId`; without it, stats bleed across guilds on multi-server bots.
 - [scheduleManager singleton](schedule-manager.md) — module-level `started` flag prevents duplicate intervals when the module is re-required or the function called twice.
+- [IA subcommands location](ia-subcommands.md) — new `!ia` subcommands must be inserted before the free-text catch-all `!ia <question>` handler (last block before module.exports closing); inserting after causes them to never match.
+- [API additional models location](api-models-location.md) — GuildEvent, Ticket, Birthday, Suggestion and new models are imported at the bottom of server.js (after the SSE /events route) to avoid hoisting conflicts; new GET endpoints go after those imports before the Mount block.
+- [Dashboard page pattern](dashboard-page-pattern.md) — new pages require 4 edits in App.tsx: import, Page type union, NAV_ITEMS entry, and conditional render in the Pages section.
