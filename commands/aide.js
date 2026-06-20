@@ -102,6 +102,7 @@ const CATEGORIES = [
       { label: '!ia modeles',          description: 'Liste des modèles IA disponibles',          subs: [] },
       { label: '!ia modele <alias>',   description: 'Changer de modèle IA',                     subs: [] },
       { label: '!ia statistiques',     description: 'Statistiques d\'utilisation de l\'IA',      subs: [] },
+      { label: '!ia quota',            description: 'Consulter le quota IA journalier restant',   subs: [] },
     ],
   },
   {
@@ -126,9 +127,11 @@ const CATEGORIES = [
       { label: '!chercher <terme>',              description: 'Rechercher une commande par mot-clé',           subs: [] },
       { label: '!absent [message]',              description: 'Passer en mode AFK',                           subs: [] },
       { label: '!anniversaire definir <JJ/MM>',  description: 'Enregistrer sa date d\'anniversaire',         subs: ['definir <JJ/MM[/AAAA]> — Enregistrer', 'supprimer — Supprimer', 'liste — Voir tous', 'prochains [N] — Prochain N jours', 'verifier [@user] — Vérifier'] },
+      { label: '!rebours <date> [événement]',     description: 'Compte à rebours jusqu\'à une date (ex : 25/12/2025 Noël)', subs: [] },
       { label: '!tirageteam [T1,T2,...]',        description: 'Tirage au sort des équipes (affronte-les 2 par 2)', subs: [] },
       { label: '!pileface',                      description: 'Lancer une pièce',                             subs: [] },
       { label: '!dés',                           description: 'Lancer un dé à 6 faces',                       subs: [] },
+      { label: '!lienbot',                       description: 'Obtenir le lien d\'invitation du bot',          subs: [] },
     ],
   },
   {
