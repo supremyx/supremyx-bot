@@ -70,6 +70,48 @@ async function setQuota(guildId, quota) {
   );
 }
 
+async function setAlertChannel(guildId, channelId) {
+  await IaConfig.findOneAndUpdate(
+    { guildId },
+    { quotaAlertChannelId: channelId },
+    { upsert: true, new: true }
+  );
+}
+
+async function checkAndNotifyQuota(guildId, used, quota, client) {
+  if (!quota || quota === 0) return;
+
+  const config = await IaConfig.findOne({ guildId });
+  const channelId = config?.quotaAlertChannelId;
+  if (!channelId) return;
+
+  const channel = client.channels.cache.get(channelId);
+  if (!channel) return;
+
+  const pct = used / quota;
+  const threshold80 = Math.ceil(quota * 0.8);
+
+  if (used === threshold80 && quota > 1) {
+    const embed = new EmbedBuilder()
+      .setColor(0xFFA500)
+      .setTitle('⚠️ Quota IA — 80% atteint')
+      .setDescription(`Le quota journalier de l'IA est à **${used}/${quota}** utilisations.\n\nIl reste **${quota - used}** utilisation(s) avant la coupure automatique.`)
+      .addFields({ name: '📈 Progression', value: `[${'█'.repeat(8)}${'░'.repeat(2)}] 80%`, inline: false })
+      .setFooter({ text: 'Admin : !ia quota <nombre> pour augmenter · !ia quota reset pour réinitialiser' })
+      .setTimestamp();
+    channel.send({ embeds: [embed] }).catch(() => {});
+  } else if (used >= quota) {
+    const embed = new EmbedBuilder()
+      .setColor(0xED4245)
+      .setTitle('🚨 Quota IA — 100% atteint')
+      .setDescription(`Le quota journalier est **épuisé** (**${used}/${quota}** utilisations).\n\nL'IA est maintenant **coupée** jusqu'à minuit ou jusqu'à ce qu'un admin réinitialise le compteur.`)
+      .addFields({ name: '📈 Progression', value: `[${'█'.repeat(10)}] 100%`, inline: false })
+      .setFooter({ text: 'Admin : !ia quota reset pour réinitialiser · !ia quota <nombre> pour changer la limite' })
+      .setTimestamp();
+    channel.send({ embeds: [embed] }).catch(() => {});
+  }
+}
+
 module.exports = (client) => {
 
   client.on('messageCreate', async message => {
@@ -206,20 +248,22 @@ module.exports = (client) => {
       const val = args[1]?.toLowerCase();
 
       if (!val) {
-        const [quota, used] = await Promise.all([getQuota(guildId), getDailyUsage(guildId)]);
+        const [quota, used, config] = await Promise.all([getQuota(guildId), getDailyUsage(guildId), IaConfig.findOne({ guildId })]);
         const limitText = quota === 0 ? '∞ illimité' : `${quota} / jour`;
         const bar = quota > 0
           ? '[' + '█'.repeat(Math.min(10, Math.round((used / quota) * 10))) + '░'.repeat(Math.max(0, 10 - Math.round((used / quota) * 10))) + ']'
           : null;
+        const alertCh = config?.quotaAlertChannelId ? `<#${config.quotaAlertChannelId}>` : '❌ Non configuré';
         const embed = new EmbedBuilder()
           .setColor(0xFF8C00)
           .setTitle('📊 Quota IA — Aujourd\'hui')
           .addFields(
             { name: '✅ Utilisations aujourd\'hui', value: `**${used}**`, inline: true },
             { name: '🔒 Limite journalière', value: `**${limitText}**`, inline: true },
+            { name: '🔔 Salon d\'alerte', value: alertCh, inline: true },
             ...(bar ? [{ name: '📈 Progression', value: `${bar} ${used}/${quota}`, inline: false }] : []),
           )
-          .setFooter({ text: 'Admin : !ia quota <nombre> pour définir une limite · !ia quota off pour désactiver' })
+          .setFooter({ text: 'Admin : !ia quota <nombre> · !ia quota off · !ia quota reset · !ia quota salon #salon' })
           .setTimestamp();
         return message.reply({ embeds: [embed] });
       }
@@ -238,6 +282,15 @@ module.exports = (client) => {
         start.setHours(0, 0, 0, 0);
         const deleted = await IaUsage.deleteMany({ guildId, usedAt: { $gte: start } });
         return message.reply(`✅ Compteur journalier réinitialisé — **${deleted.deletedCount}** utilisation(s) effacée(s).`);
+      }
+
+      if (val === 'salon') {
+        const mentioned = message.mentions.channels.first();
+        if (!mentioned) {
+          return message.reply('❌ Mentionne un salon textuel. Ex : `!ia quota salon #logs-admin`');
+        }
+        await setAlertChannel(guildId, mentioned.id);
+        return message.reply(`✅ Salon d'alerte quota IA défini sur ${mentioned}.\nUne notification sera envoyée à **80%** et **100%** du quota journalier.`);
       }
 
       const n = parseInt(val, 10);
