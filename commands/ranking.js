@@ -1,6 +1,7 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
+const Config = require('../database/models/Config');
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
@@ -69,11 +70,13 @@ module.exports = (client) => {
       }).join('\n');
 
       const activeTournoi = await Tournament.findOne({ active: true });
+      const config = await Config.findOne();
+      const frozen = config?.rankFrozen ?? false;
 
       const embed = new EmbedBuilder()
-        .setTitle('🏆 Classement général')
-        .setDescription(rows)
-        .setColor(0xF1C40F)
+        .setTitle(frozen ? '❄️ Classement général (gelé)' : '🏆 Classement général')
+        .setDescription(frozen ? `> ❄️ **Le classement est actuellement gelé** — positions figées pour les playoffs.\n\n${rows}` : rows)
+        .setColor(frozen ? 0x87CEEB : 0xF1C40F)
         .setFooter({ text: activeTournoi ? `Tournoi en cours : ${activeTournoi.name}` : `${teams.length} équipe(s)` })
         .setTimestamp();
 

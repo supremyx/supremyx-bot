@@ -142,6 +142,54 @@ module.exports = (client) => {
       return message.reply(`✅ Événement **#${num}** annulé.`);
     }
 
+    // --- !event joindre <id> ---
+    if (sub === 'joindre' || sub === 'participer') {
+      const num = parseInt(args[2]);
+      if (isNaN(num)) return message.reply('Usage : `!event joindre <id>`');
+      const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
+      if (!ev) return message.reply('❌ Événement introuvable.');
+      if (ev.cancelled) return message.reply('❌ Cet événement a été annulé.');
+
+      await GuildEvent.updateOne({ _id: ev._id }, {
+        $pull: { joined: message.author.id, declined: message.author.id }
+      });
+      await GuildEvent.updateOne({ _id: ev._id }, {
+        $addToSet: { joined: message.author.id }
+      });
+
+      const updated = await GuildEvent.findById(ev._id);
+      const chan = message.guild.channels.cache.get(ev.channelId);
+      if (chan && ev.messageId) {
+        const msg = await chan.messages.fetch(ev.messageId).catch(() => null);
+        if (msg) await msg.edit({ embeds: [buildEventEmbed(updated, message.guild)] }).catch(() => {});
+      }
+      return message.reply(`✅ Tu es **inscrit** à l'événement **#${num} — ${ev.title}**.`);
+    }
+
+    // --- !event quitter <id> ---
+    if (sub === 'quitter' || sub === 'decliner') {
+      const num = parseInt(args[2]);
+      if (isNaN(num)) return message.reply('Usage : `!event quitter <id>`');
+      const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
+      if (!ev) return message.reply('❌ Événement introuvable.');
+      if (ev.cancelled) return message.reply('❌ Cet événement a été annulé.');
+
+      await GuildEvent.updateOne({ _id: ev._id }, {
+        $pull: { joined: message.author.id, declined: message.author.id }
+      });
+      await GuildEvent.updateOne({ _id: ev._id }, {
+        $addToSet: { declined: message.author.id }
+      });
+
+      const updated = await GuildEvent.findById(ev._id);
+      const chan = message.guild.channels.cache.get(ev.channelId);
+      if (chan && ev.messageId) {
+        const msg = await chan.messages.fetch(ev.messageId).catch(() => null);
+        if (msg) await msg.edit({ embeds: [buildEventEmbed(updated, message.guild)] }).catch(() => {});
+      }
+      return message.reply(`✅ Tu as **décliné** l'événement **#${num} — ${ev.title}**.`);
+    }
+
     // --- !event participants <id> ---
     if (sub === 'participants' || sub === 'inscrits') {
       const num = parseInt(args[2]);
@@ -164,6 +212,8 @@ module.exports = (client) => {
       '**Commandes `!event` :**\n' +
       '`!event creer <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
       '`!event liste` — Voir les événements en cours\n' +
+      '`!event joindre <id>` — S\'inscrire à un événement\n' +
+      '`!event quitter <id>` — Décliner un événement\n' +
       '`!event participants <id>` — Voir qui participe\n' +
       '`!event annuler <id>` — Annuler un événement *(staff)*'
     );

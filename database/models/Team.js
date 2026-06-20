@@ -27,6 +27,10 @@ const TeamSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  logo: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -10,7 +10,10 @@ const configSchema = new mongoose.Schema({
   motd: { type: String, default: '' },
   motdSetBy: { type: String, default: '' },
   announceChannelId: { type: String, default: '' },
-  logChannelId: { type: String, default: '' }
+  logChannelId: { type: String, default: '' },
+  rankFrozen: { type: Boolean, default: false },
+  rankFrozenAt: { type: Date, default: null },
+  rankFrozenBy: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Config', configSchema);
