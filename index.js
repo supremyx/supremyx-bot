@@ -38,7 +38,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connecté'))
   .catch(err => console.error('❌ Erreur MongoDB:', err));
 
-client.setMaxListeners(100);
+client.setMaxListeners(150);
 setupErrorHandler(client);
 setupMaintenanceGuard(client);
 
@@ -299,5 +299,20 @@ require('./commands/tournoiplus')(client);
 
 // --- Utilitaires avancés (countdown, uptime, memoire, lienbot) ---
 require('./commands/utilitairesplus')(client);
+
+// --- Forme récente d'une équipe ---
+require('./commands/formrecente')(client);
+
+// --- Top membres les plus actifs (XP) ---
+require('./commands/topactivite')(client);
+
+// --- Logo d'équipe ---
+require('./commands/setlogo')(client);
+
+// --- Notification DM roster d'équipe ---
+require('./commands/notifequipe')(client);
+
+// --- Geler / dégeler le classement ---
+require('./commands/gelerclassement')(client);
 
 client.login(process.env.TOKEN);
