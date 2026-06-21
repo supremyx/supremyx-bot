@@ -64,7 +64,7 @@ async function awaitConfirmation(message, previewEmbed, components = null) {
   return confirmed;
 }
 
-// ── !lienedit ─────────────────────────────────────────────────────────────
+// ── !embededit ─────────────────────────────────────────────────────────────
 async function editLienMessage(message, parts) {
   // parts: [#salon, messageID, titre, description, couleur?]
   const channelArg = parts[0];
@@ -119,10 +119,10 @@ async function editLienMessage(message, parts) {
 
 module.exports = (client) => {
 
-  // ── !lien ─────────────────────────────────────────────────────────────────
+  // ── !embed ─────────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (content !== '!lien' && !content.startsWith('!lien ')) return;
+    if (content !== '!embed' && !content.startsWith('!embed ')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -130,22 +130,22 @@ module.exports = (client) => {
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
-    const rest = content.slice('!lien'.length).trim();
+    const rest = content.slice('!embed'.length).trim();
 
     if (!rest) {
       return message.reply([
-        '**Commandes `!lien` :**',
+        '**Commandes `!embed` :**',
         '',
         '**Publier directement :**',
-        '`!lien #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
-        '`!lien ici | Titre | Texte avec [lien](https://url.com) | couleur`',
+        '`!embed #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
+        '`!embed ici | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
         '**Prévisualiser avant de publier :**',
-        '`!lien preview | #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
+        '`!embed preview | #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
         '**Avec boutons cliquables :**',
-        '`!lienbutton #salon | Titre | Description | Texte >> https://... | couleur`',
-        '`!lienbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!embedbutton #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!embedbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
         '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
       ].join('\n'));
@@ -188,26 +188,26 @@ module.exports = (client) => {
     });
   });
 
-  // ── !lienbutton ───────────────────────────────────────────────────────────
+  // ── !embedbutton ───────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!lienbutton')) return;
+    if (!content.startsWith('!embedbutton')) return;
     if (!message.guild) return;
     if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
-    const rest = content.slice('!lienbutton'.length).trim();
+    const rest = content.slice('!embedbutton'.length).trim();
 
     if (!rest) {
       return message.reply([
-        '**Usage `!lienbutton` :**',
-        '`!lienbutton #salon | Titre | Description | Texte >> https://... | couleur`',
-        '`!lienbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+        '**Usage `!embedbutton` :**',
+        '`!embedbutton #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!embedbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
         '**Exemple :**',
-        '`!lienbutton #annonces | 📋 Inscription | Clique pour t\'inscrire. | S\'inscrire >> https://supremyx.xyz | or`',
+        '`!embedbutton #annonces | 📋 Inscription | Clique pour t\'inscrire. | S\'inscrire >> https://supremyx.xyz | or`',
         '',
         'Maximum **5 boutons**. URLs commençant par `https://`.',
       ].join('\n'));
@@ -265,17 +265,17 @@ module.exports = (client) => {
     });
   });
 
-  // ── !lienlist ─────────────────────────────────────────────────────────────
+  // ── !embedlist ─────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!lienlist')) return;
+    if (!content.startsWith('!embedlist')) return;
     if (!message.guild) return;
     if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
-    const channelArg = content.slice('!lienlist'.length).trim();
+    const channelArg = content.slice('!embedlist'.length).trim();
     const target = !channelArg
       ? message.channel
       : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg.replace(/\D/g, '')) || null);
@@ -308,16 +308,16 @@ module.exports = (client) => {
       .setTitle(`📋 Embeds du bot dans #${target.name}`)
       .setDescription(lines.join('\n\n'))
       .setColor(0x5865F2)
-      .setFooter({ text: `${botEmbeds.length} embed(s) trouvé(s) · Utilise !lienedit pour modifier` })
+      .setFooter({ text: `${botEmbeds.length} embed(s) trouvé(s) · Utilise !embededit pour modifier` })
       .setTimestamp();
 
     await message.reply({ embeds: [list] });
   });
 
-  // ── !liensupprimer ────────────────────────────────────────────────────────
+  // ── !embedsupprimer ────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!liensupprimer')) return;
+    if (!content.startsWith('!embedsupprimer')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -325,19 +325,19 @@ module.exports = (client) => {
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
-    const rest = content.slice('!liensupprimer'.length).trim();
+    const rest = content.slice('!embedsupprimer'.length).trim();
 
     if (!rest || !rest.includes('|')) {
       return message.reply([
-        '**Usage :** `!liensupprimer #salon | ID_message`',
-        '`!liensupprimer ici | ID_message` — dans le salon courant',
+        '**Usage :** `!embedsupprimer #salon | ID_message`',
+        '`!embedsupprimer ici | ID_message` — dans le salon courant',
         '',
         '**Comment obtenir l\'ID du message :**',
         'Active le mode développeur Discord *(Paramètres → Apparence → Mode développeur)*',
         'puis fais clic droit sur le message → **Copier l\'identifiant**.',
         '',
         '**Exemple :**',
-        '`!liensupprimer #annonces | 1234567890123456789`',
+        '`!embedsupprimer #annonces | 1234567890123456789`',
         '',
         '⚠️ Je ne peux supprimer que mes propres messages.',
       ].join('\n'));
@@ -364,7 +364,7 @@ module.exports = (client) => {
       return message.reply('⛔ Je ne peux supprimer que **mes propres messages**.');
 
     if (!targetMessage.embeds.length)
-      return message.reply('⚠️ Ce message ne contient pas d\'embed. Utilise `!liensupprimer` uniquement sur des embeds publiés par le bot.');
+      return message.reply('⚠️ Ce message ne contient pas d\'embed. Utilise `!embedsupprimer` uniquement sur des embeds publiés par le bot.');
 
     // Prévisualisation + confirmation
     const preview = targetMessage.embeds[0];
@@ -405,30 +405,30 @@ module.exports = (client) => {
     });
   });
 
-  // ── !lienedit ─────────────────────────────────────────────────────────────
+  // ── !embededit ─────────────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!lienedit')) return;
+    if (!content.startsWith('!embededit')) return;
     if (!message.guild) return;
     if (!message.member) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Staff uniquement.');
 
-    const rest = content.slice('!lienedit'.length).trim();
+    const rest = content.slice('!embededit'.length).trim();
 
     if (!rest) {
       return message.reply([
-        '**Usage `!lienedit` :**',
-        '`!lienedit #salon | ID_message | Nouveau titre | Nouvelle description | couleur`',
-        '`!lienedit ici | ID_message | Nouveau titre | Nouvelle description | couleur`',
+        '**Usage `!embededit` :**',
+        '`!embededit #salon | ID_message | Nouveau titre | Nouvelle description | couleur`',
+        '`!embededit ici | ID_message | Nouveau titre | Nouvelle description | couleur`',
         '',
         '**Comment obtenir l\'ID du message :**',
         'Active le mode développeur Discord *(Paramètres → Apparence → Mode développeur)*',
         'puis fais clic droit sur le message → **Copier l\'identifiant**.',
         '',
         '**Exemple :**',
-        '`!lienedit #annonces | 1234567890123456789 | 🏆 Tournoi MAJ | Inscriptions closes. | rouge`',
+        '`!embededit #annonces | 1234567890123456789 | 🏆 Tournoi MAJ | Inscriptions closes. | rouge`',
         '',
         '⚠️ Je ne peux modifier que mes propres messages.',
       ].join('\n'));
