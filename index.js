@@ -85,6 +85,8 @@ client.once('clientReady', async () => {
   console.log('🎭 Système reaction-roles activé');
   startSondageManager(client);
   console.log('📊 Système sondages activé');
+  startSondageProgManager(client);
+  console.log('📅 Système sondages programmés activé');
   startBirthdayManager(client);
   console.log('🎂 Système anniversaires activé');
   startLevelManager(client);

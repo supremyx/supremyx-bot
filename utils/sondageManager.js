@@ -60,4 +60,4 @@ async function startSondageManager(client) {
   }
 }
 
-module.exports = { startSondageManager };
+module.exports = { startSondageManager, closeSondage };
