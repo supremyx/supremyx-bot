@@ -117,6 +117,7 @@ const STAFF_CATEGORIES = [
       { label: '!embed liste [#salon]',                        description: 'Lister les embeds publiés par le bot dans un salon', subs: [] },
       { label: '!embed modifier #salon | ID | Titre | Desc | couleur', description: 'Modifier un embed déjà publié par le bot',   subs: ['modifier ici | ID | Titre | Desc | couleur — Dans le salon courant'] },
       { label: '!embed supprimer #salon | ID_message',         description: 'Supprimer un embed publié par le bot (confirmation requise)', subs: ['supprimer ici | ID_message — Supprimer dans le salon courant'] },
+      { label: '!embed cloner #salon | ID_message | #salon_destination', description: 'Dupliquer un embed existant du bot vers un autre salon', subs: [] },
       { label: '!retirer <messageId>',                         description: 'Relancer un giveaway (reroll du gagnant)',          subs: [] },
       { label: '!notifequipe <équipe> | <message>',           description: 'Envoyer un DM à tous les membres Discord du roster', subs: [] },
     ],

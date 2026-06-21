@@ -77,6 +77,7 @@ const HELP_TEXT = [
   '`!embed liste [#salon]` — lister les embeds du bot dans un salon',
   '`!embed modifier #salon | ID | Nouveau titre | Nouvelle description | couleur`',
   '`!embed supprimer #salon | ID_message`',
+  '`!embed cloner #salon | ID_message | #salon_destination` — dupliquer un embed vers un autre salon',
   '',
   '**🎨 Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
 ].join('\n');
@@ -391,6 +392,76 @@ module.exports = (client) => {
         await staffLog(client, {
           action: 'embed supprimer',
           details: `**Salon :** <#${target.id}>\n**ID :** \`${messageId}\`\n**Titre :** ${ptitle}`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed cloner ──────────────────────────────────────────────────────
+      if (sub === 'cloner') {
+        if (!args || !args.includes('|')) return message.reply([
+          '**Usage :** `!embed cloner #salon | ID_message | #salon_destination`',
+          '`!embed cloner ici | ID_message | #salon_destination`',
+          '',
+          '**Exemple :** `!embed cloner #annonces | 1234567890123456789 | #général`',
+          '',
+          '⚠️ Je ne peux cloner que mes propres embeds.',
+        ].join('\n'));
+
+        const parts   = args.split('|').map(p => p.trim());
+        const srcArg  = parts[0];
+        const msgId   = parts[1]?.replace(/\D/g, '');
+        const dstArg  = parts[2];
+
+        if (!msgId || !/^\d{15,20}$/.test(msgId))
+          return message.reply('❌ ID de message invalide (identifiant numérique requis).');
+        if (!dstArg)
+          return message.reply('❌ Salon de destination manquant.');
+
+        const src = resolveTarget(message, srcArg);
+        if (!src) return message.reply('❌ Salon source introuvable.');
+
+        // Résoudre destination : mention ou ID
+        const dstId = dstArg.replace(/\D/g, '');
+        const dst   = message.guild.channels.cache.get(dstId) || null;
+        if (!dst) return message.reply('❌ Salon de destination introuvable. Mentionne-le avec `#`.');
+
+        let original;
+        try { original = await src.messages.fetch(msgId); }
+        catch { return message.reply(`❌ Message \`${msgId}\` introuvable dans <#${src.id}>.`); }
+
+        if (original.author.id !== client.user.id)
+          return message.reply('⛔ Je ne peux cloner que **mes propres messages**.');
+        if (!original.embeds.length)
+          return message.reply('⚠️ Ce message ne contient pas d\'embed à cloner.');
+
+        // Reconstituer l'embed (EmbedBuilder n'accepte pas directement un Embed brut)
+        const src_emb = original.embeds[0];
+        const cloned  = new EmbedBuilder()
+          .setColor(src_emb.color ?? 0x5865F2)
+          .setFooter({ text: `Cloné par ${message.author.tag} depuis #${src.name}` })
+          .setTimestamp();
+
+        if (src_emb.title)       cloned.setTitle(src_emb.title);
+        if (src_emb.description) cloned.setDescription(src_emb.description);
+        if (src_emb.image?.url)  cloned.setImage(src_emb.image.url);
+        if (src_emb.thumbnail?.url) cloned.setThumbnail(src_emb.thumbnail.url);
+        if (src_emb.url)         cloned.setURL(src_emb.url);
+        if (src_emb.fields?.length) cloned.addFields(src_emb.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline })));
+
+        // Conserver les composants (boutons) si présents
+        const components = original.components.length ? original.components : [];
+
+        const sent = await dst.send({ embeds: [cloned], components });
+        await message.delete().catch(() => {});
+
+        message.channel.send(
+          `✅ Embed cloné dans <#${dst.id}>. [Voir le message](${sent.url})`
+        ).then(m => setTimeout(() => m.delete().catch(() => {}), 8000));
+
+        await staffLog(client, {
+          action: 'embed cloner',
+          details: `**Source :** <#${src.id}> \`${msgId}\`\n**Destination :** <#${dst.id}>\n**Titre :** ${src_emb.title || '—'}`,
           author: message.author.tag,
         });
         return;
