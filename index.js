@@ -18,6 +18,7 @@ const { startAutomod } = require('./utils/automod');
 const { startAntispam } = require('./utils/antispam');
 const { startReactionRoles } = require('./utils/reactionRoles');
 const { startSondageManager } = require('./utils/sondageManager');
+const { startSondageProgManager } = require('./utils/sondageProgManager');
 const { startBirthdayManager } = require('./utils/birthdayManager');
 const { startLevelManager } = require('./utils/levelManager');
 const { startDashboardManager } = require('./utils/dashboardManager');
