@@ -4,6 +4,9 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
