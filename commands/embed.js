@@ -1,6 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { staffLog } = require('../utils/staffLog');
 const { logStaffAction } = require('../utils/staffLog');
+const ScheduledEmbed = require('../database/models/ScheduledEmbed');
 
 // ─── Couleurs ────────────────────────────────────────────────────────────────
 const COLOR_MAP = {
@@ -78,6 +79,11 @@ const HELP_TEXT = [
   '`!embed modifier #salon | ID | Nouveau titre | Nouvelle description | couleur`',
   '`!embed supprimer #salon | ID_message`',
   '`!embed cloner #salon | ID_message | #salon_destination` — dupliquer un embed vers un autre salon',
+  '',
+  '**🕐 Planification :**',
+  '`!embed programmer #salon | Titre | Description | couleur | YYYY-MM-DD HH:MM`',
+  '`!embed programmes` — voir les embeds en attente de publication',
+  '`!embed déprogrammer <id>` — annuler un embed planifié',
   '',
   '**🎨 Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
 ].join('\n');
