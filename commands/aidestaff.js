@@ -271,9 +271,14 @@ function buildButtonRows() {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('staff_search')
-        .setLabel('Rechercher une commande staff')
+        .setLabel('Rechercher')
         .setEmoji('🔍')
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('staff_history')
+        .setLabel('Historique')
+        .setEmoji('📋')
+        .setStyle(ButtonStyle.Secondary)
     )
   );
   return rows;

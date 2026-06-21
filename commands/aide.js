@@ -224,9 +224,14 @@ function buildButtonRows() {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('aide_search')
-        .setLabel('Rechercher une commande')
+        .setLabel('Rechercher')
         .setEmoji('🔍')
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('aide_history')
+        .setLabel('Historique')
+        .setEmoji('📋')
+        .setStyle(ButtonStyle.Secondary)
     )
   );
   return rows;
@@ -470,6 +475,34 @@ module.exports = (client) => {
   // Interactions : boutons + menus déroulants
   client.on('interactionCreate', async interaction => {
     try {
+      // ── Bouton historique → embed éphémère ───────────────────────────────
+      if (interaction.isButton() && interaction.customId === 'aide_history') {
+        const doc = await SearchHistory.findOne({
+          userId: interaction.user.id,
+          guildId: interaction.guildId,
+          type: 'aide',
+        });
+        const terms = doc?.terms?.slice().reverse() ?? [];
+
+        const embed = new EmbedBuilder()
+          .setColor(0xFF8C00)
+          .setAuthor({ name: `📋 Historique · ${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL() })
+          .setFooter({ text: 'SUPREMYX Esports · !aide pour le menu complet' })
+          .setTimestamp();
+
+        if (!terms.length) {
+          embed.setDescription('Aucune recherche enregistrée.\nClique sur 🔍 **Rechercher** pour commencer.');
+        } else {
+          embed.setDescription('Tes **5 dernières recherches** (la plus récente en premier) :');
+          terms.forEach((t, i) => {
+            const ts = Math.floor(new Date(t.at).getTime() / 1000);
+            embed.addFields({ name: `#${i + 1} — ${t.term}`, value: `<t:${ts}:R>`, inline: true });
+          });
+        }
+
+        return interaction.reply({ ephemeral: true, embeds: [embed] });
+      }
+
       // ── Bouton recherche → ouvre la modal ────────────────────────────────
       if (interaction.isButton() && interaction.customId === 'aide_search') {
         return interaction.showModal(buildSearchModal('aide_modal_search'));
