@@ -265,6 +265,15 @@ function buildButtonRows() {
     );
     rows.push(row);
   }
+  rows.push(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('staff_search')
+        .setLabel('Rechercher une commande staff')
+        .setEmoji('🔍')
+        .setStyle(ButtonStyle.Primary)
+    )
+  );
   return rows;
 }
 
@@ -412,6 +421,70 @@ module.exports = (client) => {
   // Interactions : boutons + menus déroulants
   client.on('interactionCreate', async interaction => {
     try {
+      // ── Bouton recherche → ouvre la modal ────────────────────────────────
+      if (interaction.isButton() && interaction.customId === 'staff_search') {
+        if (!interaction.member?.permissions.has('Administrator')) {
+          return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
+        }
+        return interaction.showModal(
+          new ModalBuilder()
+            .setCustomId('staff_modal_search')
+            .setTitle('🔍 Rechercher une commande staff')
+            .addComponents(
+              new ActionRowBuilder().addComponents(
+                new TextInputBuilder()
+                  .setCustomId('search_term')
+                  .setLabel('Mot-clé (ex : inscription, sondage…)')
+                  .setStyle(TextInputStyle.Short)
+                  .setPlaceholder('Tape un mot-clé et appuie sur Envoyer')
+                  .setMinLength(2)
+                  .setMaxLength(50)
+                  .setRequired(true)
+              )
+            )
+        );
+      }
+
+      // ── Soumission de la modal de recherche ───────────────────────────────
+      if (interaction.isModalSubmit() && interaction.customId === 'staff_modal_search') {
+        if (!interaction.member?.permissions.has('Administrator')) {
+          return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
+        }
+        const term = interaction.fields.getTextInputValue('search_term').trim().toLowerCase();
+
+        const results = [];
+        for (const cat of STAFF_CATEGORIES) {
+          const matches = cat.commands.filter(cmd =>
+            cmd.label.toLowerCase().includes(term) ||
+            cmd.description.toLowerCase().includes(term) ||
+            cmd.subs.some(s => s.toLowerCase().includes(term))
+          );
+          if (matches.length) results.push({ cat, matches });
+        }
+        const total = results.reduce((n, r) => n + r.matches.length, 0);
+
+        if (!total) {
+          return interaction.reply({
+            ephemeral: true,
+            content: `🔍 Aucune commande staff trouvée pour **"${term}"**.\nEssaie un autre mot-clé ou consulte les catégories via \`!aidestaff\`.`,
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setAuthor({ name: `🔍 Résultats pour "${term}" · Staff`, iconURL: client.user.displayAvatarURL() })
+          .setDescription(`**${total}** résultat(s) dans ${results.length} catégorie(s) · 🔐 Staff uniquement`)
+          .setFooter({ text: 'SUPREMYX Esports · < > obligatoire · [ ] optionnel · !aidestaff pour le menu complet' })
+          .setTimestamp();
+
+        for (const { cat, matches } of results) {
+          const value = matches.map(cmd => `\`${cmd.label}\` — ${cmd.description}`).join('\n');
+          embed.addFields({ name: `${cat.emoji} ${cat.label}`, value: value.slice(0, 1024), inline: false });
+        }
+
+        return interaction.reply({ ephemeral: true, embeds: [embed] });
+      }
+
       // ── Clic bouton catégorie ────────────────────────────────────────────
       if (interaction.isButton() && interaction.customId.startsWith('staff_btn_')) {
         if (!interaction.member?.permissions.has('Administrator')) {
