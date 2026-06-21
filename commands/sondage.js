@@ -97,7 +97,8 @@ module.exports = (client) => {
         '**Gestion :**\n' +
         '`!sondage prog liste` — voir les sondages programmés\n' +
         '`!sondage prog annuler <n°>` — annuler un sondage programmé\n' +
-        '`!sondage historique` — afficher les sondages clôturés avec leurs résultats'
+        '`!sondage historique` — afficher les sondages clôturés avec leurs résultats\n' +
+        '`!sondage stats` — statistiques globales des sondages du serveur'
       );
     }
 
