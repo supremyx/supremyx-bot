@@ -96,7 +96,11 @@ const STAFF_CATEGORIES = [
       { label: '!annonce <message>',          description: 'Envoyer une annonce dans le salon configuré',  subs: [] },
       { label: '!dire <message>',             description: 'Faire parler le bot dans le salon courant',    subs: [] },
       { label: '!vote <question>',            description: 'Sondage rapide par réactions',                 subs: [] },
-      { label: '!sondage',                    description: 'Sondage avancé (multiples options, timed)',    subs: [] },
+      { label: '!sondage <durée> <question> | <opt1> | <opt2>', description: 'Sondage immédiat avec options multiples et résultats auto', subs: [
+        'programmer <question> | <opt1> | ... | <durée> | <JJ/MM HH:MM> — Programmer un sondage à une heure précise',
+        'prog liste — Voir tous les sondages programmés en attente',
+        'prog annuler <n°> — Annuler un sondage programmé',
+      ] },
       { label: '!concours <durée> <prix>',    description: 'Lancer un giveaway',                          subs: [] },
       { label: '!diffuser <message>',         description: 'Diffuser dans plusieurs salons',               subs: ['ajouter #salon — Ajouter salon', 'retirer #salon — Retirer salon', 'liste — Voir salons', 'aperçu — Prévisualiser'] },
       { label: '!setmessagejour <texte>',     description: 'Définir le message du jour automatique',      subs: [] },
