@@ -9,6 +9,7 @@ const {
   TextInputStyle,
 } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
+const { findSimilar } = require('../utils/fuzzySearch');
 
 // ─── Données par catégorie ────────────────────────────────────────────────────
 const STAFF_CATEGORIES = [
