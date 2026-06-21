@@ -62,7 +62,10 @@ async function closeSondage(client, sondageOrId) {
       .setTimestamp();
 
     await msg.edit({ embeds: [resultEmbed] });
-    sondage.closed = true;
+    sondage.closed     = true;
+    sondage.results    = results;
+    sondage.totalVotes = total;
+    sondage.winner     = winner.count > 0 ? winner.option : '';
     await sondage.save();
   } catch {
     // Silent fail
@@ -93,13 +96,89 @@ module.exports = (client) => {
         'Ex : `!sondage programmer Tournoi samedi ? | Oui | Non | 1h | 25/06 18:00`\n\n' +
         '**Gestion :**\n' +
         '`!sondage prog liste` — voir les sondages programmés\n' +
-        '`!sondage prog annuler <n°>` — annuler un sondage programmé'
+        '`!sondage prog annuler <n°>` — annuler un sondage programmé\n' +
+        '`!sondage historique` — afficher les sondages clôturés avec leurs résultats'
       );
     }
 
     if (!isStaff) return message.reply('❌ Staff uniquement.');
 
     const sub = args.split(' ')[0].toLowerCase();
+
+    // ══ !sondage historique ════════════════════════════════════════════════════
+    if (sub === 'historique') {
+      const PAGE_SIZE = 3;
+
+      const closed = await Sondage.find({ guildId: message.guild.id, closed: true })
+        .sort({ updatedAt: -1 });
+
+      if (!closed.length) {
+        return message.reply('📭 Aucun sondage clôturé pour ce serveur.');
+      }
+
+      const totalPages = Math.ceil(closed.length / PAGE_SIZE);
+      let page = 0;
+
+      function buildEmbed(p) {
+        const slice = closed.slice(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE);
+        const desc = slice.map((s, idx) => {
+          const num    = p * PAGE_SIZE + idx + 1;
+          const date   = s.updatedAt
+            ? s.updatedAt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '—';
+          const winner = s.winner || 'Aucun vote';
+          const total  = s.totalVotes ?? 0;
+
+          let detail = '';
+          if (s.results && s.results.length) {
+            detail = '\n' + s.results.map((r, i) => {
+              const bar = total > 0 ? Math.round((r.count / total) * 10) : 0;
+              const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
+              const crown = i === 0 && r.count > 0 ? '🏆 ' : `${i + 1}. `;
+              return `${crown}**${r.option}** — ${r.count} vote(s) (${pct}%)\n${'█'.repeat(bar)}${'░'.repeat(10 - bar)}`;
+            }).join('\n');
+          }
+
+          return (
+            `**${num}. ${s.question}**\n` +
+            `📅 Clôturé le ${date} · 🗳️ ${total} vote(s) · 🏆 ${winner}` +
+            detail
+          );
+        }).join('\n\n─────────────────────\n\n');
+
+        return new EmbedBuilder()
+          .setTitle('📜 Historique des sondages clôturés')
+          .setColor(0x5865F2)
+          .setDescription(desc)
+          .setFooter({ text: `Page ${p + 1}/${totalPages} · ${closed.length} sondage(s) au total` });
+      }
+
+      const sent = await message.channel.send({ embeds: [buildEmbed(0)] });
+
+      if (totalPages === 1) return;
+
+      await sent.react('◀️').catch(() => {});
+      await sent.react('▶️').catch(() => {});
+
+      const filter = (reaction, user) =>
+        ['◀️', '▶️'].includes(reaction.emoji.name) && user.id === message.author.id;
+
+      const collector = sent.createReactionCollector({ filter, time: 120_000 });
+
+      collector.on('collect', async (reaction, user) => {
+        reaction.users.remove(user.id).catch(() => {});
+        if (reaction.emoji.name === '▶️' && page < totalPages - 1) page++;
+        else if (reaction.emoji.name === '◀️' && page > 0) page--;
+        else return;
+        await sent.edit({ embeds: [buildEmbed(page)] }).catch(() => {});
+      });
+
+      collector.on('end', () => {
+        sent.reactions.removeAll().catch(() => {});
+      });
+
+      return;
+    }
 
     // ══ !sondage prog liste ════════════════════════════════════════════════════
     if (sub === 'prog') {
