@@ -486,6 +486,37 @@ module.exports = (client) => {
   // Interactions : boutons + menus déroulants
   client.on('interactionCreate', async interaction => {
     try {
+      // ── Bouton historique → embed éphémère ───────────────────────────────
+      if (interaction.isButton() && interaction.customId === 'staff_history') {
+        if (!interaction.member?.permissions.has('Administrator')) {
+          return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
+        }
+        const doc = await SearchHistory.findOne({
+          userId: interaction.user.id,
+          guildId: interaction.guildId,
+          type: 'staff',
+        });
+        const terms = doc?.terms?.slice().reverse() ?? [];
+
+        const embed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setAuthor({ name: `📋 Historique staff · ${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL() })
+          .setFooter({ text: 'SUPREMYX Esports · Staff · !aidestaff pour le menu complet' })
+          .setTimestamp();
+
+        if (!terms.length) {
+          embed.setDescription('Aucune recherche staff enregistrée.\nClique sur 🔍 **Rechercher** pour commencer.');
+        } else {
+          embed.setDescription('Tes **5 dernières recherches staff** (la plus récente en premier) :');
+          terms.forEach((t, i) => {
+            const ts = Math.floor(new Date(t.at).getTime() / 1000);
+            embed.addFields({ name: `#${i + 1} — ${t.term}`, value: `<t:${ts}:R>`, inline: true });
+          });
+        }
+
+        return interaction.reply({ ephemeral: true, embeds: [embed] });
+      }
+
       // ── Bouton recherche → ouvre la modal ────────────────────────────────
       if (interaction.isButton() && interaction.customId === 'staff_search') {
         if (!interaction.member?.permissions.has('Administrator')) {
