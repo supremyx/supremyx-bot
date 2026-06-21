@@ -388,6 +388,13 @@ module.exports = (client) => {
       const total = results.reduce((n, r) => n + r.matches.length, 0);
 
       if (!total) {
+        const suggestions = findSimilar(term, CATEGORIES);
+        if (suggestions.length) {
+          const suggestText = suggestions
+            .map(({ cat, cmd }) => `• \`${cmd.label}\` *(${cat.emoji} ${cat.label})* — ${cmd.description}`)
+            .join('\n');
+          return message.reply(`🔍 Aucun résultat exact pour \`${term}\`.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`);
+        }
         return message.reply(`🔍 Aucune commande trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aide\` pour naviguer par catégorie.`);
       }
 
@@ -425,6 +432,16 @@ module.exports = (client) => {
         const term = interaction.fields.getTextInputValue('search_term').trim().toLowerCase();
         const embed = buildSearchResultEmbed(term, CATEGORIES, client, false);
         if (!embed) {
+          const suggestions = findSimilar(term, CATEGORIES);
+          if (suggestions.length) {
+            const suggestText = suggestions
+              .map(({ cat, cmd }) => `• \`${cmd.label}\` *(${cat.emoji} ${cat.label})* — ${cmd.description}`)
+              .join('\n');
+            return interaction.reply({
+              ephemeral: true,
+              content: `🔍 Aucun résultat exact pour **"${term}"**.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`,
+            });
+          }
           return interaction.reply({
             ephemeral: true,
             content: `🔍 Aucune commande trouvée pour **"${term}"**.\nEssaie un autre mot-clé ou consulte les catégories via \`!aide\`.`,
