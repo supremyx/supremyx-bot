@@ -999,6 +999,59 @@ router.get('/dispos', publicLimiter, async (req, res) => {
   }
 });
 
+// ── GET /api/sondages ─────────────────────────────────────────────────────────
+router.get('/sondages', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = guildId ? { guildId } : {};
+
+    const [all, closedAll, openCount] = await Promise.all([
+      Sondage.countDocuments(filter),
+      Sondage.find({ ...filter, closed: true }).sort({ updatedAt: -1 }).lean(),
+      Sondage.countDocuments({ ...filter, closed: false }),
+    ]);
+
+    const closedCount = closedAll.length;
+    const avgVotes = closedCount > 0
+      ? parseFloat((closedAll.reduce((s, x) => s + (x.totalVotes || 0), 0) / closedCount).toFixed(1))
+      : 0;
+
+    const mostPopular = closedAll.reduce((best, s) =>
+      (!best || (s.totalVotes || 0) > (best.totalVotes || 0)) ? s : best, null);
+
+    let topOption = null;
+    let topCount = 0;
+    for (const s of closedAll) {
+      for (const r of (s.results || [])) {
+        if (r.count > topCount) { topCount = r.count; topOption = { label: r.option, question: s.question, count: r.count }; }
+      }
+    }
+
+    const winnerFreq = {};
+    for (const s of closedAll) {
+      if (s.winner) winnerFreq[s.winner] = (winnerFreq[s.winner] || 0) + 1;
+    }
+    const topWinnerEntry = Object.entries(winnerFreq).sort((a, b) => b[1] - a[1])[0];
+    const topWinner = topWinnerEntry ? { label: topWinnerEntry[0], wins: topWinnerEntry[1] } : null;
+
+    res.json({
+      stats: {
+        total: all,
+        closed: closedCount,
+        open: openCount,
+        closeRate: all > 0 ? Math.round((closedCount / all) * 100) : 0,
+        avgVotes,
+        mostPopular: mostPopular ? { question: mostPopular.question, totalVotes: mostPopular.totalVotes || 0 } : null,
+        topOption,
+        topWinner,
+      },
+      history: closedAll,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
