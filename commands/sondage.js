@@ -180,6 +180,87 @@ module.exports = (client) => {
       return;
     }
 
+    // ══ !sondage stats ════════════════════════════════════════════════════════
+    if (sub === 'stats') {
+      const guildId = message.guild.id;
+
+      const [totalCount, closedAll, openAll] = await Promise.all([
+        Sondage.countDocuments({ guildId }),
+        Sondage.find({ guildId, closed: true }),
+        Sondage.find({ guildId, closed: false })
+      ]);
+
+      const closedCount = closedAll.length;
+      const openCount   = openAll.length;
+
+      // ── Participation moyenne ─────────────────────────────────────────────
+      const avgVotes = closedCount > 0
+        ? (closedAll.reduce((s, s2) => s + (s2.totalVotes || 0), 0) / closedCount).toFixed(1)
+        : '—';
+
+      // ── Sondage le plus populaire ─────────────────────────────────────────
+      const mostPopular = closedAll.reduce((best, s) => {
+        return (!best || (s.totalVotes || 0) > (best.totalVotes || 0)) ? s : best;
+      }, null);
+
+      // ── Option la plus votée toutes questions confondues ──────────────────
+      let topOption = null;
+      let topCount  = 0;
+      for (const s of closedAll) {
+        for (const r of (s.results || [])) {
+          if (r.count > topCount) { topCount = r.count; topOption = { label: r.option, question: s.question }; }
+        }
+      }
+
+      // ── Taux de clôture ───────────────────────────────────────────────────
+      const closeRate = totalCount > 0
+        ? Math.round((closedCount / totalCount) * 100)
+        : 0;
+
+      // ── Option la plus choisie comme gagnante ─────────────────────────────
+      const winnerFreq = {};
+      for (const s of closedAll) {
+        if (s.winner) winnerFreq[s.winner] = (winnerFreq[s.winner] || 0) + 1;
+      }
+      const topWinner = Object.entries(winnerFreq).sort((a, b) => b[1] - a[1])[0];
+
+      const embed = new EmbedBuilder()
+        .setTitle('📊 Statistiques des sondages')
+        .setColor(0xFEE75C)
+        .addFields(
+          { name: '📋 Total créés',      value: `${totalCount}`,  inline: true },
+          { name: '✅ Clôturés',         value: `${closedCount}`, inline: true },
+          { name: '🟢 En cours',         value: `${openCount}`,   inline: true },
+          { name: '📈 Taux de clôture',  value: `${closeRate}%`,  inline: true },
+          { name: '🗳️ Votes moy./sondage', value: `${avgVotes}`, inline: true },
+          {
+            name: '🏆 Sondage le + populaire',
+            value: mostPopular
+              ? `"${mostPopular.question}" — **${mostPopular.totalVotes} vote(s)**`
+              : '—',
+            inline: false
+          },
+          {
+            name: '🔥 Option la + votée (tous sondages)',
+            value: topOption
+              ? `"${topOption.label}" (${topCount} vote(s)) sur *${topOption.question}*`
+              : '—',
+            inline: false
+          },
+          {
+            name: '🥇 Réponse gagnante la + fréquente',
+            value: topWinner
+              ? `"${topWinner[0]}" — gagnante **${topWinner[1]} fois**`
+              : '—',
+            inline: false
+          }
+        )
+        .setFooter({ text: `Serveur : ${message.guild.name}` })
+        .setTimestamp();
+
+      return message.channel.send({ embeds: [embed] });
+    }
+
     // ══ !sondage prog liste ════════════════════════════════════════════════════
     if (sub === 'prog') {
       const subArgs = args.slice(4).trim();
