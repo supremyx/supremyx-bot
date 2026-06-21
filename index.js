@@ -126,7 +126,7 @@ require('./commands/botstats')(client);
 require('./utils/commandTracker')(client);
 
 // --- Annonces ---
-require('./commands/lien')(client);
+require('./commands/embed')(client);
 require('./commands/planifier')(client);
 require('./commands/announce')(client);
 require('./commands/say')(client);
@@ -240,8 +240,7 @@ require('./commands/afk')(client);
 // --- Anniversaires ---
 require('./commands/birthday')(client);
 
-// --- Embed builder ---
-require('./commands/embedbuilder')(client);
+// --- Embed builder (fusionné dans embed.js) ---
 
 // --- Welcome & Autorole ---
 require('./commands/welcome')(client);

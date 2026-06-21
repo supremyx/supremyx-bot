@@ -1,0 +1,406 @@
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { staffLog } = require('../utils/staffLog');
+const { logStaffAction } = require('../utils/staffLog');
+
+// ─── Couleurs ────────────────────────────────────────────────────────────────
+const COLOR_MAP = {
+  rouge: 0xED4245, rougepur: 0xFF0000, vert: 0x57F287, bleu: 0x5865F2,
+  bleuciel: 0x87CEEB, jaune: 0xFEE75C, orange: 0xE67E22, violet: 0x9B59B6,
+  blanc: 0xFFFFFF, noir: 0x2C2F33, or: 0xF1C40F, cyan: 0x1ABC9C,
+  rose: 0xEB459E, gris: 0x808080,
+};
+
+function parseColor(raw = '') {
+  const key = raw.trim().toLowerCase();
+  if (COLOR_MAP[key] !== undefined) return COLOR_MAP[key];
+  if (key.startsWith('#')) {
+    const parsed = parseInt(key.slice(1), 16);
+    if (!isNaN(parsed)) return parsed;
+  }
+  return 0x5865F2;
+}
+
+function parseButtons(raw = '') {
+  return raw.split('|').map(s => s.trim()).filter(Boolean).map(part => {
+    const sep = part.indexOf('>>');
+    if (sep === -1) return null;
+    const label = part.slice(0, sep).trim();
+    const url   = part.slice(sep + 2).trim();
+    if (!label || !url.startsWith('http')) return null;
+    return { label, url };
+  }).filter(Boolean).slice(0, 5);
+}
+
+function resolveTarget(message, channelArg) {
+  if (channelArg.toLowerCase() === 'ici') return message.channel;
+  return message.mentions.channels.first() || message.guild.channels.cache.get(channelArg.replace(/\D/g, '')) || null;
+}
+
+// ─── Prévisualisation avec ✅/❌ ─────────────────────────────────────────────
+async function awaitConfirmation(message, previewEmbed, components = null) {
+  const payload = { embeds: [previewEmbed] };
+  if (components) payload.components = components;
+  const preview = await message.channel.send(payload);
+  await preview.react('✅').catch(() => {});
+  await preview.react('❌').catch(() => {});
+  const notice = await message.channel.send('📋 **Prévisualisation** — Réagis ✅ pour publier ou ❌ pour annuler *(60s)*');
+  let confirmed = false;
+  try {
+    const collected = await preview.awaitReactions({
+      filter: (r, u) => ['✅', '❌'].includes(r.emoji.name) && u.id === message.author.id,
+      max: 1, time: 60_000, errors: ['time'],
+    });
+    confirmed = collected.first()?.emoji?.name === '✅';
+  } catch { confirmed = false; }
+  await preview.delete().catch(() => {});
+  await notice.delete().catch(() => {});
+  return confirmed;
+}
+
+// ─── Texte d'aide ────────────────────────────────────────────────────────────
+const HELP_TEXT = [
+  '**Commandes `!embed` :**',
+  '',
+  '**📤 Publier un embed dans un salon :**',
+  '`!embed envoyer #salon | Titre | Description | couleur`',
+  '`!embed envoyer ici | Titre | Description | couleur`',
+  '`!embed envoyer preview | #salon | Titre | Description | couleur` — prévisualiser avant publication',
+  '',
+  '**🔘 Embed avec boutons URL :**',
+  '`!embed boutons #salon | Titre | Description | Texte >> https://... | couleur`',
+  '`!embed boutons preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+  '',
+  '**⚙️ Embed avancé (dans le salon courant) :**',
+  '`!embed avancé Titre | Description | couleur | image_url | pied de page`',
+  '',
+  '**📋 Gérer les embeds existants :**',
+  '`!embed liste [#salon]` — lister les embeds du bot dans un salon',
+  '`!embed modifier #salon | ID | Nouveau titre | Nouvelle description | couleur`',
+  '`!embed supprimer #salon | ID_message`',
+  '',
+  '**🎨 Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
+].join('\n');
+
+module.exports = (client) => {
+
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (!message.member) return;
+
+      const content = message.content.trim();
+      if (content !== '!embed' && !content.startsWith('!embed ')) return;
+
+      if (!message.member.permissions.has('Administrator'))
+        return message.reply('⛔ Staff uniquement.');
+
+      const rest = content.slice('!embed'.length).trim();
+      const spaceIdx = rest.indexOf(' ');
+      const sub = (spaceIdx === -1 ? rest : rest.slice(0, spaceIdx)).toLowerCase();
+      const args = spaceIdx === -1 ? '' : rest.slice(spaceIdx + 1).trim();
+
+      // ── Aide ───────────────────────────────────────────────────────────────
+      if (!sub) return message.reply(HELP_TEXT);
+
+      // ── !embed envoyer ─────────────────────────────────────────────────────
+      if (sub === 'envoyer') {
+        if (!args) return message.reply(
+          '**Usage :** `!embed envoyer [preview] #salon | Titre | Description | couleur`\n' +
+          '`!embed envoyer ici | Titre | Description | couleur`'
+        );
+
+        const parts = args.split('|').map(p => p.trim());
+        const isPreview  = parts[0].toLowerCase() === 'preview';
+        const channelArg = isPreview ? parts[1] : parts[0];
+        const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
+        const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
+        const colorRaw   = isPreview ? (parts[4] || 'bleu') : (parts[3] || 'bleu');
+
+        if (!desc) return message.reply('❌ La description est requise.');
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
+
+        const embed = new EmbedBuilder()
+          .setColor(parseColor(colorRaw))
+          .setDescription(desc)
+          .setFooter({ text: `Posté par ${message.author.tag}` })
+          .setTimestamp();
+        if (title) embed.setTitle(title);
+
+        if (isPreview) {
+          const confirmed = await awaitConfirmation(message, embed);
+          if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+        }
+
+        await target.send({ embeds: [embed] });
+        await message.delete().catch(() => {});
+        if (target.id !== message.channel.id)
+          message.channel.send(`✅ Embed publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+        await staffLog(client, {
+          action: 'embed envoyer',
+          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Contenu :** ${desc.slice(0, 200)}${isPreview ? '\n*(prévisualisé)*' : ''}`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed boutons ─────────────────────────────────────────────────────
+      if (sub === 'boutons') {
+        if (!args) return message.reply(
+          '**Usage :** `!embed boutons [preview] #salon | Titre | Description | Texte >> https://... | couleur`\n' +
+          'Maximum **5 boutons**. URLs commençant par `https://`.'
+        );
+
+        const parts = args.split('|').map(p => p.trim());
+        const isPreview  = parts[0].toLowerCase() === 'preview';
+        const channelArg = isPreview ? parts[1] : parts[0];
+        const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
+        const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
+        const extras     = isPreview ? parts.slice(4) : parts.slice(3);
+
+        const colorRaw = extras.find(p => {
+          const k = p.trim().toLowerCase();
+          return (COLOR_MAP[k] !== undefined || k.startsWith('#')) && !p.includes('>>');
+        }) || 'bleu';
+        const buttonsRaw = extras.filter(p => p.includes('>>')).join('|');
+        const buttons    = parseButtons(buttonsRaw);
+
+        if (!desc) return message.reply('❌ La description est requise.');
+        if (!buttons.length) return message.reply('❌ Aucun bouton valide. Format : `Texte >> https://url.com`');
+
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
+
+        const embed = new EmbedBuilder()
+          .setColor(parseColor(colorRaw))
+          .setDescription(desc)
+          .setFooter({ text: `Posté par ${message.author.tag}` })
+          .setTimestamp();
+        if (title) embed.setTitle(title);
+
+        const row = new ActionRowBuilder().addComponents(
+          buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
+        );
+
+        if (isPreview) {
+          const confirmed = await awaitConfirmation(message, embed, [row]);
+          if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+        }
+
+        await target.send({ embeds: [embed], components: [row] });
+        await message.delete().catch(() => {});
+        if (target.id !== message.channel.id)
+          message.channel.send(`✅ Embed avec boutons publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+        await staffLog(client, {
+          action: 'embed boutons',
+          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}${isPreview ? '\n*(prévisualisé)*' : ''}`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed avancé ──────────────────────────────────────────────────────
+      if (sub === 'avancé' || sub === 'avance') {
+        if (!args) return message.reply(
+          '**Usage :** `!embed avancé Titre | Description | couleur | image_url | pied de page`\n\n' +
+          '**Exemples :**\n' +
+          '`!embed avancé Bienvenue | Rejoins notre serveur !`\n' +
+          '`!embed avancé Règles | Sois respectueux. | rouge`\n' +
+          '`!embed avancé Annonce | Texte | #5865F2 | https://... | Pied de page`\n\n' +
+          '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `blanc` `noir` `or` `cyan` ou `#HEX`'
+        );
+
+        const parts = args.split('|').map(p => p.trim());
+        const title    = parts[0] || '';
+        const desc     = parts[1] || '';
+        const colorRaw = parts[2] || 'or';
+        const imageUrl = parts[3] || '';
+        const footer   = parts[4] || '';
+
+        let color = COLOR_MAP[colorRaw.toLowerCase()] ?? 0xF1C40F;
+        if (colorRaw.startsWith('#')) {
+          const parsed = parseInt(colorRaw.slice(1), 16);
+          if (!isNaN(parsed)) color = parsed;
+        }
+
+        const embed = new EmbedBuilder().setColor(color).setTimestamp();
+        if (title)    embed.setTitle(title);
+        if (desc)     embed.setDescription(desc);
+        if (imageUrl) embed.setImage(imageUrl);
+        if (footer)   embed.setFooter({ text: footer });
+
+        await message.channel.send({ embeds: [embed] });
+        try { await message.delete(); } catch {}
+
+        logStaffAction(client, `📝 **Embed avancé posté** — "${title || 'Sans titre'}" | Par : ${message.author.tag}`);
+        return;
+      }
+
+      // ── !embed liste ───────────────────────────────────────────────────────
+      if (sub === 'liste') {
+        const channelArg = args;
+        const target = !channelArg
+          ? message.channel
+          : (message.mentions.channels.first() || message.guild.channels.cache.get(channelArg.replace(/\D/g, '')) || null);
+
+        if (!target) return message.reply('❌ Salon introuvable.');
+
+        let fetched;
+        try { fetched = await target.messages.fetch({ limit: 100 }); }
+        catch { return message.reply('❌ Impossible de lire les messages de ce salon (permissions manquantes ?).'); }
+
+        const botEmbeds = fetched
+          .filter(m => m.author.id === client.user.id && m.embeds.length > 0)
+          .first(10);
+
+        if (!botEmbeds.length)
+          return message.reply(`❌ Aucun embed du bot trouvé dans <#${target.id}> (sur les 100 derniers messages).`);
+
+        const lines = botEmbeds.map(m => {
+          const emb = m.embeds[0];
+          const t   = emb.title ? `**${emb.title}**` : '*(sans titre)*';
+          const d   = emb.description ? emb.description.slice(0, 80).replace(/\n/g, ' ') + (emb.description.length > 80 ? '…' : '') : '*(vide)*';
+          const btn = m.components.length > 0 ? ' 🔘' : '';
+          return `\`${m.id}\` — ${t}${btn}\n↳ ${d}\n↳ [Aller au message](${m.url})`;
+        });
+
+        const listEmbed = new EmbedBuilder()
+          .setTitle(`📋 Embeds du bot dans #${target.name}`)
+          .setDescription(lines.join('\n\n'))
+          .setColor(0x5865F2)
+          .setFooter({ text: `${botEmbeds.length} embed(s) · Utilise !embed modifier pour éditer` })
+          .setTimestamp();
+
+        return message.reply({ embeds: [listEmbed] });
+      }
+
+      // ── !embed modifier ────────────────────────────────────────────────────
+      if (sub === 'modifier') {
+        if (!args || !args.includes('|')) return message.reply([
+          '**Usage :** `!embed modifier #salon | ID_message | Nouveau titre | Nouvelle description | couleur`',
+          '`!embed modifier ici | ID_message | Titre | Description | couleur`',
+          '',
+          '**Exemple :**',
+          '`!embed modifier #annonces | 1234567890123456789 | 🏆 Tournoi MAJ | Inscriptions closes. | rouge`',
+          '',
+          '⚠️ Je ne peux modifier que mes propres messages.',
+        ].join('\n'));
+
+        const parts      = args.split('|').map(p => p.trim());
+        const channelArg = parts[0];
+        const msgId      = parts[1]?.replace(/\D/g, '');
+        const title      = parts[2] || '';
+        const desc       = parts[3] || '';
+        const colorRaw   = parts[4] || 'bleu';
+
+        if (!msgId) return message.reply('❌ ID de message invalide.');
+        if (!desc)  return message.reply('❌ La nouvelle description est requise.');
+
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable.');
+
+        let targetMsg;
+        try { targetMsg = await target.messages.fetch(msgId); }
+        catch { return message.reply('❌ Message introuvable. Vérifie l\'ID et le salon.'); }
+
+        if (targetMsg.author.id !== client.user.id)
+          return message.reply('❌ Je ne peux modifier que mes propres messages.');
+        if (!targetMsg.embeds.length)
+          return message.reply('❌ Ce message ne contient pas d\'embed.');
+
+        const updated = new EmbedBuilder()
+          .setColor(parseColor(colorRaw))
+          .setDescription(desc)
+          .setFooter({ text: `Modifié par ${message.author.tag}` })
+          .setTimestamp();
+        if (title) updated.setTitle(title);
+
+        await targetMsg.edit({ embeds: [updated], components: targetMsg.components });
+        await message.delete().catch(() => {});
+        message.channel.send(`✅ Embed modifié dans <#${target.id}>.`)
+          .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+        await staffLog(client, {
+          action: 'embed modifier',
+          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Nouveau contenu :** ${desc.slice(0, 200)}`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed supprimer ───────────────────────────────────────────────────
+      if (sub === 'supprimer') {
+        if (!args || !args.includes('|')) return message.reply([
+          '**Usage :** `!embed supprimer #salon | ID_message`',
+          '`!embed supprimer ici | ID_message`',
+          '',
+          '**Exemple :** `!embed supprimer #annonces | 1234567890123456789`',
+          '',
+          '⚠️ Je ne peux supprimer que mes propres messages.',
+        ].join('\n'));
+
+        const parts = args.split('|').map(p => p.trim());
+        const channelArg = parts[0];
+        const messageId  = parts[1];
+
+        if (!messageId || !/^\d{15,20}$/.test(messageId))
+          return message.reply('❌ ID de message invalide (identifiant numérique requis).');
+
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable.');
+
+        let targetMessage;
+        try { targetMessage = await target.messages.fetch(messageId); }
+        catch { return message.reply(`❌ Message \`${messageId}\` introuvable dans <#${target.id}>.`); }
+
+        if (targetMessage.author.id !== client.user.id)
+          return message.reply('⛔ Je ne peux supprimer que **mes propres messages**.');
+        if (!targetMessage.embeds.length)
+          return message.reply('⚠️ Ce message ne contient pas d\'embed.');
+
+        const prev   = targetMessage.embeds[0];
+        const ptitle = prev.title || '*(sans titre)*';
+        const pdesc  = prev.description
+          ? prev.description.slice(0, 120).replace(/\n/g, ' ') + (prev.description.length > 120 ? '…' : '')
+          : '*(vide)*';
+        const hasBtns = targetMessage.components.length > 0 ? ' 🔘 *(contient des boutons)*' : '';
+
+        const confirmEmbed = new EmbedBuilder()
+          .setTitle('🗑️ Confirmer la suppression')
+          .setColor(0xED4245)
+          .addFields(
+            { name: '📋 Titre',  value: ptitle, inline: true },
+            { name: '📍 Salon',  value: `<#${target.id}>`, inline: true },
+            { name: '🆔 ID',     value: `\`${messageId}\``, inline: true },
+            { name: '📝 Aperçu', value: pdesc + hasBtns },
+          )
+          .setFooter({ text: 'Réagis ✅ pour supprimer, ❌ pour annuler (30s)' });
+
+        const confirmed = await awaitConfirmation(message, confirmEmbed);
+        if (!confirmed)
+          return message.channel.send('❌ Suppression annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+        try { await targetMessage.delete(); }
+        catch { return message.reply('❌ Impossible de supprimer ce message (permissions manquantes ?).'); }
+
+        await message.reply(`✅ Message \`${messageId}\` supprimé dans <#${target.id}>.`);
+
+        await staffLog(client, {
+          action: 'embed supprimer',
+          details: `**Salon :** <#${target.id}>\n**ID :** \`${messageId}\`\n**Titre :** ${ptitle}`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── Sous-commande inconnue ─────────────────────────────────────────────
+      return message.reply(`❌ Sous-commande \`${sub}\` inconnue.\n\n${HELP_TEXT}`);
+
+    } catch (err) {
+      console.error('[embed]', err);
+    }
+  });
+};
