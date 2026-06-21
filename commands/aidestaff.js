@@ -10,6 +10,7 @@ const {
 } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const { findSimilar } = require('../utils/fuzzySearch');
+const SearchHistory = require('../database/models/SearchHistory');
 
 // ─── Données par catégorie ────────────────────────────────────────────────────
 const STAFF_CATEGORIES = [
@@ -322,6 +323,15 @@ function buildCommandEmbed(cat, cmdIdx) {
   return embed;
 }
 
+// ─── Persistance historique de recherche ─────────────────────────────────────
+async function saveSearchTerm(userId, guildId, term, type) {
+  await SearchHistory.findOneAndUpdate(
+    { userId, guildId, type },
+    { $push: { terms: { $each: [{ term, at: new Date() }], $slice: -5 } } },
+    { upsert: true, new: true }
+  );
+}
+
 // ─── Module ───────────────────────────────────────────────────────────────────
 module.exports = (client) => {
 
@@ -359,6 +369,46 @@ module.exports = (client) => {
     }
   });
 
+  // ─── !aidestaff historique ────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (!message.member) return;
+      if (message.author.bot) return;
+      if (message.content.trim() !== '!aidestaff historique') return;
+
+      if (!message.member.permissions.has('Administrator'))
+        return message.reply('⛔ Commande réservée au staff.');
+
+      const doc = await SearchHistory.findOne({
+        userId: message.author.id,
+        guildId: message.guild.id,
+        type: 'staff',
+      });
+      const terms = doc?.terms?.slice().reverse() ?? [];
+
+      const embed = new EmbedBuilder()
+        .setColor(0xED4245)
+        .setAuthor({ name: `📋 Historique staff · ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+        .setFooter({ text: 'SUPREMYX Esports · Staff · !aidestaff pour le menu complet' })
+        .setTimestamp();
+
+      if (!terms.length) {
+        embed.setDescription('Aucune recherche staff enregistrée.\nUtilise `!chercher staff <terme>` ou le bouton 🔍 dans `!aidestaff`.');
+      } else {
+        embed.setDescription('Tes **5 dernières recherches staff** (la plus récente en premier) :');
+        terms.forEach((t, i) => {
+          const ts = Math.floor(new Date(t.at).getTime() / 1000);
+          embed.addFields({ name: `#${i + 1} — ${t.term}`, value: `<t:${ts}:R>`, inline: true });
+        });
+      }
+
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[aidestaff historique]', err);
+    }
+  });
+
   // ─── !chercher staff <terme> ──────────────────────────────────────────────
   client.on('messageCreate', async message => {
     try {
@@ -381,6 +431,8 @@ module.exports = (client) => {
 
       const cd = checkCooldown(message.author.id, 'chercher_staff', 5);
       if (cd) return replyCooldown(message, cd, 'chercher staff');
+
+      saveSearchTerm(message.author.id, message.guild.id, term, 'staff').catch(() => {});
 
       const results = [];
       for (const cat of STAFF_CATEGORIES) {
@@ -459,6 +511,7 @@ module.exports = (client) => {
           return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
         }
         const term = interaction.fields.getTextInputValue('search_term').trim().toLowerCase();
+        saveSearchTerm(interaction.user.id, interaction.guildId, term, 'staff').catch(() => {});
 
         const results = [];
         for (const cat of STAFF_CATEGORIES) {

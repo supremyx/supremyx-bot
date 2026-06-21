@@ -10,6 +10,7 @@ const {
 } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const { findSimilar } = require('../utils/fuzzySearch');
+const SearchHistory = require('../database/models/SearchHistory');
 
 // ─── Données par catégorie ────────────────────────────────────────────────────
 const CATEGORIES = [
@@ -322,6 +323,15 @@ function buildCommandEmbed(cat, cmdIdx) {
   return embed;
 }
 
+// ─── Persistance historique de recherche ─────────────────────────────────────
+async function saveSearchTerm(userId, guildId, term, type) {
+  await SearchHistory.findOneAndUpdate(
+    { userId, guildId, type },
+    { $push: { terms: { $each: [{ term, at: new Date() }], $slice: -5 } } },
+    { upsert: true, new: true }
+  );
+}
+
 // ─── Module ───────────────────────────────────────────────────────────────────
 module.exports = (client) => {
 
@@ -355,6 +365,42 @@ module.exports = (client) => {
     }
   });
 
+  // ─── !aide historique ─────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (message.content.trim() !== '!aide historique') return;
+
+      const doc = await SearchHistory.findOne({
+        userId: message.author.id,
+        guildId: message.guild.id,
+        type: 'aide',
+      });
+      const terms = doc?.terms?.slice().reverse() ?? [];
+
+      const embed = new EmbedBuilder()
+        .setColor(0xFF8C00)
+        .setAuthor({ name: `📋 Historique · ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+        .setFooter({ text: 'SUPREMYX Esports · !aide pour le menu complet' })
+        .setTimestamp();
+
+      if (!terms.length) {
+        embed.setDescription('Aucune recherche enregistrée.\nUtilise `!chercher <terme>` ou le bouton 🔍 dans `!aide`.');
+      } else {
+        embed.setDescription('Tes **5 dernières recherches** (la plus récente en premier) :');
+        terms.forEach((t, i) => {
+          const ts = Math.floor(new Date(t.at).getTime() / 1000);
+          embed.addFields({ name: `#${i + 1} — ${t.term}`, value: `<t:${ts}:R>`, inline: true });
+        });
+      }
+
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[aide historique]', err);
+    }
+  });
+
   // ─── !chercher <terme> ────────────────────────────────────────────────────
   client.on('messageCreate', async message => {
     try {
@@ -374,6 +420,8 @@ module.exports = (client) => {
 
       const cd = checkCooldown(message.author.id, 'chercher', 5);
       if (cd) return replyCooldown(message, cd, 'chercher');
+
+      saveSearchTerm(message.author.id, message.guild.id, term, 'aide').catch(() => {});
 
       const results = [];
       for (const cat of CATEGORIES) {
@@ -430,6 +478,7 @@ module.exports = (client) => {
       // ── Soumission de la modal de recherche ───────────────────────────────
       if (interaction.isModalSubmit() && interaction.customId === 'aide_modal_search') {
         const term = interaction.fields.getTextInputValue('search_term').trim().toLowerCase();
+        saveSearchTerm(interaction.user.id, interaction.guildId, term, 'aide').catch(() => {});
         const embed = buildSearchResultEmbed(term, CATEGORIES, client, false);
         if (!embed) {
           const suggestions = findSimilar(term, CATEGORIES);
