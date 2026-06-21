@@ -817,6 +817,7 @@ const GuildEvent  = require('../database/models/GuildEvent');
 const Ticket      = require('../database/models/Ticket');
 const Birthday    = require('../database/models/Birthday');
 const Suggestion  = require('../database/models/Suggestion');
+const Sondage     = require('../database/models/Sondage');
 const PerfAlert   = require('../database/models/PerfAlert');
 const Pronostic   = require('../database/models/Pronostic');
 const Disponibilite = require('../database/models/Disponibilite');
