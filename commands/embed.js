@@ -473,6 +473,131 @@ module.exports = (client) => {
         return;
       }
 
+      // ── !embed programmer ──────────────────────────────────────────────────
+      if (sub === 'programmer') {
+        if (!args || !args.includes('|')) return message.reply([
+          '**Usage :** `!embed programmer #salon | Titre | Description | couleur | YYYY-MM-DD HH:MM`',
+          '',
+          '**Exemple :**',
+          '`!embed programmer #annonces | 🏆 Tournoi | Inscriptions ouvertes ! | or | 2025-07-14 20:00`',
+          '',
+          'L\'heure est en **heure d\'Abidjan** (UTC+0). Titre et couleur sont optionnels.',
+        ].join('\n'));
+
+        const parts      = args.split('|').map(p => p.trim());
+        const channelArg = parts[0];
+        const title      = parts[1] || '';
+        const desc       = parts[2] || '';
+        const colorRaw   = parts[3] || 'bleu';
+        const dateRaw    = parts[4] || '';
+
+        if (!desc)    return message.reply('❌ La description est requise.');
+        if (!dateRaw) return message.reply('❌ La date est requise. Format : `YYYY-MM-DD HH:MM`');
+
+        const match = dateRaw.trim().match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$/);
+        if (!match) return message.reply('❌ Format de date invalide. Utilise `YYYY-MM-DD HH:MM` (ex : `2025-07-14 20:00`)');
+
+        const [, y, mo, d, h, mi] = match;
+        const scheduledAt = new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi));
+        if (isNaN(scheduledAt.getTime())) return message.reply('❌ Date invalide.');
+        if (scheduledAt <= new Date()) return message.reply('❌ La date doit être dans le futur.');
+
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
+
+        const doc = await ScheduledEmbed.create({
+          guildId:     message.guild.id,
+          channelId:   target.id,
+          title,
+          description: desc,
+          color:       parseColor(colorRaw),
+          scheduledAt,
+          createdBy:   message.author.tag,
+        });
+
+        const shortId = doc._id.toString().slice(-6);
+        const ts      = Math.floor(scheduledAt.getTime() / 1000);
+
+        const confirm = new EmbedBuilder()
+          .setColor(0x57F287)
+          .setTitle('✅ Embed programmé')
+          .addFields(
+            { name: '📍 Salon',      value: `<#${target.id}>`,      inline: true },
+            { name: '🕐 Publication', value: `<t:${ts}:F> (<t:${ts}:R>)`, inline: true },
+            { name: '🆔 ID court',   value: `\`${shortId}\``,       inline: true },
+            { name: '📋 Titre',      value: title || '*(aucun)*',    inline: true },
+            { name: '📝 Aperçu',     value: desc.slice(0, 200),      inline: false },
+          )
+          .setFooter({ text: `!embed déprogrammer ${shortId} pour annuler` })
+          .setTimestamp();
+
+        await message.reply({ embeds: [confirm] });
+
+        await staffLog(client, {
+          action: 'embed programmer',
+          details: `**Salon :** <#${target.id}>\n**Date :** <t:${ts}:F>\n**Titre :** ${title || '—'}\n**ID :** \`${shortId}\``,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed programmes ──────────────────────────────────────────────────
+      if (sub === 'programmes') {
+        const pending = await ScheduledEmbed.find({
+          guildId: message.guild.id,
+          sent: false,
+          scheduledAt: { $gte: new Date() },
+        }).sort({ scheduledAt: 1 }).limit(10);
+
+        if (!pending.length) {
+          return message.reply('📭 Aucun embed programmé en attente sur ce serveur.');
+        }
+
+        const listEmbed = new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setTitle('🕐 Embeds programmés en attente')
+          .setDescription(pending.map((doc, i) => {
+            const ts      = Math.floor(doc.scheduledAt.getTime() / 1000);
+            const shortId = doc._id.toString().slice(-6);
+            const titre   = doc.title ? `**${doc.title}**` : '*(sans titre)*';
+            return `**${i + 1}.** \`${shortId}\` — ${titre} → <#${doc.channelId}>\n↳ <t:${ts}:F> (<t:${ts}:R>) · par ${doc.createdBy}`;
+          }).join('\n\n'))
+          .setFooter({ text: `${pending.length} embed(s) · !embed déprogrammer <id> pour annuler` })
+          .setTimestamp();
+
+        return message.reply({ embeds: [listEmbed] });
+      }
+
+      // ── !embed déprogrammer ────────────────────────────────────────────────
+      if (sub === 'déprogrammer' || sub === 'deprogrammer') {
+        const shortId = args.trim();
+        if (!shortId) return message.reply('**Usage :** `!embed déprogrammer <id>`\nL\'ID est visible dans `!embed programmes` ou dans le message de confirmation.');
+
+        const docs = await ScheduledEmbed.find({
+          guildId: message.guild.id,
+          sent: false,
+        });
+        const doc = docs.find(d => d._id.toString().slice(-6) === shortId || d._id.toString() === shortId);
+
+        if (!doc) return message.reply(`❌ Aucun embed programmé trouvé avec l'ID \`${shortId}\`.`);
+
+        const ts    = Math.floor(doc.scheduledAt.getTime() / 1000);
+        const titre = doc.title || '*(sans titre)*';
+
+        await ScheduledEmbed.findByIdAndDelete(doc._id);
+
+        await message.reply(
+          `✅ Embed \`${shortId}\` annulé.\n> **${titre}** prévu <t:${ts}:R> dans <#${doc.channelId}>`
+        );
+
+        await staffLog(client, {
+          action: 'embed déprogrammer',
+          details: `**ID :** \`${shortId}\`\n**Titre :** ${titre}\n**Salon :** <#${doc.channelId}>\n**Date prévue :** <t:${ts}:F>`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
       // ── Sous-commande inconnue ─────────────────────────────────────────────
       return message.reply(`❌ Sous-commande \`${sub}\` inconnue.\n\n${HELP_TEXT}`);
 

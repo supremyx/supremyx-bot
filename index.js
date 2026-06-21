@@ -23,6 +23,7 @@ const { startBirthdayManager } = require('./utils/birthdayManager');
 const { startLevelManager } = require('./utils/levelManager');
 const { startDashboardManager } = require('./utils/dashboardManager');
 const { startScheduleManager } = require('./utils/scheduleManager');
+const { startScheduledEmbedManager } = require('./utils/scheduledEmbedManager');
 require('dotenv').config();
 
 const client = new Client({
@@ -95,6 +96,7 @@ client.once('clientReady', async () => {
   console.log('📊 Système dashboard automatique activé');
   startScheduleManager(client);
   console.log('📅 Système rappels calendrier activé');
+  startScheduledEmbedManager(client);
 });
 
 // --- Intelligence Artificielle ---
