@@ -8,6 +8,11 @@ interface ScheduledEmbedDoc {
   title: string;
   description: string;
   color: number;
+  imageUrl: string;
+  thumbnailUrl: string;
+  authorName: string;
+  authorIconUrl: string;
+  footer: string;
   scheduledAt: string;
   createdBy: string;
   sent: boolean;
@@ -29,27 +34,20 @@ interface EmbedData {
 
 // ─── Couleurs preset ─────────────────────────────────────────────────────────
 const COLOR_PRESETS = [
-  { label: "Bleu",   hex: "#5865F2", num: 0x5865F2 },
-  { label: "Or",     hex: "#d4963a", num: 0xd4963a },
-  { label: "Vert",   hex: "#57F287", num: 0x57F287 },
-  { label: "Rouge",  hex: "#ED4245", num: 0xED4245 },
-  { label: "Violet", hex: "#9B59B6", num: 0x9B59B6 },
-  { label: "Rose",   hex: "#FF73FA", num: 0xFF73FA },
-  { label: "Cyan",   hex: "#1ABC9C", num: 0x1ABC9C },
-  { label: "Gris",   hex: "#95A5A6", num: 0x95A5A6 },
+  { label: "Or",     hex: "#d4963a" },
+  { label: "Bleu",   hex: "#5865F2" },
+  { label: "Vert",   hex: "#57F287" },
+  { label: "Rouge",  hex: "#ED4245" },
+  { label: "Jaune",  hex: "#FEE75C" },
+  { label: "Violet", hex: "#9B59B6" },
+  { label: "Rose",   hex: "#FF73FA" },
+  { label: "Cyan",   hex: "#1ABC9C" },
 ];
 
-function hexColor(n: number) {
-  return `#${n.toString(16).padStart(6, "0")}`;
-}
-function numFromHex(h: string) {
-  return parseInt(h.replace("#", ""), 16);
-}
+function hexColor(n: number) { return `#${n.toString(16).padStart(6, "0")}`; }
+function numFromHex(h: string) { return parseInt(h.replace("#", ""), 16); }
 function fmtDate(d: string) {
-  return new Date(d).toLocaleString("fr-FR", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
+  return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 function timeRelative(d: string) {
   const diff = new Date(d).getTime() - Date.now();
@@ -61,46 +59,99 @@ function timeRelative(d: string) {
   return `dans ${Math.floor(h / 24)}j`;
 }
 function shortId(id: string) { return id.slice(-6); }
-
-// ─── Default form state ───────────────────────────────────────────────────────
-function todayLocal() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
-}
+function todayLocal() { return new Date().toISOString().slice(0, 10); }
 function defaultTime() {
   const d = new Date(Date.now() + 3_600_000);
   return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`;
 }
 
 const EMPTY_FORM = {
-  channelId: "",
-  title: "",
-  description: "",
-  colorHex: "#5865F2",
-  date: todayLocal(),
-  time: defaultTime(),
-  createdBy: "Dashboard",
+  channelId: "", title: "", description: "", colorHex: "#d4963a",
+  imageUrl: "", thumbnailUrl: "", authorName: "", authorIconUrl: "", footer: "",
+  date: todayLocal(), time: defaultTime(),
 };
 
-// ─── Embed preview ─────────────────────────────────────────────────────────────
-function EmbedPreview({ title, description, colorHex }: { title: string; description: string; colorHex: string }) {
+// ─── Discord-style Embed Preview ─────────────────────────────────────────────
+function DiscordEmbedPreview({ f }: { f: typeof EMPTY_FORM }) {
+  const hasContent = f.title || f.description || f.imageUrl || f.thumbnailUrl || f.authorName || f.footer;
   return (
-    <div className="rounded-lg overflow-hidden flex" style={{ background: "#36393f", border: "1px solid #202225" }}>
-      <div className="w-1 flex-shrink-0" style={{ background: colorHex }} />
-      <div className="px-3 py-3 flex-1 min-w-0">
-        {title && (
-          <p className="text-sm font-bold leading-snug mb-1" style={{ color: "#ffffff" }}>
-            {title}
-          </p>
+    <div className="rounded-lg overflow-hidden flex" style={{ background: "#2f3136", border: "1px solid #202225", maxWidth: 440 }}>
+      <div className="w-1 flex-shrink-0 rounded-l" style={{ background: f.colorHex }} />
+      <div className="flex-1 min-w-0 p-3">
+        {!hasContent && (
+          <p className="text-xs italic" style={{ color: "#72767d" }}>L'aperçu apparaît ici…</p>
         )}
-        <p className="text-xs whitespace-pre-wrap break-words leading-relaxed" style={{ color: "#dcddde" }}>
-          {description || <span style={{ color: "#72767d" }}><em>Description…</em></span>}
-        </p>
-        <p className="text-[10px] mt-2" style={{ color: "#72767d" }}>
-          Programmé par {EMPTY_FORM.createdBy} • aujourd'hui à {defaultTime()}
-        </p>
+        {/* Author */}
+        {f.authorName && (
+          <div className="flex items-center gap-2 mb-2">
+            {f.authorIconUrl && (
+              <img src={f.authorIconUrl} alt="" className="w-5 h-5 rounded-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            )}
+            <span className="text-xs font-semibold" style={{ color: "#dcddde" }}>{f.authorName}</span>
+          </div>
+        )}
+
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            {/* Title */}
+            {f.title && (
+              <p className="text-sm font-bold mb-1 leading-snug" style={{ color: "#ffffff" }}>{f.title}</p>
+            )}
+            {/* Description — render [text](url) as blue spans */}
+            {f.description && (
+              <p className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: "#dcddde" }}>
+                {f.description.split(/(\[[^\]]+\]\([^)]+\))/g).map((chunk, i) => {
+                  const m = chunk.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+                  if (m) return <span key={i} style={{ color: "#00b0f4", textDecoration: "underline", cursor: "pointer" }}>{m[1]}</span>;
+                  return chunk;
+                })}
+              </p>
+            )}
+            {/* Image */}
+            {f.imageUrl && (
+              <img src={f.imageUrl} alt="" className="mt-2 rounded max-w-full" style={{ maxHeight: 160, objectFit: "cover" }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            )}
+          </div>
+
+          {/* Thumbnail */}
+          {f.thumbnailUrl && (
+            <img src={f.thumbnailUrl} alt="" className="w-16 h-16 rounded object-cover flex-shrink-0"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          )}
+        </div>
+
+        {/* Footer */}
+        {f.footer && (
+          <p className="text-[10px] mt-2 pt-1" style={{ color: "#72767d", borderTop: "1px solid #40444b" }}>{f.footer}</p>
+        )}
       </div>
     </div>
+  );
+}
+
+// ─── Field input helper ────────────────────────────────────────────────────
+function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
+        {label} {required && <span style={{ color: "#f87171" }}>*</span>}
+      </label>
+      {children}
+      {hint && <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>{hint}</p>}
+    </div>
+  );
+}
+function TextInput({ value, onChange, placeholder, ...rest }: React.InputHTMLAttributes<HTMLInputElement> & { onChange: (v: string) => void }) {
+  return (
+    <input
+      type="text" value={value as string}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+      {...rest}
+    />
   );
 }
 
@@ -112,11 +163,10 @@ export default function EmbedsProgrammesPage() {
   const [canceling, setCanceling] = useState<string | null>(null);
   const [tab, setTab]             = useState<"pending" | "history">("pending");
 
-  // Form
-  const [showForm, setShowForm]   = useState(false);
-  const [form, setForm]           = useState(EMPTY_FORM);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [showForm, setShowForm]       = useState(false);
+  const [form, setForm]               = useState(EMPTY_FORM);
+  const [submitting, setSubmitting]   = useState(false);
+  const [formError, setFormError]     = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -131,37 +181,35 @@ export default function EmbedsProgrammesPage() {
 
   function setField(k: keyof typeof EMPTY_FORM, v: string) {
     setForm(f => ({ ...f, [k]: v }));
-    setFormError(null);
-    setFormSuccess(null);
+    setFormError(null); setFormSuccess(null);
   }
 
   async function submitForm(e: React.FormEvent) {
     e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-
+    setFormError(null); setFormSuccess(null);
     if (!form.channelId.trim()) return setFormError("L'ID du salon est requis.");
-    if (!form.description.trim()) return setFormError("La description est requise.");
     if (!form.date || !form.time) return setFormError("La date et l'heure sont requises.");
-
     const [y, mo, d] = form.date.split("-").map(Number);
     const [h, mi]    = form.time.split(":").map(Number);
     const scheduledAt = new Date(Date.UTC(y, mo - 1, d, h, mi));
-
     if (scheduledAt <= new Date()) return setFormError("La date doit être dans le futur (heure d'Abidjan = UTC+0).");
-
     setSubmitting(true);
     try {
       const r = await fetch(apiUrl("/api/scheduled-embeds"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          channelId:   form.channelId.trim(),
-          title:       form.title.trim(),
-          description: form.description.trim(),
-          color:       numFromHex(form.colorHex),
-          scheduledAt: scheduledAt.toISOString(),
-          createdBy:   "Dashboard",
+          channelId:    form.channelId.trim(),
+          title:        form.title.trim(),
+          description:  form.description.trim(),
+          color:        numFromHex(form.colorHex),
+          imageUrl:     form.imageUrl.trim(),
+          thumbnailUrl: form.thumbnailUrl.trim(),
+          authorName:   form.authorName.trim(),
+          authorIconUrl:form.authorIconUrl.trim(),
+          footer:       form.footer.trim(),
+          scheduledAt:  scheduledAt.toISOString(),
+          createdBy:    "Dashboard",
         }),
       });
       const json = await r.json();
@@ -169,11 +217,8 @@ export default function EmbedsProgrammesPage() {
       setFormSuccess(`✅ Embed programmé ! ID : ${json.id}`);
       setForm({ ...EMPTY_FORM, date: todayLocal(), time: defaultTime() });
       load();
-    } catch {
-      setFormError("Erreur réseau. Vérifie ta connexion.");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch { setFormError("Erreur réseau."); }
+    finally { setSubmitting(false); }
   }
 
   async function cancel(id: string) {
@@ -187,12 +232,8 @@ export default function EmbedsProgrammesPage() {
           stats: { ...prev.stats, pending: prev.stats.pending - 1 },
           pending: prev.pending.filter(d => d._id.slice(-6) !== id && d._id !== id),
         } : null);
-      } else {
-        alert("Erreur lors de l'annulation.");
-      }
-    } catch {
-      alert("Erreur réseau.");
-    }
+      } else { alert("Erreur lors de l'annulation."); }
+    } catch { alert("Erreur réseau."); }
     setCanceling(null);
   }
 
@@ -207,215 +248,147 @@ export default function EmbedsProgrammesPage() {
         <div>
           <h2 className="font-bold text-lg">📨 Embeds Programmés</h2>
           <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-            Visualise, planifie et annule les embeds en attente de publication
+            Planifie des embeds riches (thumbnail, auteur, liens) et gère leur publication automatique
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={load}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-            style={{ background: "var(--muted)", color: "var(--foreground)", border: "1px solid var(--border)" }}
-          >
+          <button onClick={load} className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+            style={{ background: "var(--muted)", color: "var(--foreground)", border: "1px solid var(--border)" }}>
             ↻ Actualiser
           </button>
           <button
             onClick={() => { setShowForm(f => !f); setFormError(null); setFormSuccess(null); }}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
             style={{
-              background: showForm ? "rgba(212,150,58,0.2)" : "var(--primary)",
+              background: showForm ? "rgba(212,150,58,0.15)" : "var(--primary)",
               color: showForm ? "var(--primary)" : "var(--primary-foreground)",
               border: showForm ? "1px solid rgba(212,150,58,0.4)" : "none",
-            }}
-          >
+            }}>
             {showForm ? "✕ Fermer" : "+ Nouveau"}
           </button>
         </div>
       </div>
 
-      {/* ── Formulaire de création ──────────────────────────────────────────── */}
+      {/* ── Formulaire ─────────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="rounded-xl mb-8 overflow-hidden" style={{ border: "1px solid rgba(212,150,58,0.35)", background: "rgba(212,150,58,0.04)" }}>
-          <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(212,150,58,0.2)" }}>
-            <span className="text-sm font-bold" style={{ color: "#d4963a" }}>✏️ Programmer un embed</span>
+        <div className="rounded-xl mb-8 overflow-hidden" style={{ border: "1px solid rgba(212,150,58,0.35)", background: "rgba(212,150,58,0.03)" }}>
+          <div className="px-5 py-3" style={{ borderBottom: "1px solid rgba(212,150,58,0.2)" }}>
+            <span className="text-sm font-bold" style={{ color: "#d4963a" }}>✏️ Programmer un embed riche</span>
           </div>
 
-          <form onSubmit={submitForm} className="p-5">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <form onSubmit={submitForm}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
 
-              {/* ── Champs gauche ──────────────────────────────────────────── */}
-              <div className="flex flex-col gap-4">
+              {/* ── Champs ──────────────────────────────────────────────────── */}
+              <div className="flex flex-col gap-4 p-5" style={{ borderRight: "1px solid rgba(212,150,58,0.15)" }}>
 
-                {/* Channel ID */}
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
-                    📍 ID du salon Discord <span style={{ color: "#f87171" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.channelId}
-                    onChange={e => setField("channelId", e.target.value)}
-                    placeholder="ex : 1234567890123456789"
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                  />
-                  <p className="text-[10px] mt-1" style={{ color: "var(--muted-foreground)" }}>
-                    Discord → clic droit sur le salon → "Copier l'identifiant"
-                  </p>
-                </div>
+                <Field label="📍 ID du salon Discord" required hint="Discord → clic droit sur le salon → Copier l'identifiant">
+                  <TextInput value={form.channelId} onChange={v => setField("channelId", v)} placeholder="1234567890123456789" />
+                </Field>
 
-                {/* Titre */}
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
-                    📋 Titre <span style={{ color: "var(--muted-foreground)" }}>(optionnel)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.title}
-                    onChange={e => setField("title", e.target.value)}
-                    placeholder="ex : 🏆 Tournoi du weekend"
-                    maxLength={256}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                  />
-                </div>
+                <Field label="📋 Titre" hint="Gras en haut de l'embed">
+                  <TextInput value={form.title} onChange={v => setField("title", v)} placeholder="🤝 Let's get social !" maxLength={256} />
+                </Field>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
-                    📝 Description <span style={{ color: "#f87171" }}>*</span>
-                  </label>
+                <Field label="📝 Description" hint="Supporte [texte](https://url) pour les liens cliquables">
                   <textarea
                     value={form.description}
-                    onChange={e => setField("description", e.target.value)}
-                    placeholder="Contenu de l'embed…"
-                    rows={4}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                    onChange={e => { setField("description", e.target.value); }}
+                    placeholder={"♡ [TELEGRAM](https://t.me/...)\n♡ [INSTAGRAM](https://instagram.com/...)\n♡ [FACEBOOK](https://facebook.com/...)"}
+                    rows={5}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none font-mono"
                     style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                   />
                   <p className="text-[10px] mt-0.5 text-right" style={{ color: "var(--muted-foreground)" }}>
-                    {form.description.length} / 2000
+                    {form.description.length} / 4000
                   </p>
-                </div>
+                </Field>
 
                 {/* Couleur */}
-                <div>
-                  <label className="block text-xs font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>
-                    🎨 Couleur
-                  </label>
+                <Field label="🎨 Couleur de la barre">
                   <div className="flex flex-wrap gap-2 mb-2">
                     {COLOR_PRESETS.map(c => (
-                      <button
-                        key={c.hex}
-                        type="button"
-                        title={c.label}
-                        onClick={() => setField("colorHex", c.hex)}
-                        className="w-7 h-7 rounded-full transition-transform cursor-pointer"
-                        style={{
-                          background: c.hex,
-                          outline: form.colorHex === c.hex ? `2px solid ${c.hex}` : "none",
-                          outlineOffset: "2px",
-                          transform: form.colorHex === c.hex ? "scale(1.15)" : "scale(1)",
-                        }}
+                      <button key={c.hex} type="button" title={c.label} onClick={() => setField("colorHex", c.hex)}
+                        className="w-7 h-7 rounded-full cursor-pointer transition-transform"
+                        style={{ background: c.hex, outline: form.colorHex === c.hex ? `2px solid ${c.hex}` : "none", outlineOffset: "2px", transform: form.colorHex === c.hex ? "scale(1.2)" : "scale(1)" }}
                       />
                     ))}
                     <div className="flex items-center gap-1.5">
-                      <input
-                        type="color"
-                        value={form.colorHex}
-                        onChange={e => setField("colorHex", e.target.value)}
-                        className="w-7 h-7 rounded cursor-pointer border-0 p-0"
-                        style={{ background: "none" }}
-                        title="Couleur personnalisée"
-                      />
-                      <span className="text-[11px] font-mono" style={{ color: "var(--muted-foreground)" }}>
-                        {form.colorHex}
-                      </span>
+                      <input type="color" value={form.colorHex} onChange={e => setField("colorHex", e.target.value)}
+                        className="w-7 h-7 rounded cursor-pointer border-0 p-0" style={{ background: "none" }} />
+                      <span className="text-[11px] font-mono" style={{ color: "var(--muted-foreground)" }}>{form.colorHex}</span>
                     </div>
                   </div>
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="🖼️ Image (bas)" hint="Grande image en bas de l'embed">
+                    <TextInput value={form.imageUrl} onChange={v => setField("imageUrl", v)} placeholder="https://…" />
+                  </Field>
+                  <Field label="📌 Thumbnail (haut-droite)" hint="Petite image en haut à droite">
+                    <TextInput value={form.thumbnailUrl} onChange={v => setField("thumbnailUrl", v)} placeholder="https://…" />
+                  </Field>
                 </div>
 
-                {/* Date + Heure */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
-                      📅 Date <span style={{ color: "#f87171" }}>*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={form.date}
-                      min={todayLocal()}
-                      onChange={e => setField("date", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: "var(--muted-foreground)" }}>
-                      🕐 Heure (UTC+0) <span style={{ color: "#f87171" }}>*</span>
-                    </label>
-                    <input
-                      type="time"
-                      value={form.time}
-                      onChange={e => setField("time", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                    />
-                  </div>
+                  <Field label="👤 Auteur (nom)" hint="Ligne au-dessus du titre">
+                    <TextInput value={form.authorName} onChange={v => setField("authorName", v)} placeholder="SUPREMYX CI" />
+                  </Field>
+                  <Field label="🪪 Icône auteur (URL)" hint="Avatar circulaire à gauche de l'auteur">
+                    <TextInput value={form.authorIconUrl} onChange={v => setField("authorIconUrl", v)} placeholder="https://…" />
+                  </Field>
                 </div>
-                <p className="text-[10px] -mt-2" style={{ color: "var(--muted-foreground)" }}>
-                  ⚠️ L'heure est en heure d'Abidjan (UTC+0 = GMT)
-                </p>
+
+                <Field label="📄 Pied de page" hint="Petite ligne en bas, après l'image">
+                  <TextInput value={form.footer} onChange={v => setField("footer", v)} placeholder="| SUPREMYX INTERNATIONAL SCRIMS & EVENTS" />
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="📅 Date" required>
+                    <input type="date" value={form.date} min={todayLocal()} onChange={e => setField("date", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+                  </Field>
+                  <Field label="🕐 Heure (UTC+0)" required hint="Abidjan = UTC+0">
+                    <input type="time" value={form.time} onChange={e => setField("time", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+                  </Field>
+                </div>
               </div>
 
-              {/* ── Aperçu droite ───────────────────────────────────────────── */}
-              <div className="flex flex-col gap-3">
-                <p className="text-xs font-semibold" style={{ color: "var(--muted-foreground)" }}>
-                  👁️ Aperçu en temps réel
-                </p>
-                <EmbedPreview
-                  title={form.title}
-                  description={form.description}
-                  colorHex={form.colorHex}
-                />
+              {/* ── Aperçu droite ─────────────────────────────────────────── */}
+              <div className="flex flex-col gap-3 p-5 bg-[#1e1f22]">
+                <p className="text-xs font-semibold" style={{ color: "var(--muted-foreground)" }}>👁️ Aperçu Discord en temps réel</p>
+                <DiscordEmbedPreview f={form} />
 
-                {/* Récap publication */}
-                {form.channelId && form.date && form.time && (
-                  <div className="rounded-lg p-3 text-xs" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
-                    <p className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>📋 Récapitulatif</p>
-                    <div className="flex flex-col gap-1" style={{ color: "var(--muted-foreground)" }}>
-                      <span>📍 Salon ID : <code className="px-1 rounded" style={{ background: "var(--card)" }}>{form.channelId || "—"}</code></span>
-                      <span>🕐 Publication : <strong style={{ color: "var(--foreground)" }}>{form.date} à {form.time} (UTC+0)</strong></span>
-                      <span>🎨 Couleur : <span className="inline-block w-3 h-3 rounded-full align-middle mr-1" style={{ background: form.colorHex }} />{form.colorHex}</span>
-                    </div>
-                  </div>
-                )}
+                <div className="rounded-lg p-3 mt-1" style={{ background: "rgba(88,101,242,0.08)", border: "1px solid rgba(88,101,242,0.2)" }}>
+                  <p className="text-[10px] font-semibold mb-1" style={{ color: "#5865F2" }}>💡 Syntaxe liens cliquables</p>
+                  <code className="text-[10px] leading-relaxed block" style={{ color: "var(--muted-foreground)" }}>
+                    [texte visible](https://lien)<br/>
+                    ♡ [TELEGRAM](https://t.me/mongroupe)<br/>
+                    ♡ [INSTAGRAM](https://instagram.com/moi)
+                  </code>
+                </div>
 
-                {/* Aide commande Discord */}
-                <div className="rounded-lg p-3 text-[10px]" style={{ background: "rgba(88,101,242,0.08)", border: "1px solid rgba(88,101,242,0.2)" }}>
-                  <p className="font-semibold mb-1" style={{ color: "#5865F2" }}>💡 Équivalent Discord</p>
-                  <code className="break-all leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-                    !embed programmer #{form.channelId || "salon"} | {form.title || "Titre"} | {form.description.slice(0, 40) || "Description"} | {form.colorHex} | {form.date} {form.time}
+                <div className="rounded-lg p-3" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                  <p className="text-[10px] font-semibold mb-1" style={{ color: "var(--foreground)" }}>📋 Équivalent commande Discord</p>
+                  <code className="text-[10px] leading-relaxed break-all block" style={{ color: "var(--muted-foreground)" }}>
+                    !embed riche #{form.channelId || "salon"} | {form.title || "Titre"} | {form.description.slice(0,40) || "Description"} | {form.colorHex}{form.imageUrl ? ` | ${form.imageUrl.slice(0,30)}…` : ""}{form.thumbnailUrl ? ` | ${form.thumbnailUrl.slice(0,30)}…` : ""}{form.authorName ? ` | ${form.authorName}` : ""}
                   </code>
                 </div>
               </div>
             </div>
 
-            {/* Feedback + submit */}
-            <div className="mt-5 flex items-center gap-3 flex-wrap">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-5 py-2 rounded-lg text-sm font-bold cursor-pointer transition-opacity disabled:opacity-60"
-                style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-              >
+            {/* Submit bar */}
+            <div className="px-5 py-4 flex items-center gap-3 flex-wrap" style={{ borderTop: "1px solid rgba(212,150,58,0.15)" }}>
+              <button type="submit" disabled={submitting}
+                className="px-5 py-2 rounded-lg text-sm font-bold cursor-pointer disabled:opacity-60"
+                style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
                 {submitting ? "Envoi…" : "📅 Programmer l'embed"}
               </button>
-              {formError && (
-                <p className="text-sm font-semibold" style={{ color: "#f87171" }}>⚠️ {formError}</p>
-              )}
-              {formSuccess && (
-                <p className="text-sm font-semibold" style={{ color: "#57F287" }}>{formSuccess}</p>
-              )}
+              {formError   && <p className="text-sm font-semibold" style={{ color: "#f87171" }}>⚠️ {formError}</p>}
+              {formSuccess && <p className="text-sm font-semibold" style={{ color: "#57F287" }}>{formSuccess}</p>}
             </div>
           </form>
         </div>
@@ -433,12 +406,13 @@ export default function EmbedsProgrammesPage() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             {[
-              { icon: "⏳", label: "En attente",          value: data.stats.pending,  color: "#d4963a" },
-              { icon: "📤", label: "Publiés aujourd'hui", value: data.stats.sentToday, color: "#57F287" },
-              { icon: "📆", label: "Cette semaine",       value: data.stats.sentWeek,  color: "#6366f1" },
+              { icon: "⏳", label: "En attente",          value: data.stats.pending,   color: "#d4963a" },
+              { icon: "📤", label: "Publiés aujourd'hui", value: data.stats.sentToday,  color: "#57F287" },
+              { icon: "📆", label: "Cette semaine",       value: data.stats.sentWeek,   color: "#6366f1" },
               { icon: "🕐", label: "Prochain",            value: data.stats.next ? timeRelative(data.stats.next) : "—", color: "#ec4899" },
             ].map(({ icon, label, value, color }) => (
-              <div key={label} className="flex flex-col items-center gap-2 rounded-xl p-4 text-center" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+              <div key={label} className="flex flex-col items-center gap-2 rounded-xl p-4 text-center"
+                style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
                 <span className="text-xl">{icon}</span>
                 <span className="text-xl font-bold" style={{ color }}>{value}</span>
                 <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{label}</span>
@@ -448,16 +422,19 @@ export default function EmbedsProgrammesPage() {
 
           {/* Prochain embed */}
           {pending.length > 0 && (
-            <div className="rounded-xl p-4 mb-8 flex items-center gap-4" style={{ border: "1px solid rgba(212,150,58,0.35)", background: "rgba(212,150,58,0.06)" }}>
+            <div className="rounded-xl p-4 mb-8 flex items-center gap-4"
+              style={{ border: "1px solid rgba(212,150,58,0.35)", background: "rgba(212,150,58,0.06)" }}>
               <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: hexColor(pending[0].color) }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#d4963a" }}>⚡ Prochain embed à publier</p>
                 <p className="text-sm font-bold truncate">{pending[0].title || "(sans titre)"}</p>
                 <p className="text-xs truncate mt-0.5" style={{ color: "var(--muted-foreground)" }}>{pending[0].description}</p>
-                <div className="flex flex-wrap gap-x-4 mt-1">
-                  <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>📍 <code>#{shortId(pending[0]._id)}</code></span>
-                  <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>🕐 {fmtDate(pending[0].scheduledAt)} ({timeRelative(pending[0].scheduledAt)})</span>
-                  <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>✍️ {pending[0].createdBy}</span>
+                <div className="flex flex-wrap gap-x-4 mt-1 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
+                  <span>📍 <code>#{shortId(pending[0]._id)}</code></span>
+                  <span>🕐 {fmtDate(pending[0].scheduledAt)} ({timeRelative(pending[0].scheduledAt)})</span>
+                  <span>✍️ {pending[0].createdBy}</span>
+                  {pending[0].thumbnailUrl && <span>📌 Thumbnail</span>}
+                  {pending[0].authorName   && <span>👤 {pending[0].authorName}</span>}
                 </div>
               </div>
             </div>
@@ -466,16 +443,13 @@ export default function EmbedsProgrammesPage() {
           {/* Onglets */}
           <div className="flex gap-1 mb-4 p-1 rounded-xl w-fit" style={{ background: "var(--muted)" }}>
             {(["pending", "history"] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              <button key={t} onClick={() => setTab(t)}
+                className="px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
                 style={{
                   background: tab === t ? "var(--card)" : "transparent",
                   color: tab === t ? "var(--foreground)" : "var(--muted-foreground)",
                   border: tab === t ? "1px solid var(--border)" : "1px solid transparent",
-                }}
-              >
+                }}>
                 {t === "pending" ? `⏳ En attente (${pending.length})` : `📜 Publiés (${history.length})`}
               </button>
             ))}
@@ -488,11 +462,9 @@ export default function EmbedsProgrammesPage() {
                 <div className="py-16 text-center" style={{ color: "var(--muted-foreground)" }}>
                   <div className="text-4xl mb-3">📭</div>
                   <p className="text-sm">Aucun embed programmé en attente.</p>
-                  <button
-                    onClick={() => setShowForm(true)}
+                  <button onClick={() => setShowForm(true)}
                     className="mt-3 px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-                    style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-                  >
+                    style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
                     + Créer le premier
                   </button>
                 </div>
@@ -500,29 +472,32 @@ export default function EmbedsProgrammesPage() {
                 <div className="divide-y" style={{ borderColor: "var(--border)" }}>
                   {pending.map(doc => {
                     const sid = shortId(doc._id);
+                    const badges = [
+                      doc.thumbnailUrl ? "📌 Thumbnail" : null,
+                      doc.imageUrl     ? "🖼️ Image"     : null,
+                      doc.authorName   ? `👤 ${doc.authorName}` : null,
+                    ].filter(Boolean);
                     return (
                       <div key={doc._id} className="px-5 py-4 flex items-center gap-4">
                         <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: hexColor(doc.color), minHeight: 40 }} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span className="text-sm font-bold truncate">{doc.title || "(sans titre)"}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>
-                              #{sid}
-                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>#{sid}</span>
+                            {badges.map(b => (
+                              <span key={b} className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: "rgba(88,101,242,0.1)", color: "#818cf8", border: "1px solid rgba(88,101,242,0.2)" }}>{b}</span>
+                            ))}
                           </div>
                           <p className="text-xs truncate mb-1" style={{ color: "var(--muted-foreground)" }}>{doc.description}</p>
-                          <div className="flex flex-wrap gap-x-4">
-                            <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>🕐 {fmtDate(doc.scheduledAt)}</span>
-                            <span className="text-[11px] font-semibold" style={{ color: "#d4963a" }}>{timeRelative(doc.scheduledAt)}</span>
-                            <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>✍️ {doc.createdBy}</span>
+                          <div className="flex flex-wrap gap-x-4 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
+                            <span>🕐 {fmtDate(doc.scheduledAt)}</span>
+                            <span className="font-semibold" style={{ color: "#d4963a" }}>{timeRelative(doc.scheduledAt)}</span>
+                            <span>✍️ {doc.createdBy}</span>
                           </div>
                         </div>
-                        <button
-                          onClick={() => cancel(sid)}
-                          disabled={canceling === sid}
+                        <button onClick={() => cancel(sid)} disabled={canceling === sid}
                           className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
-                          style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}
-                        >
+                          style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}>
                           {canceling === sid ? "…" : "✕ Annuler"}
                         </button>
                       </div>
@@ -544,19 +519,15 @@ export default function EmbedsProgrammesPage() {
                     <div key={doc._id} className="px-5 py-4 flex items-center gap-4 opacity-70">
                       <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: hexColor(doc.color), minHeight: 40 }} />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className="text-sm font-semibold truncate">{doc.title || "(sans titre)"}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>
-                            #{shortId(doc._id)}
-                          </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: "rgba(87,242,135,0.1)", color: "#57F287", border: "1px solid rgba(87,242,135,0.25)" }}>
-                            ✓ Publié
-                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>#{shortId(doc._id)}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: "rgba(87,242,135,0.1)", color: "#57F287", border: "1px solid rgba(87,242,135,0.25)" }}>✓ Publié</span>
                         </div>
                         <p className="text-xs truncate mb-1" style={{ color: "var(--muted-foreground)" }}>{doc.description}</p>
-                        <div className="flex flex-wrap gap-x-4">
-                          <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>📤 {fmtDate(doc.scheduledAt)}</span>
-                          <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>✍️ {doc.createdBy}</span>
+                        <div className="flex flex-wrap gap-x-4 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
+                          <span>📤 {fmtDate(doc.scheduledAt)}</span>
+                          <span>✍️ {doc.createdBy}</span>
                         </div>
                       </div>
                     </div>
@@ -566,14 +537,15 @@ export default function EmbedsProgrammesPage() {
             )}
           </div>
 
-          {/* Footer aide */}
+          {/* Footer commandes */}
           <div className="mt-6 rounded-xl p-4" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
-            <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>📖 Commandes Discord équivalentes</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <p className="text-xs font-semibold mb-3" style={{ color: "var(--muted-foreground)" }}>📖 Commandes Discord équivalentes</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
-                { cmd: "!embed programmer #salon | Titre | Desc | couleur | YYYY-MM-DD HH:MM", desc: "Planifier un embed" },
-                { cmd: "!embed programmes",  desc: "Voir la liste" },
-                { cmd: "!embed déprogrammer <id>", desc: "Annuler un embed" },
+                { cmd: "!embed riche #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer", desc: "Embed complet (thumbnail, auteur, liens)" },
+                { cmd: "!embed riche preview | #salon | …",              desc: "Prévisualiser avant de publier" },
+                { cmd: "!embed programmer #salon | Titre | Desc | couleur | YYYY-MM-DD HH:MM", desc: "Programmer un embed simple" },
+                { cmd: "!embed déprogrammer <id>",                       desc: "Annuler un embed planifié" },
               ].map(({ cmd, desc }) => (
                 <div key={cmd} className="rounded-lg p-3" style={{ background: "var(--muted)" }}>
                   <code className="text-[10px] block truncate" style={{ color: "var(--foreground)" }}>{cmd}</code>
