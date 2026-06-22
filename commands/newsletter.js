@@ -98,7 +98,7 @@ module.exports = (client) => {
       }
 
       // ── !newsletter tester ────────────────────────────────────────────────
-      if (sub === 'tester' || sub === 'test') {
+      if (sub === 'tester') {
         const cfg = await NewsletterConfig.findOne({ guildId });
         if (!cfg?.channelId) return message.reply('❌ Configure d\'abord le salon avec `!newsletter salon #salon`.');
         const chan = message.guild.channels.cache.get(cfg.channelId);
