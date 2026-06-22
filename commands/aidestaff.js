@@ -143,6 +143,8 @@ const STAFF_CATEGORIES = [
       { label: '!calendrier salon #salon',      description: 'Config des rappels de matchs',                      subs: ['salon #salon — Salon rappels', 'rappel <activer|desactiver> [24h|1h|15m] — Toggle rappels', 'statut — Voir config', 'ajouter <DD/MM/YYYY> <HH:MM> <eq1,eq2> [note] — Ajouter', 'modifier <id> <DD/MM/YYYY> <HH:MM> — Modifier', 'supprimer <id> — Supprimer', 'vider — Supprimer passés'] },
       { label: '!salonannonce #salon',           description: 'Définir le salon d\'annonces du bot',               subs: [] },
       { label: '!salonjournaux #salon',          description: 'Définir le salon de journaux staff',                subs: [] },
+      { label: '!salonlogosubmit #salon',        description: 'Définir le salon de dépôt de logos d\'équipes',    subs: [] },
+      { label: '!salonlogolist [#salon]',        description: 'Voir les logos soumis dans un salon',               subs: [] },
       { label: '!voirconfig',                    description: 'Vue d\'ensemble de toute la configuration serveur',  subs: [] },
       { label: '!setdelai <commande> <sec>',    description: 'Modifier le cooldown d\'une commande',              subs: ['delais — Voir tous les cooldowns', 'suppdelai <commande> — Réinitialiser'] },
     ],
