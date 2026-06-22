@@ -19,17 +19,20 @@ module.exports = (client) => {
     const args = content.split(/\s+/);
     const cmd = args[0].toLowerCase();
 
-    if (cmd !== '!salonannonce' && cmd !== '!salonjournaux') return;
+    if (cmd !== '!salonannonce' && cmd !== '!salonjournaux' && cmd !== '!salonlogosubmit' && cmd !== '!salonlogolist') return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Cette commande est réservée au staff Administrateur.');
 
     const mention = message.mentions.channels.first();
     if (!mention) {
-      const usage = cmd === '!salonannonce'
-        ? '`!salonannonce #salon` — Définit le salon d\'annonces'
-        : '`!salonjournaux #salon` — Définit le salon de journaux staff';
-      return message.reply(`❌ Mentionne un salon.\nUsage : ${usage}`);
+      const usages = {
+        '!salonannonce':     '`!salonannonce #salon`     — Salon d\'annonces',
+        '!salonjournaux':    '`!salonjournaux #salon`    — Salon de journaux staff',
+        '!salonlogosubmit':  '`!salonlogosubmit #salon`  — Salon de soumission des logos (%logo)',
+        '!salonlogolist':    '`!salonlogolist #salon`    — Salon d\'affichage des logos',
+      };
+      return message.reply(`❌ Mentionne un salon.\nUsage : ${usages[cmd] ?? '`!<commande> #salon`'}`);
     }
 
     try {
@@ -66,6 +69,40 @@ module.exports = (client) => {
 
         await message.channel.send({ embeds: [embed] });
         logStaffAction(client, `🔒 **Salon journaux** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
+
+      } else if (cmd === '!salonlogosubmit') {
+        config.logoSubmitChannelId = mention.id;
+        await config.save();
+
+        const embed = new EmbedBuilder()
+          .setColor(0xE67E22)
+          .setTitle('🖼️ Salon de soumission des logos configuré')
+          .setDescription(
+            `Les équipes peuvent maintenant soumettre leur logo dans ${mention} avec le format :\n\n` +
+            '```\n%logo\nNOM DE L\'ÉQUIPE\n```\n*(+ image jointe)*'
+          )
+          .addFields({ name: '📍 Salon', value: `${mention} (\`${mention.id}\`)` })
+          .setFooter({ text: `Configuré par ${message.author.tag}` })
+          .setTimestamp();
+
+        await message.channel.send({ embeds: [embed] });
+        logStaffAction(client, `🖼️ **Salon logo submit** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
+
+      } else if (cmd === '!salonlogolist') {
+        config.logoListChannelId = mention.id;
+        config.logoListMessages = new Map();
+        await config.save();
+
+        const embed = new EmbedBuilder()
+          .setColor(0xE67E22)
+          .setTitle('📋 Salon d\'affichage des logos configuré')
+          .setDescription(`Les logos des équipes seront automatiquement affichés dans ${mention} après chaque soumission.`)
+          .addFields({ name: '📍 Salon', value: `${mention} (\`${mention.id}\`)` })
+          .setFooter({ text: `Configuré par ${message.author.tag}` })
+          .setTimestamp();
+
+        await message.channel.send({ embeds: [embed] });
+        logStaffAction(client, `📋 **Salon logo list** défini sur <#${mention.id}> | Par : ${message.author.tag}`);
       }
 
     } catch (err) {
