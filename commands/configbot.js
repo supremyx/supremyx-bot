@@ -61,7 +61,7 @@ module.exports = (client) => {
       for (const pair of pairs) {
         const [key, val] = pair.split(':');
         if (!key || val === undefined || isNaN(parseInt(val))) continue;
-        if (key.toLowerCase() === 'kill') {
+        if (key.toLowerCase() === 'kill' || key.toLowerCase() === 'élimination') {
           killBonus = parseInt(val);
         } else {
           newMap.set(String(parseInt(key)), parseInt(val));
