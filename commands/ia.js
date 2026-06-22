@@ -97,7 +97,7 @@ async function checkAndNotifyQuota(guildId, used, quota, client) {
       .setTitle('⚠️ Quota IA — 80% atteint')
       .setDescription(`Le quota journalier de l'IA est à **${used}/${quota}** utilisations.\n\nIl reste **${quota - used}** utilisation(s) avant la coupure automatique.`)
       .addFields({ name: '📈 Progression', value: `[${'█'.repeat(8)}${'░'.repeat(2)}] 80%`, inline: false })
-      .setFooter({ text: 'Admin : !ia quota <nombre> pour augmenter · !ia quota reset pour réinitialiser' })
+      .setFooter({ text: 'Admin : !ia quota <nombre> pour augmenter · !ia quota réinitialiser pour remettre à zéro' })
       .setTimestamp();
     channel.send({ embeds: [embed] }).catch(() => {});
   } else if (used >= quota) {
@@ -106,7 +106,7 @@ async function checkAndNotifyQuota(guildId, used, quota, client) {
       .setTitle('🚨 Quota IA — 100% atteint')
       .setDescription(`Le quota journalier est **épuisé** (**${used}/${quota}** utilisations).\n\nL'IA est maintenant **coupée** jusqu'à minuit ou jusqu'à ce qu'un admin réinitialise le compteur.`)
       .addFields({ name: '📈 Progression', value: `[${'█'.repeat(10)}] 100%`, inline: false })
-      .setFooter({ text: 'Admin : !ia quota reset pour réinitialiser · !ia quota <nombre> pour changer la limite' })
+      .setFooter({ text: 'Admin : !ia quota réinitialiser pour remettre à zéro · !ia quota <nombre> pour changer la limite' })
       .setTimestamp();
     channel.send({ embeds: [embed] }).catch(() => {});
   }
@@ -292,7 +292,7 @@ module.exports = (client) => {
             { name: '🎯 Restant',           value: remainStr,          inline: true },
             { name: '🔔 Salon d\'alerte',   value: alertCh,            inline: false },
           )
-          .setFooter({ text: 'Admin : !ia quota <nombre> · !ia quota off · !ia quota reset · !ia quota salon #salon' })
+          .setFooter({ text: 'Admin : !ia quota <nombre> · !ia quota désactiver · !ia quota réinitialiser · !ia quota salon #salon' })
           .setTimestamp();
         return message.reply({ embeds: [embed] });
       }
@@ -301,12 +301,12 @@ module.exports = (client) => {
         return message.reply('❌ Seuls les administrateurs peuvent modifier le quota IA.');
       }
 
-      if (val === 'off' || val === '0') {
+      if (val === 'désactiver' || val === 'desactiver' || val === '0') {
         await setQuota(guildId, 0);
         return message.reply('✅ Quota IA **désactivé** — utilisation illimitée.');
       }
 
-      if (val === 'reset') {
+      if (val === 'réinitialiser' || val === 'reinitialiser') {
         const start = new Date();
         start.setHours(0, 0, 0, 0);
         const deleted = await IaUsage.deleteMany({ guildId, usedAt: { $gte: start } });
@@ -324,7 +324,7 @@ module.exports = (client) => {
 
       const n = parseInt(val, 10);
       if (isNaN(n) || n < 1) {
-        return message.reply('❌ Valeur invalide. Utilise un nombre entier positif ou `off`.\nEx : `!ia quota 50`');
+        return message.reply('❌ Valeur invalide. Utilise un nombre entier positif ou `désactiver`.\nEx : `!ia quota 50`');
       }
       await setQuota(guildId, n);
       return message.reply(`✅ Quota IA défini à **${n} utilisations par jour** pour ce serveur.`);
