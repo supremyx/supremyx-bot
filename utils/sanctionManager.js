@@ -11,9 +11,9 @@ const DEFAULT_RULES = [
 
 const ACTION_LABELS = {
   warn: '⚠️ Avertissement',
-  mute: '🔇 Mute',
-  kick: '👢 Kick',
-  ban: '🔨 Ban'
+  mute: '🔇 Sourdine',
+  kick: '👢 Expulsion',
+  ban: '🔨 Bannissement'
 };
 
 const ACTION_COLORS = {
