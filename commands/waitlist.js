@@ -298,7 +298,7 @@ module.exports = (client) => {
       }
 
       // ── !waitlist confirmer <TAG> ────────────────────────────────────────
-      if (sub === 'confirmer' || sub === 'confirm') {
+      if (sub === 'confirmer') {
         if (!rest) return message.reply('**Usage :** `!waitlist confirmer <TAG>`');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
@@ -328,7 +328,7 @@ module.exports = (client) => {
       }
 
       // ── !waitlist retirer <TAG> ──────────────────────────────────────────
-      if (sub === 'retirer' || sub === 'remove') {
+      if (sub === 'retirer') {
         if (!rest) return message.reply('**Usage :** `!waitlist retirer <TAG>`');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
@@ -392,7 +392,7 @@ module.exports = (client) => {
       }
 
       // ── !waitlist reset ──────────────────────────────────────────────────
-      if (sub === 'reset') {
+      if (sub === 'réinitialiser' || sub === 'reinitialiser') {
         const confirm = await message.reply('⚠️ Effacer **toutes les inscriptions** ? Réagis ✅ pour confirmer (15s).');
         try { await confirm.react('✅'); } catch {}
 
@@ -421,7 +421,7 @@ module.exports = (client) => {
       }
 
       // ── !waitlist info ───────────────────────────────────────────────────
-      if (sub === 'info') {
+      if (sub === 'infos') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré. Lance : `!waitlist setup #reg | #waitlist | @rôle | slots | Titre`');
 
@@ -436,7 +436,7 @@ module.exports = (client) => {
             { name: '🔢 Places',             value: `${count} / ${config.maxSlots}`,                                                        inline: true },
             { name: '🏆 Titre',             value: config.tournamentTitle,                                                                  inline: false },
           )
-          .setFooter({ text: 'Commandes : setup · init · liste · confirmer · retirer · vip · slots · reset · info' });
+          .setFooter({ text: 'Commandes : setup · init · liste · confirmer · retirer · vip · slots · réinitialiser · infos' });
         return message.reply({ embeds: [embed] });
       }
 
@@ -451,8 +451,8 @@ module.exports = (client) => {
         '`!waitlist retirer <TAG>` — retirer une équipe',
         '`!waitlist vip <TAG>` — toggle statut VIP ⭐',
         '`!waitlist slots <n>` — changer le nombre de places',
-        '`!waitlist reset` — effacer toutes les inscriptions',
-        '`!waitlist info` — voir la configuration actuelle',
+        '`!waitlist réinitialiser` — effacer toutes les inscriptions',
+        '`!waitlist infos` — voir la configuration actuelle',
         '',
         '> Les équipes s\'inscrivent avec `%inscrire` dans le salon configuré.',
       ].join('\n'));
