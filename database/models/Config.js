@@ -13,7 +13,10 @@ const configSchema = new mongoose.Schema({
   logChannelId: { type: String, default: '' },
   rankFrozen: { type: Boolean, default: false },
   rankFrozenAt: { type: Date, default: null },
-  rankFrozenBy: { type: String, default: '' }
+  rankFrozenBy: { type: String, default: '' },
+  logoSubmitChannelId: { type: String, default: '' },
+  logoListChannelId: { type: String, default: '' },
+  logoListMessages: { type: Map, of: String, default: () => new Map() }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Config', configSchema);
