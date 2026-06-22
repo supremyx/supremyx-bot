@@ -1,7 +1,7 @@
 modules = ["nodejs-20", "web"]
 [agent]
 expertMode = true
-stack = "BEST_EFFORT_FALLBACK"
+stack = "FULLSTACK_JS"
 integrations = ["javascript_openai_ai_integrations:2.0.0"]
 
 [nix]
@@ -40,7 +40,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node api/standalone.js & cd dashboard && PORT=5000 BASE_PATH=/ npx vite --config vite.config.ts --host 0.0.0.0"
+args = "cd dashboard && PORT=5000 BASE_PATH=/ npx vite --config vite.config.ts --host 0.0.0.0"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -55,10 +55,10 @@ task = "shell.exec"
 args = "node scripts/autopush.js & node index.js"
 
 [deployment]
-deploymentTarget = "vm"
-build = ["bash", "-c", "cd dashboard && pnpm install && pnpm run build"]
+deploymentTarget = "autoscale"
+build = ["npm", "run", "build"]
 publicDir = "dashboard/dist/public"
-run = ["node", "index.js"]
+run = ["node", "./dist/index.cjs"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
