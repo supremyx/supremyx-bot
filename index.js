@@ -337,6 +337,9 @@ require('./commands/topactivite')(client);
 // --- Logo d'équipe ---
 require('./commands/setlogo')(client);
 
+// --- Système soumission logos %logo ---
+require('./commands/logosubmit')(client);
+
 // --- Notification DM roster d'équipe ---
 require('./commands/notifequipe')(client);
 
