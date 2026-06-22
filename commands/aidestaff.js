@@ -50,6 +50,7 @@ const STAFF_CATEGORIES = [
       { label: '!newsletter salon #salon',         description: 'Newsletter hebdo automatique (dimanche 20h)',        subs: ['salon #salon — Configurer', 'activer|desactiver — Toggle', 'tester — Envoyer maintenant', 'statut — Voir config'] },
       { label: '!xp multiplicateur #salon <val>',  description: 'Multiplicateur XP par salon (0 = désactivé)',       subs: ['multiplicateur #salon <0-10> — Définir', 'multiplicateurs — Voir tous'] },
       { label: '!dispo effacer @membre',            description: 'Effacer les disponibilités d\'un membre',           subs: ['effacer @membre — Effacer', 'liste <équipe> — Vue équipe'] },
+      { label: '!waitlist setup',                  description: 'Gérer la liste d\'attente d\'inscription au tournoi', subs: ['setup | config #salon <max> <rolId> [rolVip] [titre] — Configurer', 'init — Réinitialiser les inscriptions', 'liste — Voir toutes les inscriptions en attente', 'confirmer <équipe> — Confirmer une inscription', 'retirer <équipe> — Retirer une équipe de la liste', 'vip <équipe> — Marquer une équipe en priorité VIP', 'slots <N> — Modifier le nombre de places disponibles', 'réinitialiser — Vider complètement la liste', 'infos — Voir la configuration et statistiques'] },
     ],
   },
   {
