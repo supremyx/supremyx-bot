@@ -1053,6 +1053,49 @@ router.get('/sondages', publicLimiter, async (req, res) => {
   }
 });
 
+// ── GET /api/scheduled-embeds ─────────────────────────────────────────────────
+router.get('/scheduled-embeds', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = guildId ? { guildId } : {};
+
+    const [pending, recentSent] = await Promise.all([
+      ScheduledEmbed.find({ ...filter, sent: false }).sort({ scheduledAt: 1 }).lean(),
+      ScheduledEmbed.find({ ...filter, sent: true  }).sort({ scheduledAt: -1 }).limit(20).lean(),
+    ]);
+
+    const now = new Date();
+    const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const weekStart  = new Date(todayStart.getTime() - 6 * 86400000);
+
+    const sentToday = recentSent.filter(d => new Date(d.scheduledAt) >= todayStart).length;
+    const sentWeek  = recentSent.filter(d => new Date(d.scheduledAt) >= weekStart).length;
+    const next      = pending.length > 0 ? pending[0] : null;
+
+    res.json({
+      stats: { pending: pending.length, sentToday, sentWeek, next: next ? next.scheduledAt : null },
+      pending,
+      history: recentSent,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── DELETE /api/scheduled-embeds/:id ─────────────────────────────────────────
+router.delete('/scheduled-embeds/:id', requireApiKey, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const docs = await ScheduledEmbed.find({ sent: false });
+    const doc  = docs.find(d => d._id.toString().slice(-6) === id || d._id.toString() === id);
+    if (!doc) return res.status(404).json({ error: 'Embed introuvable' });
+    await ScheduledEmbed.findByIdAndDelete(doc._id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
