@@ -1,6 +1,7 @@
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const Season = require('../database/models/Season');
+const PlayerStat = require('../database/models/PlayerStat');
 const { EmbedBuilder } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
@@ -18,6 +19,103 @@ module.exports = (client) => {
     if (cd) return replyCooldown(message, cd, 'compare');
 
     const args = message.content.split(' ').slice(1);
+
+    // ── !comparer joueur <joueur1> vs <joueur2> ─────────────────────────
+    if (args[0]?.toLowerCase() === 'joueur') {
+      const rest = args.slice(1);
+      const vsIndex = rest.findIndex(a => a.toLowerCase() === 'vs');
+
+      if (vsIndex < 1 || vsIndex === rest.length - 1)
+        return message.reply('Usage : `!comparer joueur <joueur1> vs <joueur2>`');
+
+      const nom1 = rest.slice(0, vsIndex).join(' ').trim();
+      const nom2 = rest.slice(vsIndex + 1).join(' ').trim();
+
+      const [p1, p2] = await Promise.all([
+        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${nom1}$`, 'i') } }),
+        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${nom2}$`, 'i') } }),
+      ]);
+
+      if (!p1) return message.reply(`❌ Joueur **${nom1}** introuvable.`);
+      if (!p2) return message.reply(`❌ Joueur **${nom2}** introuvable.`);
+
+      const avg1 = p1.totalMatches > 0 ? (p1.totalKills / p1.totalMatches).toFixed(1) : '0';
+      const avg2 = p2.totalMatches > 0 ? (p2.totalKills / p2.totalMatches).toFixed(1) : '0';
+
+      function ind(v1, v2) {
+        if (v1 > v2) return ['🏆', '  '];
+        if (v2 > v1) return ['  ', '🏆'];
+        return ['🤝', '🤝'];
+      }
+
+      const [tk1, tk2] = ind(p1.totalKills, p2.totalKills);
+      const [av1, av2] = ind(parseFloat(avg1), parseFloat(avg2));
+      const [bk1, bk2] = ind(p1.bestKills, p2.bestKills);
+      const [tm1, tm2] = ind(p1.totalMatches, p2.totalMatches);
+
+      // Score global
+      const cats = [
+        [p1.totalKills, p2.totalKills],
+        [parseFloat(avg1), parseFloat(avg2)],
+        [p1.bestKills, p2.bestKills],
+      ];
+      const score1 = cats.filter(([a, b]) => a > b).length;
+      const score2 = cats.filter(([a, b]) => b > a).length;
+      const verdict = score1 > score2 ? `🏆 **${p1.displayName}** remporte la comparaison (${score1}/${cats.length} catégories)`
+        : score2 > score1 ? `🏆 **${p2.displayName}** remporte la comparaison (${score2}/${cats.length} catégories)`
+        : '🤝 Égalité parfaite';
+
+      const histFmt = (p) => p.history.slice(-5).reverse()
+        .map(h => `\`${new Date(h.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}\` — ${h.kills} kills`)
+        .join('\n') || '—';
+
+      const embed = new EmbedBuilder()
+        .setTitle(`⚔️ Duel joueurs — ${p1.displayName} vs ${p2.displayName}`)
+        .setColor(0xEB459E)
+        .addFields(
+          {
+            name: `💀 ${p1.displayName}`,
+            value: [
+              `${tk1} **Kills totaux :** ${p1.totalKills.toLocaleString('fr')}`,
+              `${av1} **Moy. kills :** ${avg1}`,
+              `${bk1} **Meilleur kills :** ${p1.bestKills}`,
+              `${tm1} **Matchs joués :** ${p1.totalMatches}`,
+              `🏠 **Équipe :** ${p1.teamName}`,
+            ].join('\n'),
+            inline: true,
+          },
+          {
+            name: `💀 ${p2.displayName}`,
+            value: [
+              `${tk2} **Kills totaux :** ${p2.totalKills.toLocaleString('fr')}`,
+              `${av2} **Moy. kills :** ${avg2}`,
+              `${bk2} **Meilleur kills :** ${p2.bestKills}`,
+              `${tm2} **Matchs joués :** ${p2.totalMatches}`,
+              `🏠 **Équipe :** ${p2.teamName}`,
+            ].join('\n'),
+            inline: true,
+          },
+          {
+            name: '🎯 Verdict',
+            value: verdict,
+            inline: false,
+          },
+          {
+            name: `📋 5 derniers matchs — ${p1.displayName}`,
+            value: histFmt(p1),
+            inline: true,
+          },
+          {
+            name: `📋 5 derniers matchs — ${p2.displayName}`,
+            value: histFmt(p2),
+            inline: true,
+          }
+        )
+        .setFooter({ text: '🏆 meilleur  |  🤝 égal' })
+        .setTimestamp();
+
+      return message.channel.send({ embeds: [embed] });
+    }
 
     // ── !compare season <équipe1> vs <équipe2> ──────────────────────────
     if (args[0]?.toLowerCase() === 'season') {
@@ -161,8 +259,9 @@ module.exports = (client) => {
     if (separator === -1 || separator === 0 || separator === args.length - 1)
       return message.reply(
         'Usage :\n' +
-        '`!comparer <équipe1> vs <équipe2>` — Stats en direct\n' +
-        '`!comparer season <équipe1> vs <équipe2>` — Historique des saisons'
+        '`!comparer <équipe1> vs <équipe2>` — Équipes en direct\n' +
+        '`!comparer season <équipe1> vs <équipe2>` — Historique des saisons\n' +
+        '`!comparer joueur <joueur1> vs <joueur2>` — Duel entre deux joueurs'
       );
 
     const name1 = args.slice(0, separator).join(' ');
