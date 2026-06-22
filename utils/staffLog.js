@@ -44,15 +44,16 @@ async function logStaffAction(client, message) {
  * Usage: staffLog(client, { action, details, author })
  */
 async function staffLog(client, { action, details, author }) {
-  const colors = { addmatch: 0x57F287, unregister: 0xED4245, resetmatch: 0xFEE75C };
-  const icons = { addmatch: '🎯', unregister: '🗑️', resetmatch: '🔄' };
+  const colors = { ajoutermatch: 0x57F287, desenregistrer: 0xED4245, reinitialiser: 0xFEE75C };
+  const icons  = { ajoutermatch: '🎯', desenregistrer: '🗑️', reinitialiser: '🔄' };
+  const labels = { ajoutermatch: 'Match ajouté', desenregistrer: 'Équipe supprimée', reinitialiser: 'Scores réinitialisés' };
 
   const channelId = getLogChannelId();
   if (channelId) {
     const channel = client.channels.cache.get(channelId);
     if (channel) {
       const embed = new EmbedBuilder()
-        .setTitle(`${icons[action] || '📋'} Action staff — ${action}`)
+        .setTitle(`${icons[action] || '📋'} Action staff — ${labels[action] || action}`)
         .setDescription(details)
         .setColor(colors[action] || 0x5865F2)
         .setFooter({ text: `Effectué par ${author}` })
@@ -61,7 +62,7 @@ async function staffLog(client, { action, details, author }) {
     }
   }
   // Persist to DB
-  const message = `**${action}** — ${details.replace(/\*\*/g, '')} | Par : ${author}`;
+  const message = `**${labels[action] || action}** — ${details.replace(/\*\*/g, '')} | Par : ${author}`;
   await StaffLogEntry.create({ message, category: action }).catch(() => {});
 }
 

@@ -9,20 +9,20 @@ interface LogEntry {
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  match:      { bg: "rgba(99,102,241,0.15)",  text: "#a5b4fc", border: "rgba(99,102,241,0.3)"  },
-  modération: { bg: "rgba(239,68,68,0.15)",   text: "#fca5a5", border: "rgba(239,68,68,0.3)"   },
-  tournoi:    { bg: "rgba(212,150,58,0.15)",  text: "#fcd34d", border: "rgba(212,150,58,0.3)"  },
-  données:    { bg: "rgba(6,182,212,0.15)",   text: "#67e8f9", border: "rgba(6,182,212,0.3)"   },
-  config:     { bg: "rgba(168,85,247,0.15)",  text: "#d8b4fe", border: "rgba(168,85,247,0.3)"  },
-  ticket:     { bg: "rgba(236,72,153,0.15)",  text: "#f9a8d4", border: "rgba(236,72,153,0.3)"  },
-  rang:       { bg: "rgba(52,211,153,0.15)",  text: "#6ee7b7", border: "rgba(52,211,153,0.3)"  },
-  trophée:    { bg: "rgba(234,179,8,0.15)",   text: "#fde047", border: "rgba(234,179,8,0.3)"   },
-  événement:  { bg: "rgba(249,115,22,0.15)",  text: "#fdba74", border: "rgba(249,115,22,0.3)"  },
-  équipe:     { bg: "rgba(59,130,246,0.15)",  text: "#93c5fd", border: "rgba(59,130,246,0.3)"  },
-  addmatch:   { bg: "rgba(99,102,241,0.15)",  text: "#a5b4fc", border: "rgba(99,102,241,0.3)"  },
-  unregister: { bg: "rgba(239,68,68,0.15)",   text: "#fca5a5", border: "rgba(239,68,68,0.3)"   },
-  resetmatch: { bg: "rgba(212,150,58,0.15)",  text: "#fcd34d", border: "rgba(212,150,58,0.3)"  },
-  général:    { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)"  },
+  match:          { bg: "rgba(99,102,241,0.15)",  text: "#a5b4fc", border: "rgba(99,102,241,0.3)"  },
+  modération:     { bg: "rgba(239,68,68,0.15)",   text: "#fca5a5", border: "rgba(239,68,68,0.3)"   },
+  tournoi:        { bg: "rgba(212,150,58,0.15)",  text: "#fcd34d", border: "rgba(212,150,58,0.3)"  },
+  données:        { bg: "rgba(6,182,212,0.15)",   text: "#67e8f9", border: "rgba(6,182,212,0.3)"   },
+  config:         { bg: "rgba(168,85,247,0.15)",  text: "#d8b4fe", border: "rgba(168,85,247,0.3)"  },
+  ticket:         { bg: "rgba(236,72,153,0.15)",  text: "#f9a8d4", border: "rgba(236,72,153,0.3)"  },
+  rang:           { bg: "rgba(52,211,153,0.15)",  text: "#6ee7b7", border: "rgba(52,211,153,0.3)"  },
+  trophée:        { bg: "rgba(234,179,8,0.15)",   text: "#fde047", border: "rgba(234,179,8,0.3)"   },
+  événement:      { bg: "rgba(249,115,22,0.15)",  text: "#fdba74", border: "rgba(249,115,22,0.3)"  },
+  équipe:         { bg: "rgba(59,130,246,0.15)",  text: "#93c5fd", border: "rgba(59,130,246,0.3)"  },
+  ajoutermatch:   { bg: "rgba(99,102,241,0.15)",  text: "#a5b4fc", border: "rgba(99,102,241,0.3)"  },
+  desenregistrer: { bg: "rgba(239,68,68,0.15)",   text: "#fca5a5", border: "rgba(239,68,68,0.3)"   },
+  reinitialiser:  { bg: "rgba(212,150,58,0.15)",  text: "#fcd34d", border: "rgba(212,150,58,0.3)"  },
+  général:        { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)"  },
 };
 
 const DEFAULT_COLOR = { bg: "rgba(255,255,255,0.05)", text: "#9ca3af", border: "rgba(255,255,255,0.1)" };

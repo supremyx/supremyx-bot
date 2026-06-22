@@ -17,7 +17,7 @@ module.exports = (client) => {
       message.reply('🔄 Tous les scores ont été remis à zéro.');
 
       await staffLog(client, {
-        action: 'resetmatch',
+        action: 'reinitialiser',
         details: 'Tous les points, kills, wins et losses ont été remis à zéro.',
         author: message.author.tag
       });

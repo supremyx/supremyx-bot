@@ -83,7 +83,7 @@ export default function ModerationPage() {
   const TABS: { key: Tab; label: string; count: number }[] = [
     { key: "warns",     label: "⚠️ Avertissements", count: warnings.length },
     { key: "sanctions", label: "⚖️ Sanctions",       count: sanctions.length },
-    { key: "blacklist", label: "🚫 Blacklist",        count: blacklist.length },
+    { key: "blacklist", label: "🚫 Liste noire",       count: blacklist.length },
   ];
 
   return (
@@ -205,7 +205,7 @@ export default function ModerationPage() {
             filteredBlacklist.length === 0 ? (
               <div className="rounded-xl py-16 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
                 <div className="text-3xl mb-2">✅</div>
-                <p className="text-sm">Blacklist vide.</p>
+                <p className="text-sm">Liste noire vide.</p>
               </div>
             ) : (
               <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>

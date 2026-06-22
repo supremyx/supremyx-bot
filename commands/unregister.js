@@ -26,7 +26,7 @@ module.exports = (client) => {
       message.reply(`🗑️ **${team.name}** a été supprimée (équipe + historique).`);
 
       await staffLog(client, {
-        action: 'unregister',
+        action: 'desenregistrer',
         details: `**Équipe supprimée :** ${team.name}\n**Matchs supprimés :** ${matchCount}`,
         author: message.author.tag
       });

@@ -89,7 +89,7 @@ module.exports = (client) => {
       syncRanks(message.guild).catch(() => {});
 
       await staffLog(client, {
-        action: 'addmatch',
+        action: 'ajoutermatch',
         details: `**Équipe :** ${team.name}\n**Placement :** #${placement}\n**Kills :** ${kills}\n**Points gagnés :** +${pts}${activeTournoi ? `\n**Tournoi :** ${activeTournoi.name}` : ''}`,
         author: message.author.tag
       });
