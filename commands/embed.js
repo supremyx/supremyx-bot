@@ -74,6 +74,11 @@ const HELP_TEXT = [
   '**⚙️ Embed avancé (dans le salon courant) :**',
   '`!embed avancé Titre | Description | couleur | image_url | pied de page`',
   '',
+  '**✨ Embed riche (avec thumbnail, auteur, liens) :**',
+  '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
+  '`!embed riche preview | #salon | ...` — prévisualiser avant publication',
+  'Dans la description, utilise `[texte](https://lien)` pour créer des liens cliquables.',
+  '',
   '**📋 Gérer les embeds existants :**',
   '`!embed liste [#salon]` — lister les embeds du bot dans un salon',
   '`!embed modifier #salon | ID | Nouveau titre | Nouvelle description | couleur`',
@@ -593,6 +598,81 @@ module.exports = (client) => {
         await staffLog(client, {
           action: 'embed déprogrammer',
           details: `**ID :** \`${shortId}\`\n**Titre :** ${titre}\n**Salon :** <#${doc.channelId}>\n**Date prévue :** <t:${ts}:F>`,
+          author: message.author.tag,
+        });
+        return;
+      }
+
+      // ── !embed riche ───────────────────────────────────────────────────────
+      if (sub === 'riche') {
+        const isPreview = args?.startsWith('preview');
+        const rest = isPreview
+          ? args.replace(/^preview\s*\|?\s*/, '').trim()
+          : (args || '');
+
+        if (!rest) return message.reply([
+          '**Usage :** `!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
+          '',
+          '> **Champs optionnels :** tous sauf #salon.',
+          '> Dans la description : `[texte](https://url)` crée un lien cliquable.',
+          '',
+          '**Exemple (lien vers réseaux) :**',
+          '```',
+          '!embed riche #follow-us | 🤝 Let\'s get social!',
+          '  | ♡ [TELEGRAM](https://t.me/mongroupe)\\n♡ [INSTAGRAM](https://instagram.com/moi)',
+          '  | or | https://mon-image.jpg | https://mon-logo.png | SUPREMYX CI',
+          '```',
+        ].join('\n'));
+
+        const parts        = rest.split('|').map(p => p.trim());
+        const channelArg   = parts[0] || '';
+        const title        = parts[1] || '';
+        const desc         = parts[2] || '';
+        const colorRaw     = parts[3] || 'or';
+        const imageUrl     = parts[4] || '';
+        const thumbnailUrl = parts[5] || '';
+        const authorName   = parts[6] || '';
+        const authorIcon   = parts[7] || '';
+        const footer       = parts[8] || '';
+
+        if (!channelArg) return message.reply('❌ Précise le salon cible. Ex : `!embed riche #annonces | ...`');
+
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable. Mentionne-le avec `#` ou écris `ici`.');
+
+        const embed = new EmbedBuilder()
+          .setColor(parseColor(colorRaw))
+          .setTimestamp();
+
+        if (title)        embed.setTitle(title);
+        if (desc)         embed.setDescription(desc);
+        if (imageUrl)     embed.setImage(imageUrl);
+        if (thumbnailUrl) embed.setThumbnail(thumbnailUrl);
+        if (footer)       embed.setFooter({ text: footer });
+        if (authorName)   embed.setAuthor({ name: authorName, iconURL: authorIcon || undefined });
+
+        if (isPreview) {
+          const confirmed = await awaitConfirmation(message, embed);
+          if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+        }
+
+        await target.send({ embeds: [embed] });
+        try { await message.delete(); } catch {}
+        if (target.id !== message.channel.id) {
+          message.channel.send(`✅ Embed riche publié dans <#${target.id}>.`)
+            .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+        }
+
+        await staffLog(client, {
+          action: 'embed riche',
+          details: [
+            `**Salon :** <#${target.id}>`,
+            `**Titre :** ${title || '—'}`,
+            imageUrl     ? `**Image :** ${imageUrl}`        : null,
+            thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}` : null,
+            authorName   ? `**Auteur :** ${authorName}`      : null,
+            isPreview    ? '*(prévisualisé)*'                 : null,
+          ].filter(Boolean).join('\n'),
           author: message.author.tag,
         });
         return;

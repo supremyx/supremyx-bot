@@ -15,15 +15,19 @@ async function processDueEmbeds() {
           continue;
         }
 
-        const embed = new EmbedBuilder()
-          .setColor(doc.color)
-          .setDescription(doc.description)
-          .setFooter({ text: `Programmé par ${doc.createdBy}` })
-          .setTimestamp();
+        const embed = new EmbedBuilder().setColor(doc.color).setTimestamp();
 
-        if (doc.title)    embed.setTitle(doc.title);
-        if (doc.imageUrl) embed.setImage(doc.imageUrl);
-        if (doc.footer)   embed.setFooter({ text: doc.footer });
+        if (doc.title)        embed.setTitle(doc.title);
+        if (doc.description)  embed.setDescription(doc.description);
+        if (doc.imageUrl)     embed.setImage(doc.imageUrl);
+        if (doc.thumbnailUrl) embed.setThumbnail(doc.thumbnailUrl);
+        if (doc.footer)       embed.setFooter({ text: doc.footer });
+        if (doc.authorName) {
+          embed.setAuthor({
+            name:    doc.authorName,
+            iconURL: doc.authorIconUrl || undefined,
+          });
+        }
 
         await channel.send({ embeds: [embed] });
         await ScheduledEmbed.findByIdAndUpdate(doc._id, { sent: true });
