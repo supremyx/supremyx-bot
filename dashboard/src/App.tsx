@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Toaster } from "sonner";
-import { Trophy, Medal, Award, Users, Zap, Target, Menu, X, ExternalLink } from "lucide-react";
+import { Trophy, Medal, Award, Users, Zap, Target, Menu, X, ExternalLink, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import TournoisPage from "./pages/TournoisPage";
@@ -89,10 +89,215 @@ interface PlayerDetail {
   history: { kills: number; date: string; teamName?: string }[];
 }
 
-function PlayerQuickModal({ name, onClose, onGoToPage }: { name: string; onClose: () => void; onGoToPage: (name: string) => void }) {
+/* ── Comparaison côte-à-côte ── */
+function PlayerCompareModal({ nameA, nameB, onClose, onSwap }: {
+  nameA: string; nameB: string;
+  onClose: () => void;
+  onSwap: (a: string, b: string) => void;
+}) {
+  const [detailA, setDetailA] = useState<PlayerDetail | null>(null);
+  const [detailB, setDetailB] = useState<PlayerDetail | null>(null);
+  const [loadingA, setLoadingA] = useState(true);
+  const [loadingB, setLoadingB] = useState(true);
+
+  useEffect(() => {
+    fetch(apiUrl(`/api/players/${encodeURIComponent(nameA)}`)).then(r => r.json())
+      .then(d => { setDetailA(d); setLoadingA(false); }).catch(() => setLoadingA(false));
+  }, [nameA]);
+  useEffect(() => {
+    fetch(apiUrl(`/api/players/${encodeURIComponent(nameB)}`)).then(r => r.json())
+      .then(d => { setDetailB(d); setLoadingB(false); }).catch(() => setLoadingB(false));
+  }, [nameB]);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+
+  type StatKey = "totalKills" | "avgKills" | "bestKills" | "totalMatches";
+  const STATS: { key: StatKey; label: string; color: string; fmt?: (v: number) => string }[] = [
+    { key: "totalKills",   label: "Kills totaux", color: "#f87171", fmt: v => v.toLocaleString("fr-FR") },
+    { key: "avgKills",     label: "Moy. kills",   color: "#fb923c" },
+    { key: "bestKills",    label: "Meilleur",     color: "#facc15" },
+    { key: "totalMatches", label: "Matchs",       color: "var(--primary)" },
+  ];
+
+  function winner(key: StatKey) {
+    if (!detailA || !detailB) return null;
+    if (detailA[key] > detailB[key]) return "A";
+    if (detailB[key] > detailA[key]) return "B";
+    return "tie";
+  }
+
+  const loading = loadingA || loadingB;
+  const maxHistory = 15;
+  const globalMax = detailA && detailB
+    ? Math.max(...detailA.history.slice(0, maxHistory).map(h => h.kills), ...detailB.history.slice(0, maxHistory).map(h => h.kills), 1)
+    : 1;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6"
+      style={{ background: "rgba(0,0,0,0.80)", backdropFilter: "blur(12px)" }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{ background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-base font-bold truncate" style={{ color: "#f87171" }}>{nameA}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>VS</span>
+            <span className="text-base font-bold truncate" style={{ color: "var(--primary)" }}>{nameB}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => onSwap(nameB, nameA)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}
+            >⇄ Inverser</button>
+            <button onClick={onClose} className="size-8 rounded-lg flex items-center justify-center text-lg cursor-pointer" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>×</button>
+          </div>
+        </div>
+
+        {loading && <div className="py-20 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement des données…</div>}
+
+        {!loading && detailA && detailB && (
+          <div className="p-6 space-y-6">
+
+            {/* Stats comparison rows */}
+            <div className="space-y-3">
+              {STATS.map(({ key, label, color, fmt }) => {
+                const valA = detailA[key] as number;
+                const valB = detailB[key] as number;
+                const maxV = Math.max(valA, valB, 1);
+                const pctA = (valA / maxV) * 100;
+                const pctB = (valB / maxV) * 100;
+                const w = winner(key);
+                return (
+                  <div key={key}>
+                    <div className="flex items-center justify-between mb-1.5 text-xs" style={{ color: "var(--muted-foreground)" }}>
+                      <span className="font-bold" style={{ color: w === "A" ? "#f87171" : "var(--muted-foreground)" }}>
+                        {fmt ? fmt(valA) : valA} {w === "A" && "🏆"}
+                      </span>
+                      <span className="text-center font-semibold uppercase tracking-wider" style={{ color }}>{label}</span>
+                      <span className="font-bold" style={{ color: w === "B" ? "var(--primary)" : "var(--muted-foreground)" }}>
+                        {w === "B" && "🏆"} {fmt ? fmt(valB) : valB}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 h-2">
+                      <div className="flex-1 flex justify-end">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pctA}%`, background: "rgba(248,113,113,0.7)" }} />
+                      </div>
+                      <div className="w-px h-3 shrink-0" style={{ background: "var(--border)" }} />
+                      <div className="flex-1">
+                        <div className="h-2 rounded-full transition-all" style={{ width: `${pctB}%`, background: "rgba(212,150,58,0.7)" }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Score global */}
+            {(() => {
+              const winsA = STATS.filter(s => winner(s.key) === "A").length;
+              const winsB = STATS.filter(s => winner(s.key) === "B").length;
+              const verdict = winsA > winsB ? nameA : winsB > winsA ? nameB : null;
+              return (
+                <div className="rounded-xl p-4 text-center" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                  {verdict
+                    ? <><p className="text-xs mb-1" style={{ color: "var(--muted-foreground)" }}>Vainqueur global</p>
+                        <p className="text-lg font-black">🏆 {verdict}</p>
+                        <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{winsA} vs {winsB} catégories</p></>
+                    : <><p className="text-xs mb-1" style={{ color: "var(--muted-foreground)" }}>Résultat</p>
+                        <p className="text-lg font-black">🤝 Égalité parfaite</p></>}
+                </div>
+              );
+            })()}
+
+            {/* Mini graphiques superposés */}
+            {(detailA.history.length > 0 || detailB.history.length > 0) && (
+              <div>
+                <h3 className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: "var(--muted-foreground)" }}>
+                  Kills sur les {maxHistory} derniers matchs
+                </h3>
+                <div className="flex items-end gap-0.5 h-20">
+                  {Array.from({ length: maxHistory }).map((_, i) => {
+                    const hA = detailA.history[i];
+                    const hB = detailB.history[i];
+                    return (
+                      <div key={i} className="flex-1 flex items-end gap-px" title={`${hA ? hA.kills : "–"} vs ${hB ? hB.kills : "–"}`}>
+                        {hA && <div className="flex-1 rounded-t-sm" style={{ height: `${Math.max((hA.kills / globalMax) * 100, 3)}%`, background: "rgba(248,113,113,0.65)" }} />}
+                        {hB && <div className="flex-1 rounded-t-sm" style={{ height: `${Math.max((hB.kills / globalMax) * 100, 3)}%`, background: "rgba(212,150,58,0.65)" }} />}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-center gap-4 mt-2 text-xs" style={{ color: "var(--muted-foreground)" }}>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full inline-block" style={{ background: "rgba(248,113,113,0.7)" }} />{nameA}</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full inline-block" style={{ background: "rgba(212,150,58,0.7)" }} />{nameB}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Tableau historique côte-à-côte */}
+            {(detailA.history.length > 0 || detailB.history.length > 0) && (
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { detail: detailA, name: nameA, color: "#f87171" },
+                  { detail: detailB, name: nameB, color: "var(--primary)" },
+                ].map(({ detail, name: n, color }) => (
+                  <div key={n}>
+                    <p className="text-xs font-bold mb-2 truncate" style={{ color }}>{n}</p>
+                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
+                            <th className="py-1.5 px-2 text-left">Date</th>
+                            <th className="py-1.5 px-2 text-center">Kills</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detail.history.slice(0, 8).map((h, i) => (
+                            <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: i % 2 !== 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                              <td className="py-1.5 px-2" style={{ color: "var(--muted-foreground)" }}>{fmtDate(h.date)}</td>
+                              <td className="py-1.5 px-2 text-center font-bold" style={{ color }}>{h.kills}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Fiche rapide joueur (overlay global) ── */
+interface ComparePickerResult { displayName: string; teamName: string; }
+
+function PlayerQuickModal({ name, onClose, onGoToPage, onCompare }: {
+  name: string;
+  onClose: () => void;
+  onGoToPage: (name: string) => void;
+  onCompare: (a: string, b: string) => void;
+}) {
   const [detail, setDetail] = useState<PlayerDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerResults, setPickerResults] = useState<ComparePickerResult[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const pickerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch(apiUrl(`/api/players/${encodeURIComponent(name)}`))
@@ -102,10 +307,27 @@ function PlayerQuickModal({ name, onClose, onGoToPage }: { name: string; onClose
   }, [name]);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { if (showPicker) setShowPicker(false); else onClose(); } };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [onClose, showPicker]);
+
+  useEffect(() => {
+    if (showPicker) setTimeout(() => pickerInputRef.current?.focus(), 50);
+    else { setPickerQuery(""); setPickerResults([]); }
+  }, [showPicker]);
+
+  useEffect(() => {
+    if (!pickerQuery.trim()) { setPickerResults([]); return; }
+    setPickerLoading(true);
+    const lq = pickerQuery.toLowerCase();
+    fetch(apiUrl("/api/players?limit=100")).then(r => r.json()).then(d => {
+      setPickerResults((d.players ?? [])
+        .filter((p: ComparePickerResult) => p.displayName.toLowerCase().includes(lq) && p.displayName !== name)
+        .slice(0, 6));
+      setPickerLoading(false);
+    }).catch(() => setPickerLoading(false));
+  }, [pickerQuery, name]);
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
 
@@ -134,7 +356,6 @@ function PlayerQuickModal({ name, onClose, onGoToPage }: { name: string; onClose
               onClick={() => { onClose(); onGoToPage(name); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}
-              title="Voir dans la page Joueurs"
             >
               <ExternalLink className="size-3" /> Page joueurs
             </button>
@@ -210,6 +431,59 @@ function PlayerQuickModal({ name, onClose, onGoToPage }: { name: string; onClose
                 </div>
               </div>
             )}
+
+            {/* ── Comparer avec un autre joueur ── */}
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+              <button
+                onClick={() => setShowPicker(p => !p)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold cursor-pointer transition-colors"
+                style={{ background: showPicker ? "rgba(212,150,58,0.1)" : "var(--muted)", color: "var(--foreground)" }}
+              >
+                <span>⚔️ Comparer avec un autre joueur…</span>
+                <span style={{ color: "var(--muted-foreground)" }}>{showPicker ? "▲" : "▼"}</span>
+              </button>
+              {showPicker && (
+                <div style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <Search className="size-3.5 shrink-0" style={{ color: "var(--muted-foreground)" }} />
+                    <input
+                      ref={pickerInputRef}
+                      value={pickerQuery}
+                      onChange={e => setPickerQuery(e.target.value)}
+                      placeholder="Nom du joueur adversaire…"
+                      className="flex-1 bg-transparent text-sm focus:outline-none"
+                      style={{ color: "var(--foreground)" }}
+                    />
+                    {pickerLoading && <div className="size-3.5 border-2 border-t-transparent rounded-full animate-spin shrink-0" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />}
+                  </div>
+                  {pickerResults.length > 0 ? (
+                    <div className="py-1">
+                      {pickerResults.map(p => (
+                        <button
+                          key={p.displayName}
+                          onClick={() => onCompare(name, p.displayName)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-colors"
+                          style={{ background: "transparent" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(212,150,58,0.08)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <span>💀</span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{p.displayName}</p>
+                            <p className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{p.teamName}</p>
+                          </div>
+                          <span className="ml-auto text-xs font-semibold" style={{ color: "var(--primary)" }}>⚔️ VS</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : pickerQuery && !pickerLoading ? (
+                    <p className="text-center text-xs py-4" style={{ color: "var(--muted-foreground)" }}>Aucun joueur trouvé pour « {pickerQuery} »</p>
+                  ) : (
+                    <p className="text-center text-xs py-4" style={{ color: "var(--muted-foreground)" }}>Tape le nom d'un joueur pour le comparer</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -273,6 +547,7 @@ export default function App() {
   const [compareWith, setCompareWith] = useState<string | null>(null);
   const [searchedPlayer, setSearchedPlayer] = useState<string | undefined>(undefined);
   const [quickPlayer, setQuickPlayer]       = useState<string | null>(null);
+  const [comparePlayers, setComparePlayers] = useState<{ a: string; b: string } | null>(null);
 
   const goToTeam = useCallback((name: string) => { setActiveTeam(name); setPage("equipe"); }, []);
   const goToComparison = useCallback((a: string, b?: string) => {
@@ -334,15 +609,30 @@ export default function App() {
       />
 
       {/* Fiche joueur rapide — overlay global */}
-      {quickPlayer && (
+      {quickPlayer && !comparePlayers && (
         <PlayerQuickModal
           name={quickPlayer}
           onClose={() => setQuickPlayer(null)}
           onGoToPage={(name) => {
+            setQuickPlayer(null);
             setSearchedPlayer(undefined);
             setTimeout(() => setSearchedPlayer(name), 0);
             setPage("joueurs");
           }}
+          onCompare={(a, b) => {
+            setQuickPlayer(null);
+            setComparePlayers({ a, b });
+          }}
+        />
+      )}
+
+      {/* Comparaison côte-à-côte — overlay global */}
+      {comparePlayers && (
+        <PlayerCompareModal
+          nameA={comparePlayers.a}
+          nameB={comparePlayers.b}
+          onClose={() => setComparePlayers(null)}
+          onSwap={(a, b) => setComparePlayers({ a, b })}
         />
       )}
 
