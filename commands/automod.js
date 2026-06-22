@@ -58,16 +58,16 @@ module.exports = (client) => {
           .addFields(
             { name: 'État', value: config.enabled ? '✅ **Activé**' : '⛔ **Désactivé**', inline: true },
             { name: 'Mots interdits', value: `**${wordCount}** entrée(s)`, inline: true },
-            { name: 'Commandes', value: '`!automod activer` / `!automod désactiver`\n`!automod test <message>` — tester un message\n`!mots` — voir la liste', inline: false },
+            { name: 'Commandes', value: '`!automod activer` / `!automod désactiver`\n`!automod tester <message>` — tester un message\n`!mots` — voir la liste', inline: false },
           )
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 
-      // !automod test <message> — tester si un message serait filtré
-      if (sub === 'test') {
+      // !automod tester <message> — tester si un message serait filtré
+      if (sub === 'tester') {
         const testMsg = args.slice(2).join(' ').toLowerCase().trim();
-        if (!testMsg) return message.reply('Usage : `!automod test <message à tester>`');
+        if (!testMsg) return message.reply('Usage : `!automod tester <message à tester>`');
 
         const words = await BadWord.find().lean();
         const triggered = words.filter(w => testMsg.includes(w.word.toLowerCase()));
