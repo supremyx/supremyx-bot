@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Toaster } from "sonner";
-import { Trophy, Medal, Award, Users, Zap, Target, Menu, X } from "lucide-react";
+import { Trophy, Medal, Award, Users, Zap, Target, Menu, X, ExternalLink } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import TournoisPage from "./pages/TournoisPage";
@@ -78,6 +78,145 @@ function useBotStatus() {
   return online;
 }
 
+/* ── Fiche joueur rapide (overlay global depuis la recherche) ── */
+interface PlayerDetail {
+  displayName: string;
+  teams: string[];
+  totalKills: number;
+  totalMatches: number;
+  bestKills: number;
+  avgKills: number;
+  history: { kills: number; date: string; teamName?: string }[];
+}
+
+function PlayerQuickModal({ name, onClose, onGoToPage }: { name: string; onClose: () => void; onGoToPage: (name: string) => void }) {
+  const [detail, setDetail] = useState<PlayerDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(apiUrl(`/api/players/${encodeURIComponent(name)}`))
+      .then(r => r.json())
+      .then(d => { setDetail(d); setLoading(false); })
+      .catch(() => { setError("Impossible de charger les données."); setLoading(false); });
+  }, [name]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)" }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{ background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">💀</span>
+              <h2 className="font-bold text-lg">{name}</h2>
+            </div>
+            {detail && (
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                {detail.teams.join(", ")} · {detail.totalMatches} match{detail.totalMatches !== 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { onClose(); onGoToPage(name); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}
+              title="Voir dans la page Joueurs"
+            >
+              <ExternalLink className="size-3" /> Page joueurs
+            </button>
+            <button onClick={onClose} className="size-8 rounded-lg flex items-center justify-center text-lg cursor-pointer" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>×</button>
+          </div>
+        </div>
+
+        {loading && <div className="py-20 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>}
+        {error && <div className="py-20 text-center text-red-400">{error}</div>}
+
+        {detail && (
+          <div className="p-6 space-y-6">
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Kills totaux", value: detail.totalKills.toLocaleString("fr-FR"), color: "#f87171" },
+                { label: "Moy. kills",   value: detail.avgKills,                            color: "#fb923c" },
+                { label: "Meilleur",     value: detail.bestKills,                           color: "#facc15" },
+                { label: "Matchs",       value: detail.totalMatches,                        color: "var(--primary)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                  <div className="text-xl font-black" style={{ color }}>{value}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Mini chart kills */}
+            {detail.history.length > 0 && (
+              <div>
+                <div className="flex items-end gap-1 h-16 mb-1">
+                  {detail.history.slice(0, 20).map((h, i) => {
+                    const maxK = Math.max(...detail.history.slice(0, 20).map(x => x.kills), 1);
+                    const pct = Math.max((h.kills / maxK) * 100, 4);
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center group relative">
+                        <div className="w-full rounded-t-sm transition-all" title={`${h.kills} kills`}
+                          style={{ height: `${pct}%`, background: "rgba(248,113,113,0.6)", minHeight: 3 }} />
+                        <span className="absolute -top-5 text-[9px] opacity-0 group-hover:opacity-100 font-bold text-red-400">{h.kills}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-center" style={{ color: "var(--muted-foreground)" }}>Kills sur les {Math.min(detail.history.length, 20)} derniers matchs</p>
+              </div>
+            )}
+
+            {/* History table */}
+            {detail.history.length > 0 && (
+              <div>
+                <h3 className="text-xs uppercase tracking-wider font-semibold mb-3" style={{ color: "var(--muted-foreground)" }}>
+                  Historique récent
+                </h3>
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-xs" style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
+                        <th className="py-2 px-3 text-left">Date</th>
+                        <th className="py-2 px-3 text-center">Kills</th>
+                        {detail.teams.length > 1 && <th className="py-2 px-3 text-left hidden sm:table-cell">Équipe</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.history.map((h, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: i % 2 !== 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                          <td className="py-2 px-3 text-xs" style={{ color: "var(--muted-foreground)" }}>{fmtDate(h.date)}</td>
+                          <td className="py-2 px-3 text-center text-red-400 font-bold">{h.kills}</td>
+                          {detail.teams.length > 1 && <td className="py-2 px-3 text-xs hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>{h.teamName || "—"}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RankIcon({ rank }: { rank: number }) {
   if (rank === 1) return <Trophy className="size-5 text-yellow-400" />;
   if (rank === 2) return <Medal className="size-5 text-gray-300" />;
@@ -133,6 +272,7 @@ export default function App() {
   const [activeTeam, setActiveTeam]   = useState<string | null>(null);
   const [compareWith, setCompareWith] = useState<string | null>(null);
   const [searchedPlayer, setSearchedPlayer] = useState<string | undefined>(undefined);
+  const [quickPlayer, setQuickPlayer]       = useState<string | null>(null);
 
   const goToTeam = useCallback((name: string) => { setActiveTeam(name); setPage("equipe"); }, []);
   const goToComparison = useCallback((a: string, b?: string) => {
@@ -193,6 +333,19 @@ export default function App() {
         }}
       />
 
+      {/* Fiche joueur rapide — overlay global */}
+      {quickPlayer && (
+        <PlayerQuickModal
+          name={quickPlayer}
+          onClose={() => setQuickPlayer(null)}
+          onGoToPage={(name) => {
+            setSearchedPlayer(undefined);
+            setTimeout(() => setSearchedPlayer(name), 0);
+            setPage("joueurs");
+          }}
+        />
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50" style={{ background: "rgba(22,21,30,0.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)" }}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -232,7 +385,7 @@ export default function App() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <GlobalSearch onSelectTeam={goToTeam} onSelectPlayer={(name) => { setSearchedPlayer(undefined); setTimeout(() => setSearchedPlayer(name), 0); setPage("joueurs"); }} />
+            <GlobalSearch onSelectTeam={goToTeam} onSelectPlayer={(name) => setQuickPlayer(name)} />
             {lastUpdate && page === "classement" && (
               <span className="hidden xl:inline text-xs" style={{ color: "var(--muted-foreground)" }}>
                 Mis à jour à {lastUpdate.toLocaleTimeString("fr-FR")}
