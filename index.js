@@ -152,6 +152,7 @@ require('./commands/ranking')(client);
 require('./commands/stats')(client);
 require('./commands/search')(client);
 require('./commands/compare')(client);
+require('./commands/top3')(client);
 require('./commands/history')(client);
 require('./commands/top')(client);
 require('./commands/matchs')(client);
