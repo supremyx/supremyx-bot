@@ -343,4 +343,7 @@ require('./commands/notifequipe')(client);
 // --- Geler / dégeler le classement ---
 require('./commands/gelerclassement')(client);
 
+// --- Système d'inscription %inscrire + waitlist embed ---
+require('./commands/waitlist')(client);
+
 client.login(process.env.TOKEN);
