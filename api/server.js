@@ -1085,21 +1085,26 @@ router.get('/scheduled-embeds', publicLimiter, async (req, res) => {
 // ── POST /api/scheduled-embeds ────────────────────────────────────────────────
 router.post('/scheduled-embeds', publicLimiter, async (req, res) => {
   try {
-    const { guildId, channelId, title, description, color, scheduledAt, createdBy } = req.body;
+    const { guildId, channelId, title, description, color, scheduledAt, createdBy,
+            imageUrl, thumbnailUrl, authorName, authorIconUrl, footer } = req.body;
     if (!channelId) return res.status(400).json({ error: 'channelId requis' });
-    if (!description) return res.status(400).json({ error: 'description requise' });
     if (!scheduledAt) return res.status(400).json({ error: 'scheduledAt requis' });
     const date = new Date(scheduledAt);
     if (isNaN(date.getTime())) return res.status(400).json({ error: 'Date invalide' });
     if (date <= new Date()) return res.status(400).json({ error: 'La date doit être dans le futur' });
     const doc = await ScheduledEmbed.create({
-      guildId:     guildId || '',
+      guildId:      guildId || '',
       channelId,
-      title:       title || '',
-      description,
-      color:       typeof color === 'number' ? color : parseInt(String(color).replace('#',''), 16) || 0x5865F2,
-      scheduledAt: date,
-      createdBy:   createdBy || 'Dashboard',
+      title:        title || '',
+      description:  description || '',
+      color:        typeof color === 'number' ? color : parseInt(String(color).replace('#',''), 16) || 0x5865F2,
+      imageUrl:     imageUrl || '',
+      thumbnailUrl: thumbnailUrl || '',
+      authorName:   authorName || '',
+      authorIconUrl:authorIconUrl || '',
+      footer:       footer || '',
+      scheduledAt:  date,
+      createdBy:    createdBy || 'Dashboard',
     });
     res.json({ ok: true, id: doc._id.toString().slice(-6), _id: doc._id });
   } catch (err) {

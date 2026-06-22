@@ -114,6 +114,7 @@ const STAFF_CATEGORIES = [
       { label: '!embed envoyer [preview] #salon | Titre | Desc | couleur', description: 'Publier un embed texte dans un salon (preview = prévisualiser avant)', subs: ['envoyer ici | Titre | Desc | couleur — Publier dans le salon courant'] },
       { label: '!embed boutons [preview] #salon | Titre | Desc | Texte >> https://... | couleur', description: 'Publier un embed avec boutons URL cliquables (max 5)', subs: ['boutons preview | … — Prévisualiser avant publication'] },
       { label: '!embed avancé Titre | Desc | couleur | image_url | footer', description: 'Poster un embed riche dans le salon courant (couleur, image, footer)', subs: [] },
+      { label: '!embed riche #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer', description: 'Embed complet : thumbnail, auteur, image, liens hypertextes dans la description', subs: ['embed riche preview | #salon | ... — Prévisualiser avant publication'] },
       { label: '!embed liste [#salon]',                        description: 'Lister les embeds publiés par le bot dans un salon', subs: [] },
       { label: '!embed modifier #salon | ID | Titre | Desc | couleur', description: 'Modifier un embed déjà publié par le bot',   subs: ['modifier ici | ID | Titre | Desc | couleur — Dans le salon courant'] },
       { label: '!embed supprimer #salon | ID_message',         description: 'Supprimer un embed publié par le bot (confirmation requise)', subs: ['supprimer ici | ID_message — Supprimer dans le salon courant'] },
