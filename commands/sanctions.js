@@ -41,12 +41,12 @@ module.exports = (client) => {
       const target = message.mentions.members.first();
       if (!target) return message.reply(
         '**Usage :** `!punition @user <type> [durée_min] | <raison>`\n' +
-        '**Types :** `warn`, `mute`, `kick`, `ban`\n\n' +
+        '**Types :** `avertir`, `sourdine`, `expulser`, `bannir`\n\n' +
         '**Exemples :**\n' +
-        '`!punition @user warn | Langage inapproprié`\n' +
-        '`!punition @user mute 30 | Spam`\n' +
-        '`!punition @user kick | Non-respect des règles`\n' +
-        '`!punition @user ban | Triche avérée`'
+        '`!punition @user avertir | Langage inapproprié`\n' +
+        '`!punition @user sourdine 30 | Spam`\n' +
+        '`!punition @user expulser | Non-respect des règles`\n' +
+        '`!punition @user bannir | Triche avérée`'
       );
 
       if (target.id === message.author.id) return message.reply('❌ Tu ne peux pas te sanctionner toi-même.');
@@ -57,16 +57,18 @@ module.exports = (client) => {
       const beforePipe = (pipeIdx === -1 ? rawRest : rawRest.slice(0, pipeIdx)).trim();
       const afterPipe  = (pipeIdx === -1 ? ''      : rawRest.slice(pipeIdx + 1)).trim();
       const tokens = beforePipe.split(' ');
-      const type = tokens[0]?.toLowerCase();
+      const TYPE_FR = { 'avertir': 'warn', 'sourdine': 'mute', 'expulser': 'kick', 'bannir': 'ban' };
+      const typeRaw = tokens[0]?.toLowerCase();
+      const type = TYPE_FR[typeRaw] || typeRaw;
       const durationArg = parseInt(tokens[1]);
       const duration = !isNaN(durationArg) && durationArg > 0 ? durationArg : null;
       const reason = afterPipe || 'Aucune raison précisée';
 
       if (!['warn', 'mute', 'kick', 'ban'].includes(type)) {
-        return message.reply('❌ Type invalide. Utilise : `warn`, `mute`, `kick`, `ban`');
+        return message.reply('❌ Type invalide. Utilise : `avertir`, `sourdine`, `expulser`, `bannir`');
       }
       if (type === 'mute' && !duration) {
-        return message.reply('❌ Durée requise pour un mute. Ex : `!punition @user mute 30 | Raison`');
+        return message.reply('❌ Durée requise pour une sourdine. Ex : `!punition @user sourdine 30 | Raison`');
       }
 
       // Apply Discord action
@@ -187,12 +189,13 @@ module.exports = (client) => {
       // --- !escalade configurer <warns> <action> [durée_min] ---
       if (sub === 'configurer') {
         const warnCount = parseInt(args[2]);
-        const action = args[3]?.toLowerCase();
         const duration = parseInt(args[4]) || null;
 
-        if (isNaN(warnCount) || warnCount < 1) return message.reply('Usage : `!escalade configurer <warns> <action> [durée_min]`');
-        if (!['mute', 'kick', 'ban'].includes(action)) return message.reply('❌ Action invalide : `mute`, `kick`, `ban`');
-        if (action === 'mute' && !duration) return message.reply('❌ Durée requise pour mute. Ex : `!escalade set 3 mute 60`');
+        if (isNaN(warnCount) || warnCount < 1) return message.reply('Usage : `!escalade configurer <avertissements> <action> [durée_min]`');
+        const ACTION_FR = { 'sourdine': 'mute', 'expulser': 'kick', 'bannir': 'ban' };
+        const action = ACTION_FR[args[3]?.toLowerCase()] || args[3]?.toLowerCase();
+        if (!['mute', 'kick', 'ban'].includes(action)) return message.reply('❌ Action invalide : `sourdine`, `expulser`, `bannir`');
+        if (action === 'mute' && !duration) return message.reply('❌ Durée requise pour une sourdine. Ex : `!escalade configurer 3 sourdine 60`');
 
         config = config || await EscaladeConfig.create({ guildId: message.guild.id, rules: [] });
 
@@ -227,7 +230,7 @@ module.exports = (client) => {
           await EscaladeConfig.create({ guildId: message.guild.id, rules: DEFAULT_RULES, enabled: true });
         }
         logStaffAction(client, `🔄 **Escalade réinitialisée** aux valeurs par défaut | Par : ${message.author.tag}`);
-        return message.reply('✅ Escalade réinitialisée :\n• **3 warns** → Mute 1h\n• **5 warns** → Mute 24h\n• **7 warns** → Ban');
+        return message.reply('✅ Escalade réinitialisée :\n• **3 avertissements** → Sourdine 1h\n• **5 avertissements** → Sourdine 24h\n• **7 avertissements** → Bannissement');
       }
 
       return message.reply(
