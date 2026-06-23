@@ -22,11 +22,12 @@ import BirthdaysPage from "./pages/BirthdaysPage";
 import SuggestionsPage from "./pages/SuggestionsPage";
 import SondagesPage from "./pages/SondagesPage";
 import EmbedsProgrammesPage from "./pages/EmbedsProgrammesPage";
+import ParametresPage from "./pages/ParametresPage";
 import GlobalSearch from "./components/GlobalSearch";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres";
 
 interface Team {
   rank: number;
@@ -57,6 +58,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "sondages",          label: "Sondages",   icon: "📊" },
   { key: "embeds-programmes", label: "Embeds prog.", icon: "📨" },
   { key: "logs",              label: "Journaux",    icon: "📋" },
+  { key: "parametres",        label: "Paramètres",  icon: "⚙️" },
 ];
 
 function useBotStatus() {
@@ -752,6 +754,7 @@ export default function App() {
       {page === "suggestions"  && <SuggestionsPage />}
       {page === "sondages"          && <SondagesPage />}
       {page === "embeds-programmes" && <EmbedsProgrammesPage />}
+      {page === "parametres"        && <ParametresPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>

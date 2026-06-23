@@ -1138,6 +1138,19 @@ router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
   }
 });
 
+// ── GET /admin/config — clé API masquée (protégé) ────────────────────────────
+router.get('/admin/config', requireApiKey, (_req, res) => {
+  const key = process.env.BOT_API_KEY || '';
+  const masked = key.length > 8
+    ? key.slice(0, 4) + '••••••••••••••••••••••••' + key.slice(-4)
+    : '••••••••';
+  res.json({
+    botApiKey: key,
+    botApiKeyMasked: masked,
+    keyLength: key.length,
+  });
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
