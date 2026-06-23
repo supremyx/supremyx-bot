@@ -10,6 +10,19 @@ interface MatchEvent {
   tournamentName: string | null;
 }
 
+interface TournamentStartEvent {
+  name: string;
+  startedBy: string;
+}
+
+interface TournamentEndEvent {
+  name: string;
+  winner: string | null;
+  winnerPts: number;
+  matchCount: number;
+  endedBy: string;
+}
+
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 function showMatchToast(m: MatchEvent) {
@@ -23,6 +36,23 @@ function showMatchToast(m: MatchEvent) {
       .filter(Boolean)
       .join("  ·  "),
     duration: 7000,
+  });
+}
+
+function showTournamentStartToast(t: TournamentStartEvent) {
+  toast.success(`🏁 Tournoi démarré — ${t.name}`, {
+    description: `Lancé par ${t.startedBy} · Bonne chance à toutes les équipes !`,
+    duration: 10000,
+  });
+}
+
+function showTournamentEndToast(t: TournamentEndEvent) {
+  const winnerLine = t.winner
+    ? `🥇 Vainqueur : ${t.winner} (${t.winnerPts} pts)`
+    : "Aucun vainqueur enregistré";
+  toast(`🏆 Tournoi terminé — ${t.name}`, {
+    description: `${winnerLine}  ·  ${t.matchCount} match${t.matchCount > 1 ? "s" : ""} joué${t.matchCount > 1 ? "s" : ""}`,
+    duration: 12000,
   });
 }
 
@@ -48,10 +78,27 @@ export function useMatchNotifications() {
         }
       });
 
+      es.addEventListener("newTournament", (e) => {
+        try {
+          const data: TournamentStartEvent = JSON.parse(e.data);
+          showTournamentStartToast(data);
+        } catch {
+          // ignore malformed events
+        }
+      });
+
+      es.addEventListener("endTournament", (e) => {
+        try {
+          const data: TournamentEndEvent = JSON.parse(e.data);
+          showTournamentEndToast(data);
+        } catch {
+          // ignore malformed events
+        }
+      });
+
       es.onerror = () => {
         es.close();
         esRef.current = null;
-        // Reconnect after 5s on error
         if (!unmounted) {
           reconnectTimer.current = setTimeout(connect, 5_000);
         }

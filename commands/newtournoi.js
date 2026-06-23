@@ -1,6 +1,7 @@
 const Tournament = require('../database/models/Tournament');
 const { EmbedBuilder } = require('discord.js');
 const { staffLog } = require('../utils/staffLog');
+const eventBus = require('../utils/eventBus');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -33,6 +34,8 @@ module.exports = (client) => {
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
+
+    eventBus.emit('newTournament', { name, startedBy: message.author.tag });
 
     await staffLog(client, {
       action: 'addmatch',

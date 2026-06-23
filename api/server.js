@@ -804,11 +804,23 @@ router.get('/events', (req, res) => {
     res.write(`event: newMatch\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
+  const onTournamentStart = (data) => {
+    res.write(`event: newTournament\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  const onTournamentEnd = (data) => {
+    res.write(`event: endTournament\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
   eventBus.on('newMatch', onMatch);
+  eventBus.on('newTournament', onTournamentStart);
+  eventBus.on('endTournament', onTournamentEnd);
 
   req.on('close', () => {
     clearInterval(heartbeat);
     eventBus.off('newMatch', onMatch);
+    eventBus.off('newTournament', onTournamentStart);
+    eventBus.off('endTournament', onTournamentEnd);
   });
 });
 
