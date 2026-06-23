@@ -10,10 +10,6 @@ fi
 REPO="supremyx/supremyx-bot"
 REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"
 
-git config user.email "bot@supremyx.xyz"
-git config user.name "SUPREMYX Bot"
-git remote set-url origin "$REMOTE" 2>/dev/null || true
-
 echo "🔁 Auto-push actif — vérification toutes les 60 secondes"
 
 # ── Notification Discord via webhook ─────────────────────────────────────────
@@ -67,7 +63,7 @@ while true; do
     LAST_HASH=$(git rev-parse --short HEAD 2>/dev/null)
     TIME_NOW=$(date '+%H:%M:%S')
 
-    if git push origin main --quiet 2>/dev/null; then
+    if git push "$REMOTE" main --quiet 2>/dev/null; then
       echo "✅ [${TIME_NOW}] ${UNPUSHED} commit(s) poussé(s) sur GitHub"
       send_discord \
         "5763719" \
