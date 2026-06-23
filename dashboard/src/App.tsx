@@ -25,6 +25,7 @@ import EmbedsProgrammesPage from "./pages/EmbedsProgrammesPage";
 import ParametresPage from "./pages/ParametresPage";
 import GlobalSearch from "./components/GlobalSearch";
 import NotificationBanner from "./components/NotificationBanner";
+import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
@@ -540,6 +541,7 @@ export default function App() {
   const botOnline = useBotStatus();
   const [page, setPage]               = useState<Page>("classement");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [ranking, setRanking]         = useState<Team[]>([]);
   const [lastUpdate, setLastUpdate]   = useState<Date | null>(null);
   const [loading, setLoading]         = useState(true);
@@ -693,6 +695,25 @@ export default function App() {
                 ↻ Actualiser <span className="opacity-60 font-normal">({countdown}s)</span>
               </button>
             )}
+            {/* Bell / notification history */}
+            <button
+              data-testid="button-open-notification-history"
+              onClick={() => setHistoryOpen(o => !o)}
+              className="relative flex items-center justify-center size-9 rounded-lg transition-colors cursor-pointer"
+              style={{ background: historyOpen ? "rgba(212,150,58,0.15)" : "rgba(255,255,255,0.05)", color: historyOpen ? "var(--primary)" : "var(--muted-foreground)" }}
+              title="Historique des notifications"
+            >
+              🔔
+              {notifications.length > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold"
+                  style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                >
+                  {notifications.length > 9 ? "9+" : notifications.length}
+                </span>
+              )}
+            </button>
+
             {/* Bot status badge */}
             <div className="hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full" style={{ background: "var(--muted)", color: botOnline ? "#34d399" : botOnline === false ? "#f87171" : "var(--muted-foreground)" }}>
               <span className={`size-1.5 rounded-full ${botOnline ? "bg-emerald-400 animate-pulse" : botOnline === false ? "bg-red-400" : "bg-gray-500"}`} />
@@ -730,6 +751,15 @@ export default function App() {
           </div>
         )}
       </header>
+
+      {/* Notification History drawer */}
+      <NotificationHistory
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        notifications={notifications}
+        onDismiss={dismiss}
+        onDismissAll={dismissAll}
+      />
 
       {/* Notification Banner */}
       <NotificationBanner notifications={notifications} onDismiss={dismiss} onDismissAll={dismissAll} />
