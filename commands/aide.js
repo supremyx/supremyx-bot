@@ -25,11 +25,12 @@ const CATEGORIES = [
       { label: '!equipes',                     description: 'Liste de toutes les équipes enregistrées',            subs: [] },
       { label: '!classement',                  description: 'Classement général des équipes',                      subs: ['kills — Classement par total de kills', 'ratio — Classement par kills/match', '<tournoi> — Classement filtré sur un tournoi'] },
       { label: '!top [N]',                     description: 'Top N équipes (défaut : 10)',                         subs: [] },
-      { label: '!comparer <T1> vs <T2>',       description: 'Comparer deux équipes côte à côte',                  subs: ['<T1> vs <T2> — Stats en direct', 'season <T1> vs <T2> — Comparaison sur l\'historique des saisons'] },
+      { label: '!comparer <T1> vs <T2>',       description: 'Comparer deux équipes ou deux joueurs côte à côte',   subs: ['<T1> vs <T2> — Stats équipes en direct', 'season <T1> vs <T2> — Comparaison sur l\'historique des saisons', 'joueur <J1> vs <J2> — Comparer deux joueurs (kills, matchs, ratio)'] },
       { label: '!historique <équipe>',         description: 'Historique de tous les matchs d\'une équipe',         subs: [] },
       { label: '!matchs',                      description: 'Statistiques globales (matchs, kills, records)',      subs: [] },
       { label: '!recherche <nom>',             description: 'Rechercher une équipe ou un joueur par nom',          subs: [] },
       { label: '!formrecente <équipe> [N]',    description: 'Forme récente : N derniers matchs avec résultats et moyennes', subs: [] },
+      { label: '!top3 [30|saison]',            description: 'Top 3 joueurs par kills sur la période choisie',     subs: ['— 7 derniers jours (défaut)', '30 — 30 derniers jours', 'saison — Toute la saison archivée'] },
     ],
   },
   {
@@ -47,6 +48,7 @@ const CATEGORIES = [
       { label: '!absence declarer [raison]', description: 'Déclarer son absence au prochain match',              subs: ['declarer [raison] — Déclarer son absence', 'annuler — Annuler son absence', 'liste <équipe> — Absences d\'une équipe'] },
       { label: '!objectif <équipe>',         description: 'Voir l\'objectif de saison d\'une équipe',             subs: ['voir <équipe> — Voir l\'objectif', 'progression <équipe> — Avancement vers l\'objectif'] },
       { label: '!scout <joueur>',            description: 'Fiche de scouting complète d\'un joueur',              subs: ['<joueur> — Fiche complète', 'comparer <J1> vs <J2> — Comparer deux joueurs'] },
+      { label: '!freeagents',               description: 'Liste des joueurs enregistrés sans équipe active',      subs: [] },
     ],
   },
   {
@@ -70,6 +72,7 @@ const CATEGORIES = [
       { label: '!recap [nom_tournoi]',                 description: 'Récapitulatif automatique complet d\'un tournoi',        subs: [] },
       { label: '!pronostic <T1> vs <T2>',              description: 'Faire un pronostic sur un match à venir',               subs: ['<T1> vs <T2> — Faire un pronostic', 'resultats — Voir ses pronostics', 'classement — Top pronostiqueurs'] },
       { label: '!dispo oui|non|incertain',             description: 'Déclarer sa disponibilité pour le prochain match',      subs: ['oui|non|incertain [raison] — Déclaration générale', 'match <id> <statut> — Pour un match précis', 'voir — Voir sa dispo actuelle'] },
+      { label: '!waitlist',                            description: 'Voir la liste d\'attente du tournoi actif (places limitées)', subs: [] },
     ],
   },
   {
