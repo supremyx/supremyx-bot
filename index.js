@@ -24,6 +24,7 @@ const { startLevelManager } = require('./utils/levelManager');
 const { startDashboardManager } = require('./utils/dashboardManager');
 const { startScheduleManager } = require('./utils/scheduleManager');
 const { startScheduledEmbedManager } = require('./utils/scheduledEmbedManager');
+const { startRapportHebdo } = require('./utils/rapportHebdo');
 require('dotenv').config();
 
 const client = new Client({
@@ -97,6 +98,7 @@ client.once('clientReady', async () => {
   startScheduleManager(client);
   console.log('📅 Système rappels calendrier activé');
   startScheduledEmbedManager(client);
+  startRapportHebdo(client);
 });
 
 // --- Intelligence Artificielle ---
@@ -349,5 +351,8 @@ require('./commands/gelerclassement')(client);
 
 // --- Système d'inscription %inscrire + waitlist embed ---
 require('./commands/waitlist')(client);
+
+// --- Rapport hebdomadaire automatique ---
+require('./commands/rapportHebdo')(client);
 
 client.login(process.env.TOKEN);

@@ -213,6 +213,7 @@ const STAFF_CATEGORIES = [
     emoji: '🔧',
     color: 0x5865F2,
     commands: [
+      { label: '!rapporthebdo salon #salon', description: 'Configurer et gérer le rapport hebdomadaire automatique', subs: ['salon #salon — Configurer le salon', 'activer — Activer l\'envoi chaque dimanche 20h', 'desactiver — Désactiver', 'tester — Envoyer un aperçu maintenant', 'statut — Voir la configuration'] },
       { label: '!chercher staff <terme>',  description: 'Rechercher une commande staff par mot-clé',       subs: [] },
       { label: '!statsbot',                description: 'Statistiques d\'utilisation du bot',              subs: [] },
       { label: '!commandes',              description: 'Classement des commandes les plus utilisées',      subs: [] },
