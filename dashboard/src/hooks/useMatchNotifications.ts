@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { apiUrl } from "../lib/api";
 
-interface MatchEvent {
+export type NotifType = "match" | "tournamentStart" | "tournamentEnd";
+
+export interface MatchEvent {
   team: string;
   placement: number;
   kills: number;
@@ -10,12 +12,12 @@ interface MatchEvent {
   tournamentName: string | null;
 }
 
-interface TournamentStartEvent {
+export interface TournamentStartEvent {
   name: string;
   startedBy: string;
 }
 
-interface TournamentEndEvent {
+export interface TournamentEndEvent {
   name: string;
   winner: string | null;
   winnerPts: number;
@@ -23,7 +25,16 @@ interface TournamentEndEvent {
   endedBy: string;
 }
 
+export interface Notification {
+  id: string;
+  type: NotifType;
+  data: MatchEvent | TournamentStartEvent | TournamentEndEvent;
+  time: Date;
+}
+
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+let _idCounter = 0;
+function nextId() { return `notif-${Date.now()}-${++_idCounter}`; }
 
 function showMatchToast(m: MatchEvent) {
   const placement = m.placement > 0 ? (MEDAL[m.placement] ?? `#${m.placement}`) : null;
@@ -32,9 +43,7 @@ function showMatchToast(m: MatchEvent) {
       placement && `Place : ${placement}`,
       `+${m.points} pts · ${m.kills} kills`,
       m.tournamentName && `Tournoi : ${m.tournamentName}`,
-    ]
-      .filter(Boolean)
-      .join("  ·  "),
+    ].filter(Boolean).join("  ·  "),
     duration: 7000,
   });
 }
@@ -56,16 +65,29 @@ function showTournamentEndToast(t: TournamentEndEvent) {
   });
 }
 
+const MAX_NOTIFS = 20;
+
 export function useMatchNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const esRef = useRef<EventSource | null>(null);
+
+  const push = useCallback((type: NotifType, data: Notification["data"]) => {
+    const notif: Notification = { id: nextId(), type, data, time: new Date() };
+    setNotifications(prev => [notif, ...prev].slice(0, MAX_NOTIFS));
+  }, []);
+
+  const dismiss = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  const dismissAll = useCallback(() => setNotifications([]), []);
 
   useEffect(() => {
     let unmounted = false;
 
     function connect() {
       if (unmounted) return;
-
       const es = new EventSource(apiUrl("/api/events"));
       esRef.current = es;
 
@@ -73,44 +95,40 @@ export function useMatchNotifications() {
         try {
           const data: MatchEvent = JSON.parse(e.data);
           showMatchToast(data);
-        } catch {
-          // ignore malformed events
-        }
+          push("match", data);
+        } catch { /* ignore */ }
       });
 
       es.addEventListener("newTournament", (e) => {
         try {
           const data: TournamentStartEvent = JSON.parse(e.data);
           showTournamentStartToast(data);
-        } catch {
-          // ignore malformed events
-        }
+          push("tournamentStart", data);
+        } catch { /* ignore */ }
       });
 
       es.addEventListener("endTournament", (e) => {
         try {
           const data: TournamentEndEvent = JSON.parse(e.data);
           showTournamentEndToast(data);
-        } catch {
-          // ignore malformed events
-        }
+          push("tournamentEnd", data);
+        } catch { /* ignore */ }
       });
 
       es.onerror = () => {
         es.close();
         esRef.current = null;
-        if (!unmounted) {
-          reconnectTimer.current = setTimeout(connect, 5_000);
-        }
+        if (!unmounted) reconnectTimer.current = setTimeout(connect, 5_000);
       };
     }
 
     connect();
-
     return () => {
       unmounted = true;
       esRef.current?.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
-  }, []);
+  }, [push]);
+
+  return { notifications, dismiss, dismissAll };
 }

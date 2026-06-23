@@ -24,6 +24,7 @@ import SondagesPage from "./pages/SondagesPage";
 import EmbedsProgrammesPage from "./pages/EmbedsProgrammesPage";
 import ParametresPage from "./pages/ParametresPage";
 import GlobalSearch from "./components/GlobalSearch";
+import NotificationBanner from "./components/NotificationBanner";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
@@ -535,7 +536,7 @@ function TeamRow({ t, flash, onClick }: { t: Team; flash: boolean; onClick: () =
 }
 
 export default function App() {
-  useMatchNotifications();
+  const { notifications, dismiss, dismissAll } = useMatchNotifications();
   const botOnline = useBotStatus();
   const [page, setPage]               = useState<Page>("classement");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -729,6 +730,9 @@ export default function App() {
           </div>
         )}
       </header>
+
+      {/* Notification Banner */}
+      <NotificationBanner notifications={notifications} onDismiss={dismiss} onDismissAll={dismissAll} />
 
       {/* Pages */}
       {page === "tournois"   && <TournoisPage />}
