@@ -52,7 +52,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node scripts/autopush.js & node index.js"
+args = "node index.js"
 
 [deployment]
 deploymentTarget = "autoscale"
