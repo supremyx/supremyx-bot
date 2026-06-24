@@ -115,7 +115,7 @@ const CATEGORIES = [
       { label: '!ia strategie',          description: 'Stratégie IA pour battre une équipe',       subs: ['strategie <mon équipe> vs <adversaire> — Plan tactique'] },
       { label: '!ia bilan',              description: 'Bilan IA complet de la saison/tournoi',     subs: ['bilan — Faits marquants, progressions, records'] },
       { label: '!ia scouting',           description: 'Fiche de scouting IA d\'un joueur',         subs: ['scouting <joueur> — Rapport recrutement IA'] },
-      { label: '!ia debriefing <équipe>', description: 'Débrief post-match IA : analyse, points forts/faibles, objectifs', subs: ['debriefing <équipe> — Débrief du dernier match enregistré'] },
+      { label: '!ia debriefing <équipe>', description: 'Débrief post-match IA : analyse, points forts/faibles, objectifs', subs: ['debriefing <équipe> — Débrief du dernier match', 'debriefing statut — Voir le canal auto configuré'] },
       { label: '!ia historique',         description: 'Historique de la conversation IA',          subs: [] },
       { label: '!ia reinitialiser',      description: 'Réinitialiser la conversation IA',          subs: [] },
       { label: '!ia modeles',            description: 'Liste des modèles IA disponibles',          subs: [] },

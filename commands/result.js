@@ -1,3 +1,4 @@
+const { autoDebrief } = require('../utils/iaDebrief');
 const Team       = require('../database/models/Team');
 const Match      = require('../database/models/Match');
 const Schedule   = require('../database/models/Schedule');
@@ -222,4 +223,9 @@ async function processResults(client, message, teamArgs, scheduled) {
     details: `**Match :** ${matchTitle}\n${details}${scheduled ? `\n**Match planifié :** clôturé` : ''}`,
     author:  message.author.tag
   });
+
+  // Auto-debrief IA : fire non-blocking pour chaque équipe du match
+  for (const r of results) {
+    autoDebrief(client, message.guild.id, r.name).catch(() => {});
+  }
 }
