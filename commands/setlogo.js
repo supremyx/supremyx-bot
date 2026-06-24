@@ -7,7 +7,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
       const content = message.content.trim();
-      if (!content.startsWith('!configlogo') && !content.startsWith('!setlogo')) return;
+      if (!content.startsWith('!configlogo')) return;
       if (!message.guild) return;
       if (message.author.bot) return;
       if (!message.member) return;

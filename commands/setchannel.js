@@ -19,7 +19,7 @@ module.exports = (client) => {
     const args = content.split(/\s+/);
     const cmd = args[0].toLowerCase();
 
-    if (cmd !== '!salonannonce' && cmd !== '!salonjournaux' && cmd !== '!salonsoumissionlogos' && cmd !== '!salonlogosubmit' && cmd !== '!salonaffichagelogos' && cmd !== '!salonlogolist') return;
+    if (cmd !== '!salonannonce' && cmd !== '!salonjournaux' && cmd !== '!salonsoumissionlogos' && cmd !== '!salonaffichagelogos') return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Cette commande est réservée au staff Administrateur.');

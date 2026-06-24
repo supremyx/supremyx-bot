@@ -17,7 +17,7 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !setrankreward <rang> @role [label] ---
-    if (cmd === '!definitrecompense' || cmd === '!setrecompense') {
+    if (cmd === '!definitrecompense') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const rank = parseInt(args[1]);
@@ -87,7 +87,7 @@ module.exports = (client) => {
     }
 
     // --- !syncranks --- 
-    if (cmd === '!synchroniserrangs' || cmd === '!syncrangs') {
+    if (cmd === '!synchroniserrangs') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const waiting = await message.reply('⏳ Synchronisation des rôles en cours...');

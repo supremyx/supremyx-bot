@@ -41,7 +41,7 @@ module.exports = (client, sendOnStartup = false) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !setmotd <texte> ---
-    if (cmd === '!configmdj' || cmd === '!setmessagejour') {
+    if (cmd === '!configmdj') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const _mdLen = cmd === '!configmdj' ? '!configmdj'.length : '!setmessagejour'.length;
