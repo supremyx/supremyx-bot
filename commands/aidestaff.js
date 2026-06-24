@@ -217,7 +217,7 @@ const STAFF_CATEGORIES = [
       { label: '!chercher staff <terme>',  description: 'Rechercher une commande staff par mot-clé',       subs: [] },
       { label: '!statsbot',                description: 'Statistiques d\'utilisation du bot',              subs: [] },
       { label: '!commandes',              description: 'Classement des commandes les plus utilisées',      subs: [] },
-      { label: '!logs',                    description: 'Historique des actions staff',                    subs: ['vider — Effacer tout', 'stats — Statistiques par catégorie', 'aujourdhui — Logs du jour', '<catégorie> [page] — Filtrer par catégorie', '<mot-clé> — Recherche plein texte'] },
+      { label: '!journaux',                description: 'Historique des actions staff',                    subs: ['vider — Effacer tout', 'stats — Statistiques par catégorie', 'aujourdhui — Logs du jour', '<catégorie> [page] — Filtrer par catégorie', '<mot-clé> — Recherche plein texte'] },
       { label: '!journal [N]',             description: 'N derniers commits Git (alias : !misesajour)',    subs: [] },
       { label: '!tableaudebord',           description: 'Tableau de bord web',                             subs: [] },
       { label: '!note <équipe> <texte>',   description: 'Note interne sur une équipe',                    subs: ['note <équipe> <texte> — Ajouter', 'notes <équipe> — Voir', 'supprimenote <id> — Supprimer'] },

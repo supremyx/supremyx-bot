@@ -59,7 +59,7 @@ module.exports = (client) => {
 
     const content = message.content.trim();
     const isJournal    = content.startsWith('!journal');
-    const isChangelog  = content.startsWith('!misesajour') || content.startsWith('!changelog');
+    const isChangelog  = content.startsWith('!misesajour');
     if (!isJournal && !isChangelog) return;
 
     if (!message.member.permissions.has('Administrator'))

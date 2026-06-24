@@ -12,7 +12,7 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator') ?? false;
 
     // --- !setbirthday #channel ---
-    if (content.startsWith('!salonanniversaires') || content.startsWith('!setanniversaire')) {
+    if (content.startsWith('!salonanniversaires')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
       if (!channel) return message.reply('Usage : `!salonanniversaires #salon`');

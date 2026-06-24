@@ -182,7 +182,7 @@ export default function TournoisPage() {
             <div className="py-16 text-center" style={{ color: "var(--muted-foreground)" }}>
               <div className="text-4xl mb-3">🏆</div>
               <p className="text-sm">Aucun tournoi enregistré pour le moment.</p>
-              <p className="text-xs mt-1">Utilise <code className="px-1 rounded text-xs" style={{ background: "var(--muted)" }}>!starttournoi</code> dans Discord</p>
+              <p className="text-xs mt-1">Utilise <code className="px-1 rounded text-xs" style={{ background: "var(--muted)" }}>!nouveautournoi</code> dans Discord</p>
             </div>
           )}
         </div>

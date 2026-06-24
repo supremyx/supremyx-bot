@@ -21,7 +21,7 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator');
 
     // --- !setlevelchannel #channel ---
-    if (content.startsWith('!salonniveaux') || content.startsWith('!setchannelniveau')) {
+    if (content.startsWith('!salonniveaux')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
       if (!channel) return message.reply('Usage : `!salonniveaux #salon`');

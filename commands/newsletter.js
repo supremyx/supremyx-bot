@@ -73,17 +73,17 @@ module.exports = (client) => {
     try {
       if (!message.guild) return;
       if (message.author.bot) return;
-      if (!message.content.startsWith('!infolettre') && !message.content.startsWith('!newsletter')) return;
+      if (!message.content.startsWith('!infolettre')) return;
       if (!message.member) return;
       if (!message.member.permissions.has('Administrator')) return message.reply('⛔ Staff uniquement.');
 
       const content = message.content.trim();
-      const _nlLen  = content.startsWith('!infolettre') ? '!infolettre'.length : '!newsletter'.length;
+      const _nlLen  = '!infolettre'.length;
       const args    = content.slice(_nlLen).trim().split(/\s+/);
       const sub     = args[0]?.toLowerCase();
       const guildId = message.guild.id;
 
-      // ── !newsletter salon #salon ──────────────────────────────────────────
+      // ── !infolettre salon #salon ──────────────────────────────────────────
       if (sub === 'salon') {
         const chan = message.mentions.channels.first();
         if (!chan) return message.reply('Usage : `!infolettre salon #salon`');
@@ -91,14 +91,14 @@ module.exports = (client) => {
         return message.reply(`✅ Salon newsletter défini : <#${chan.id}>\nPublication automatique chaque **dimanche à 20h**.`);
       }
 
-      // ── !newsletter activer / desactiver ──────────────────────────────────
+      // ── !infolettre activer / desactiver ──────────────────────────────────
       if (sub === 'activer' || sub === 'desactiver' || sub === 'désactiver') {
         const active = sub === 'activer';
         await NewsletterConfig.findOneAndUpdate({ guildId }, { active }, { upsert: true });
         return message.reply(`✅ Newsletter **${active ? 'activée' : 'désactivée'}**.`);
       }
 
-      // ── !newsletter tester ────────────────────────────────────────────────
+      // ── !infolettre tester ────────────────────────────────────────────────
       if (sub === 'tester') {
         const cfg = await NewsletterConfig.findOne({ guildId });
         if (!cfg?.channelId) return message.reply('❌ Configure d\'abord le salon avec `!infolettre salon #salon`.');
@@ -109,7 +109,7 @@ module.exports = (client) => {
         return message.reply(`✅ Newsletter de test envoyée dans <#${cfg.channelId}>.`);
       }
 
-      // ── !newsletter statut ────────────────────────────────────────────────
+      // ── !infolettre statut ────────────────────────────────────────────────
       if (sub === 'statut') {
         const cfg = await NewsletterConfig.findOne({ guildId });
         const embed = new EmbedBuilder()

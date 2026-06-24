@@ -20,7 +20,7 @@ const CATEGORY_COLORS = {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!journaux') && !content.startsWith('!logs')) return;
+    if (!content.startsWith('!journaux')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;

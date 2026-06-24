@@ -44,7 +44,7 @@ module.exports = (client) => {
     }
 
     // --- !setpointssystem <p1:pts> <p2:pts> ... [kill:<pts>] ---
-    if (cmd === '!definitpoints' || cmd === '!setpoints') {
+    if (cmd === '!definitpoints') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const pairs = args.slice(1);

@@ -17,17 +17,17 @@ module.exports = (client) => {
     if (!content) {
       return message.reply(
         '**Usage :**\n' +
-        '`!poll <question> | <option1> | <option2> | ...`\n\n' +
+        '`!vote <question> | <option1> | <option2> | ...`\n\n' +
         '**Exemples :**\n' +
-        '`!poll Qui va gagner ? | TeamA | TeamB | TeamC`\n' +
-        '`!poll Match ce soir ? | Oui | Non`'
+        '`!vote Qui va gagner ? | TeamA | TeamB | TeamC`\n' +
+        '`!vote Match ce soir ? | Oui | Non`'
       );
     }
 
     const parts = content.split('|').map(p => p.trim()).filter(Boolean);
 
     if (parts.length < 2) {
-      return message.reply('❌ Il faut au moins une question et une option.\nFormat : `!poll Question | Option1 | Option2`');
+      return message.reply('❌ Il faut au moins une question et une option.\nFormat : `!vote Question | Option1 | Option2`');
     }
 
     const question = parts[0];

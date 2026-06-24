@@ -69,7 +69,7 @@ module.exports = (client) => {
 
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!evenement') && !content.startsWith('!event')) return;
+    if (!content.startsWith('!evenement')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -77,7 +77,7 @@ module.exports = (client) => {
     const args = content.split(' ');
     const sub = args[1]?.toLowerCase();
 
-    // --- !event creer <titre> | <description> | <date> ---
+    // --- !evenement creer <titre> | <description> | <date> ---
     if (sub === 'creer' || sub === 'nouveau') {
       if (!isStaff) return message.reply('Staff uniquement');
       const rest = content.slice(args[0].length + args[1].length + 2).trim();
@@ -109,7 +109,7 @@ module.exports = (client) => {
       return message.reply(`✅ Événement **#${num}** créé.`);
     }
 
-    // --- !event liste ---
+    // --- !evenement liste ---
     if (!sub || sub === 'liste') {
       const events = await GuildEvent.find({ guildId: message.guild.id, cancelled: false }).sort({ eventNumber: -1 }).limit(10);
       if (!events.length) return message.reply('Aucun événement actif. Crée-en un avec `!evenement creer`.');
@@ -123,7 +123,7 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !event annuler <id> ---
+    // --- !evenement annuler <id> ---
     if (sub === 'annuler') {
       if (!isStaff) return message.reply('Staff uniquement');
       const num = parseInt(args[2]);
@@ -142,7 +142,7 @@ module.exports = (client) => {
       return message.reply(`✅ Événement **#${num}** annulé.`);
     }
 
-    // --- !event joindre <id> ---
+    // --- !evenement joindre <id> ---
     if (sub === 'joindre' || sub === 'participer') {
       const num = parseInt(args[2]);
       if (isNaN(num)) return message.reply('Usage : `!evenement joindre <id>`');
@@ -166,7 +166,7 @@ module.exports = (client) => {
       return message.reply(`✅ Tu es **inscrit** à l'événement **#${num} — ${ev.title}**.`);
     }
 
-    // --- !event quitter <id> ---
+    // --- !evenement quitter <id> ---
     if (sub === 'quitter' || sub === 'decliner') {
       const num = parseInt(args[2]);
       if (isNaN(num)) return message.reply('Usage : `!evenement quitter <id>`');
@@ -190,7 +190,7 @@ module.exports = (client) => {
       return message.reply(`✅ Tu as **décliné** l'événement **#${num} — ${ev.title}**.`);
     }
 
-    // --- !event participants <id> ---
+    // --- !evenement participants <id> ---
     if (sub === 'participants' || sub === 'inscrits') {
       const num = parseInt(args[2]);
       if (isNaN(num)) return message.reply('Usage : `!evenement participants <id>`');
@@ -209,7 +209,7 @@ module.exports = (client) => {
     }
 
     message.reply(
-      '**Commandes `!event` :**\n' +
+      '**Commandes `!evenement` :**\n' +
       '`!evenement creer <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
       '`!evenement liste` — Voir les événements en cours\n' +
       '`!evenement joindre <id>` — S\'inscrire à un événement\n' +

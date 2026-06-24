@@ -59,7 +59,7 @@ const PAGES = [
         value: [
           '`!tournois` — Liste tous les tournois (en cours + terminés)',
           '`!detailtournoi <nom>` — Détails et classement d\'un tournoi',
-          '`!bracket` — Bracket du tournoi actif',
+          '`!tableau` — Bracket du tournoi actif',
           '`!vainqueurs` — Palmarès historique tournois/saisons',
           '`!inscrire <équipe>` — Inscrire une équipe à un tournoi ouvert',
           '`!inscription` — Voir les équipes inscrites',
@@ -167,7 +167,7 @@ const PAGES = [
       {
         name: 'Sanctions',
         value: [
-          '`!warn @user <raison>` — Avertissement',
+          '`!avertir @user <raison>` — Avertissement',
           '`!punition @user <type> | <raison>` — Sanction (warn/mute/kick/ban)',
           '`!sanctions [@user]` — Historique disciplinaire d\'un membre',
           '`!escalade` — Configure les sanctions automatiques',
@@ -177,7 +177,7 @@ const PAGES = [
         name: 'Outils',
         value: [
           '`!moderation` — Commandes de modération (mute, kick, ban...)',
-          '`!lockdown [#salon]` — Verrouille un salon ou le serveur',
+          '`!verrouiller [#salon]` — Verrouille un salon ou le serveur',
           '`!blacklist` — Gestion de la liste noire',
           '`!automod` — Configure l\'automodération',
           '`!antispam` — Configure l\'anti-spam',
@@ -197,7 +197,7 @@ const PAGES = [
         value: [
           '`!giveaway` — Crée un giveaway',
           '`!sondage <durée> <question> | <opt1> | <opt2>` — Sondage temporisé',
-          '`!poll <question>` — Sondage rapide 👍/👎',
+          '`!vote <question>` — Sondage rapide 👍/👎',
           '`!eventcmd` — Crée un événement RSVP (rejoindre/décliner)',
           '`!random` — Commandes aléatoires (pièce, dé...)',
         ].join('\n'),
@@ -226,7 +226,7 @@ const PAGES = [
           '`!announce <message>` — Envoie une annonce officielle',
           '`!diffuser <message>` — Diffuse un message sur plusieurs salons',
           '`!dire [#salon] <texte>` — Fait parler le bot dans un salon',
-          '`!motd` — Message du jour automatique',
+          '`!messagejour` — Message du jour automatique',
           '`!liens` — Affiche les liens importants du serveur',
           '`!embedbuilder` — Constructeur d\'embeds personnalisés',
           '`!reglement` — Affiche le règlement du serveur',

@@ -51,7 +51,7 @@ module.exports = (client) => {
     }
 
     // ── !freeagents ────────────────────────────────────────────────────────────
-    if (cmd === '!agentslibres' || cmd === '!freeagents') {
+    if (cmd === '!agentslibres') {
       const cd = checkCooldown(message.author.id, 'freeagents', 15);
       if (cd) return replyCooldown(message, cd, 'freeagents');
 

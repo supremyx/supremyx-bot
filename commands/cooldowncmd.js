@@ -17,7 +17,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     const content = message.content.trim();
-    if (!content.startsWith('!configdelai') && !content.startsWith('!setdelai') && !content.startsWith('!delais') && !content.startsWith('!supprimerdelai') && !content.startsWith('!suppdelai')) return;
+    if (!content.startsWith('!configdelai') && !content.startsWith('!delais') && !content.startsWith('!supprimerdelai')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -51,8 +51,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !setdelai <commande> <secondes> ---
-    if (cmd === '!configdelai' || cmd === '!setdelai') {
+    // --- !configdelai <commande> <secondes> ---
+    if (cmd === '!configdelai') {
       const commandName = args[1]?.toLowerCase().replace(/^!/, '');
       const seconds = parseInt(args[2]);
 
@@ -79,7 +79,7 @@ module.exports = (client) => {
     }
 
     // --- !delcooldown <commande> --- reset to default
-    if (cmd === '!supprimerdelai' || cmd === '!suppdelai') {
+    if (cmd === '!supprimerdelai') {
       const commandName = args[1]?.toLowerCase().replace(/^!/, '');
       if (!commandName) return message.reply('Usage : `!supprimerdelai <commande>`');
 

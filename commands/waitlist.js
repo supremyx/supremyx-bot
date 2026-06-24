@@ -190,23 +190,22 @@ module.exports = (client) => {
   });
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  COMMANDES STAFF : !waitlist
+  //  COMMANDES STAFF : !listedattente
   // ════════════════════════════════════════════════════════════════════════════
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (!message.guild)     return;
     if (!message.member)    return;
-    if (!message.content.startsWith('!listedattente') && !message.content.startsWith('!waitlist')) return;
+    if (!message.content.startsWith('!listedattente')) return;
     if (!isStaff(message.member)) return message.reply('❌ Permissions insuffisantes (Gérer le serveur).');
 
-    const _wCmd = message.content.startsWith('!listedattente') ? '!listedattente' : '!waitlist';
-    const full = message.content.slice(_wCmd.length).trim();
+    const full = message.content.slice('!listedattente'.length).trim();
     const sub  = full.split(/\s+/)[0]?.toLowerCase() || '';
     const rest = full.replace(/^\S+\s*/, '').trim();
 
     try {
 
-      // ── !waitlist configurer #reg | #waitlist | @rôle | places | Titre ──────
+      // ── !listedattente configurer #reg | #listedattente | @rôle | places | Titre ──────
       if (sub === 'configurer' || sub === 'config') {
         const fields = rest.split('|').map(f => f.trim());
         if (fields.length < 2) return message.reply([
@@ -226,7 +225,7 @@ module.exports = (client) => {
         const cleanTitle = fields.slice(4).join(' | ').trim() || 'INSCRIPTIONS';
 
         if (!regCh)  return message.reply('❌ Salon d\'inscription introuvable. Mentionne-le avec `#`.');
-        if (!waitCh) return message.reply('❌ Salon waitlist introuvable. Mentionne-le avec `#`.');
+        if (!waitCh) return message.reply('❌ Salon liste d\'attente introuvable. Mentionne-le avec `#`.');
 
         await InscriptionConfig.findOneAndUpdate(
           { guildId: message.guild.id },
@@ -264,7 +263,7 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !waitlist initialiser ────────────────────────────────────────────
+      // ── !listedattente initialiser ────────────────────────────────────────────
       if (sub === 'initialiser' || sub === 'init') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Configure d\'abord : `!listedattente configurer #reg | #listedattente | @rôle | places | Titre`');
@@ -275,7 +274,7 @@ module.exports = (client) => {
         return message.reply(`✅ Embed waitlist publié dans <#${config.waitlistChannelId}>.`);
       }
 
-      // ── !waitlist liste ──────────────────────────────────────────────────
+      // ── !listedattente liste ──────────────────────────────────────────────────
       if (sub === 'liste') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
@@ -296,9 +295,9 @@ module.exports = (client) => {
         return message.reply({ embeds: [embed] });
       }
 
-      // ── !waitlist confirmer <TAG> ────────────────────────────────────────
+      // ── !listedattente confirmer <TAG> ───────────────────────────────────
       if (sub === 'confirmer') {
-        if (!rest) return message.reply('**Usage :** `!waitlist confirmer <TAG>`');
+        if (!rest) return message.reply('**Usage :** `!listedattente confirmer <TAG>`');
 
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
@@ -327,9 +326,9 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !waitlist retirer <TAG> ──────────────────────────────────────────
+      // ── !listedattente retirer <TAG> ─────────────────────────────────────
       if (sub === 'retirer') {
-        if (!rest) return message.reply('**Usage :** `!waitlist retirer <TAG>`');
+        if (!rest) return message.reply('**Usage :** `!listedattente retirer <TAG>`');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
 
@@ -360,9 +359,9 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !waitlist vip <TAG> ──────────────────────────────────────────────
+      // ── !listedattente vip <TAG> ─────────────────────────────────────────
       if (sub === 'vip') {
-        if (!rest) return message.reply('**Usage :** `!waitlist vip <TAG>`');
+        if (!rest) return message.reply('**Usage :** `!listedattente vip <TAG>`');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
 
@@ -379,10 +378,10 @@ module.exports = (client) => {
         return message.reply(`${newVip ? '⭐ VIP activé' : '🔹 VIP retiré'} pour **${reg.teamName}** (\`${reg.tag}\`).`);
       }
 
-      // ── !waitlist places <n> ─────────────────────────────────────────────
+      // ── !listedattente places <n> ────────────────────────────────────────
       if (sub === 'places' || sub === 'slots') {
         const n = parseInt(rest);
-        if (isNaN(n) || n < 1) return message.reply('**Usage :** `!waitlist places <nombre>` (ex: `!waitlist places 16`)');
+        if (isNaN(n) || n < 1) return message.reply('**Usage :** `!listedattente places <nombre>` (ex: `!listedattente places 16`)');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
         await InscriptionConfig.findByIdAndUpdate(config._id, { maxSlots: n });
@@ -391,7 +390,7 @@ module.exports = (client) => {
         return message.reply(`✅ Nombre de places mis à jour : **${n}**.`);
       }
 
-      // ── !waitlist reset ──────────────────────────────────────────────────
+      // ── !listedattente reinitialiser ─────────────────────────────────────
       if (sub === 'réinitialiser' || sub === 'reinitialiser') {
         const confirm = await message.reply('⚠️ Effacer **toutes les inscriptions** ? Réagis ✅ pour confirmer (15s).');
         try { await confirm.react('✅'); } catch {}
@@ -420,7 +419,7 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !waitlist info ───────────────────────────────────────────────────
+      // ── !listedattente info ───────────────────────────────────────────────
       if (sub === 'infos') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré. Lance : `!listedattente configurer #reg | #listedattente | @rôle | places | Titre`');
