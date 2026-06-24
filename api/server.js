@@ -1138,6 +1138,59 @@ router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
   }
 });
 
+// ── GET /activity — fil d'activité récente (matchs + tournois) ───────────────
+router.get('/activity', async (_req, res) => {
+  try {
+    const [recentMatches, recentTournaments] = await Promise.all([
+      Match.find({}).sort({ date: -1 }).limit(40).lean(),
+      Tournament.find({}).sort({ createdAt: -1 }).limit(15).lean(),
+    ]);
+
+    const matchEvents = recentMatches.map(m => ({
+      kind: 'match',
+      team: m.teamName || m.team || '?',
+      placement: m.placement ?? 0,
+      kills: m.kills ?? 0,
+      points: m.points ?? 0,
+      tournamentName: m.tournamentName || null,
+      date: m.date || m.createdAt || new Date(),
+    }));
+
+    const tournamentEvents = recentTournaments.flatMap(t => {
+      const evts = [];
+      if (t.startedAt || t.createdAt) {
+        evts.push({
+          kind: 'tournamentStart',
+          name: t.name,
+          startedBy: t.startedBy || '?',
+          date: t.startedAt || t.createdAt,
+        });
+      }
+      if (t.endedAt) {
+        evts.push({
+          kind: 'tournamentEnd',
+          name: t.name,
+          winner: t.winner || null,
+          winnerPts: t.winnerPts || 0,
+          matchCount: t.matchCount || 0,
+          endedBy: t.endedBy || '?',
+          date: t.endedAt,
+        });
+      }
+      return evts;
+    });
+
+    const all = [...matchEvents, ...tournamentEvents]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 50);
+
+    res.json({ events: all });
+  } catch (err) {
+    console.error('/activity error:', err);
+    res.status(500).json({ events: [] });
+  }
+});
+
 // ── GET /admin/config — clé API masquée (protégé) ────────────────────────────
 router.get('/admin/config', requireApiKey, (_req, res) => {
   const key = process.env.BOT_API_KEY || '';
