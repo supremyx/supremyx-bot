@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { apiUrl } from "../lib/api";
 import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent } from "../hooks/useMatchNotifications";
 
@@ -73,6 +73,74 @@ function rawToFeedItem(e: RawEvent): FeedItem {
 
 function notifToFeedItem(n: Notification): FeedItem {
   return { id: n.id, type: n.type, data: n.data, time: n.time, isLive: true };
+}
+
+function buildDesktopNotif(item: FeedItem): { title: string; body: string; icon: string } {
+  if (item.type === "match") {
+    const d = item.data as MatchEvent;
+    const medal = d.placement > 0 ? (MEDAL[d.placement] ?? `#${d.placement}`) : "";
+    return {
+      title: `🎮 Nouveau match — ${d.team}`,
+      body: [medal, `+${d.points} pts`, `${d.kills} kills`, d.tournamentName].filter(Boolean).join("  ·  "),
+      icon: "🎮",
+    };
+  }
+  if (item.type === "tournamentStart") {
+    const d = item.data as TournamentStartEvent;
+    return {
+      title: `🏁 Tournoi démarré — ${d.name}`,
+      body: `Lancé par ${d.startedBy}`,
+      icon: "🏁",
+    };
+  }
+  const d = item.data as TournamentEndEvent;
+  return {
+    title: `🏆 Tournoi terminé — ${d.name}`,
+    body: d.winner ? `🥇 ${d.winner} (${d.winnerPts} pts) · ${d.matchCount} matchs` : `${d.matchCount} matchs joués`,
+    icon: "🏆",
+  };
+}
+
+type NotifPermission = "default" | "granted" | "denied" | "unsupported";
+
+function useDesktopNotifications() {
+  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [permission, setPermission] = useState<NotifPermission>(
+    supported ? (Notification.permission as NotifPermission) : "unsupported"
+  );
+  const [enabled, setEnabled] = useState(false);
+
+  const requestPermission = useCallback(async () => {
+    if (!supported) return;
+    const result = await Notification.requestPermission();
+    setPermission(result as NotifPermission);
+    if (result === "granted") setEnabled(true);
+  }, [supported]);
+
+  const toggle = useCallback(async () => {
+    if (!supported) return;
+    if (permission === "denied") return;
+    if (permission !== "granted") {
+      await requestPermission();
+      return;
+    }
+    setEnabled(e => !e);
+  }, [permission, supported, requestPermission]);
+
+  const send = useCallback((item: FeedItem) => {
+    if (!supported || permission !== "granted" || !enabled) return;
+    const { title, body } = buildDesktopNotif(item);
+    try {
+      const n = new window.Notification(title, {
+        body,
+        tag: item.id,
+        silent: false,
+      });
+      setTimeout(() => n.close(), 8000);
+    } catch { /* ignore */ }
+  }, [supported, permission, enabled]);
+
+  return { permission, enabled, toggle, send, supported };
 }
 
 function MatchCard({ data, time, isLive }: { data: MatchEvent; time: Date; isLive?: boolean }) {
@@ -198,6 +266,63 @@ const TYPE_LABELS: Record<string, string> = {
   tournamentEnd: "Fins",
 };
 
+function NotifToggleButton({ permission, enabled, supported, onClick }: {
+  permission: NotifPermission;
+  enabled: boolean;
+  supported: boolean;
+  onClick: () => void;
+}) {
+  if (!supported) return null;
+
+  const isDenied = permission === "denied";
+  const isGrantedOff = permission === "granted" && !enabled;
+  const isGrantedOn = permission === "granted" && enabled;
+
+  let label = "Activer les alertes";
+  let bg = "var(--muted)";
+  let color = "var(--muted-foreground)";
+  let border = "var(--border)";
+  let icon = "🔔";
+
+  if (isDenied) {
+    label = "Alertes bloquées";
+    color = "#f87171";
+    border = "rgba(248,113,113,0.3)";
+    bg = "rgba(248,113,113,0.08)";
+    icon = "🔕";
+  } else if (isGrantedOn) {
+    label = "Alertes activées";
+    color = "#34d399";
+    border = "rgba(52,211,153,0.3)";
+    bg = "rgba(52,211,153,0.1)";
+    icon = "🔔";
+  } else if (isGrantedOff) {
+    label = "Alertes désactivées";
+    icon = "🔕";
+  }
+
+  return (
+    <button
+      data-testid="button-toggle-desktop-notifs"
+      onClick={isDenied ? undefined : onClick}
+      disabled={isDenied}
+      title={isDenied ? "Autoriser les notifications dans les paramètres du navigateur" : undefined}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      style={{
+        background: bg,
+        color,
+        border: `1px solid ${border}`,
+        cursor: isDenied ? "not-allowed" : "pointer",
+        opacity: isDenied ? 0.7 : 1,
+      }}
+    >
+      <span>{icon}</span>
+      {label}
+      {isGrantedOn && <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+    </button>
+  );
+}
+
 export default function LiveActivityPage({ liveNotifications }: { liveNotifications: Notification[] }) {
   const [history, setHistory] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,6 +331,7 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
   const [liveCount, setLiveCount] = useState(0);
   const prevNotifIds = useRef<Set<string>>(new Set());
   const listRef = useRef<HTMLDivElement>(null);
+  const { permission, enabled, toggle, send, supported } = useDesktopNotifications();
 
   useEffect(() => {
     fetch(apiUrl("/api/activity"))
@@ -235,7 +361,8 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
     setHistory(prev => [...newItems, ...prev].slice(0, 100));
     setLiveCount(c => c + newOnes.length);
     listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [liveNotifications]);
+    newItems.forEach(item => send(item));
+  }, [liveNotifications, send]);
 
   const allItems: FeedItem[] = history;
   const filtered = filter === "all" ? allItems : allItems.filter(i => i.type === filter);
@@ -244,7 +371,7 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
     <main className="mx-auto max-w-3xl px-4 py-10">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <span>📡</span> Activité en direct
@@ -254,19 +381,45 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
           </p>
         </div>
 
-        {/* Connection status */}
-        <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-          style={{
-            background: connected ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
-            border: `1px solid ${connected ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
-            color: connected ? "#34d399" : "#f87171",
-          }}
-          data-testid="live-connection-status"
-        >
-          <span className={`size-2 rounded-full ${connected ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
-          {connected ? "Connecté" : "Reconnexion…"}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Desktop notification toggle */}
+          {supported && (
+            <NotifToggleButton
+              permission={permission}
+              enabled={enabled}
+              supported={supported}
+              onClick={toggle}
+            />
+          )}
+
+          {/* Connection status */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+            style={{
+              background: connected ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+              border: `1px solid ${connected ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
+              color: connected ? "#34d399" : "#f87171",
+            }}
+            data-testid="live-connection-status"
+          >
+            <span className={`size-2 rounded-full ${connected ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
+            {connected ? "Connecté" : "Reconnexion…"}
+          </div>
         </div>
       </div>
+
+      {/* Denied banner */}
+      {permission === "denied" && (
+        <div className="flex items-start gap-3 rounded-xl px-4 py-3 mb-5 text-sm"
+          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#f87171" }}>
+          <span className="text-lg shrink-0">🔕</span>
+          <div>
+            <p className="font-semibold">Notifications bloquées par le navigateur</p>
+            <p className="text-xs mt-0.5 opacity-80">
+              Pour les réactiver : cliquez sur le cadenas 🔒 dans la barre d'adresse → Notifications → Autoriser.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Stats bar */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -351,6 +504,7 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
         {!loading && filtered.length > 0 && (
           <div className="px-4 py-2.5 text-center text-xs" style={{ borderTop: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
             Mise à jour en temps réel · les 50 derniers événements sont affichés
+            {enabled && <span className="ml-2">· 🔔 alertes bureau activées</span>}
           </div>
         )}
       </div>
