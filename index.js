@@ -25,6 +25,7 @@ const { startDashboardManager } = require('./utils/dashboardManager');
 const { startScheduleManager } = require('./utils/scheduleManager');
 const { startScheduledEmbedManager } = require('./utils/scheduledEmbedManager');
 const { startRapportHebdo } = require('./utils/rapportHebdo');
+const { startIaBilanManager } = require('./utils/iaBilanManager');
 require('dotenv').config();
 
 const client = new Client({
@@ -99,6 +100,8 @@ client.once('clientReady', async () => {
   console.log('📅 Système rappels calendrier activé');
   startScheduledEmbedManager(client);
   startRapportHebdo(client);
+  startIaBilanManager(client);
+  console.log('📋 Bilan IA hebdomadaire activé (dimanche 20h30)');
 });
 
 // --- Intelligence Artificielle ---

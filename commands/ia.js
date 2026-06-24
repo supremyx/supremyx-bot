@@ -889,6 +889,98 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
+    // ── !ia bilan ──────────────────────────────────────────────────────────────
+    if (sub === 'bilan') {
+      const guildId = message.guild.id;
+      const action  = args[1]?.toLowerCase();
+
+      // !ia bilan salon #channel — configure le salon
+      if (action === 'salon') {
+        if (!message.member?.permissions.has('Administrator')) {
+          return message.reply('❌ Seuls les administrateurs peuvent configurer le salon du bilan.');
+        }
+        const mention = message.mentions.channels.first();
+        if (!mention) return message.reply('Usage : `!ia bilan salon #salon`');
+        await IaConfig.findOneAndUpdate(
+          { guildId },
+          { bilanChannelId: mention.id },
+          { upsert: true }
+        );
+        const embed = new EmbedBuilder()
+          .setColor(0xFF8C00)
+          .setTitle('✅ Salon du bilan IA configuré')
+          .setDescription(`Le bilan hebdomadaire sera posté dans ${mention} chaque **dimanche à 20h30**.`)
+          .addFields({ name: '💡 Pour tester', value: '`!ia bilan maintenant` pour envoyer immédiatement.' })
+          .setFooter({ text: `Configuré par ${message.author.username}` })
+          .setTimestamp();
+        return message.reply({ embeds: [embed] });
+      }
+
+      // !ia bilan désactiver — retire le salon
+      if (action === 'désactiver' || action === 'desactiver') {
+        if (!message.member?.permissions.has('Administrator')) {
+          return message.reply('❌ Seuls les administrateurs peuvent modifier cette configuration.');
+        }
+        await IaConfig.findOneAndUpdate({ guildId }, { bilanChannelId: null }, { upsert: true });
+        return message.reply('✅ Bilan IA hebdomadaire **désactivé**.');
+      }
+
+      // !ia bilan maintenant — déclenche manuellement
+      if (action === 'maintenant' || action === 'now') {
+        if (!message.member?.permissions.has('Administrator')) {
+          return message.reply('❌ Seuls les administrateurs peuvent déclencher le bilan manuellement.');
+        }
+        const cfg = await IaConfig.findOne({ guildId });
+        const targetChannelId = cfg?.bilanChannelId || message.channel.id;
+        const target = client.channels.cache.get(targetChannelId) || message.channel;
+
+        const thinking = await message.reply(`📊 Génération du bilan hebdomadaire dans ${target}…`);
+        const { sendBilan } = require('../utils/iaBilanManager');
+        const ok = await sendBilan(client, guildId, targetChannelId, message.author.username);
+        if (ok) {
+          await thinking.edit(`✅ Bilan envoyé dans ${target} !`);
+        } else {
+          await thinking.edit('❌ Impossible d\'envoyer le bilan — salon introuvable.');
+        }
+        return;
+      }
+
+      // !ia bilan (sans argument) — affiche le statut
+      const cfg = await IaConfig.findOne({ guildId });
+      const channelId = cfg?.bilanChannelId;
+      const lastSent  = cfg?.bilanLastSentAt;
+      const channel   = channelId ? client.channels.cache.get(channelId) : null;
+
+      const embed = new EmbedBuilder()
+        .setColor(0xFF8C00)
+        .setTitle('📋 Bilan IA hebdomadaire')
+        .setDescription('Résumé automatique posté chaque **dimanche à 20h30** avec classements, records et analyse IA de la semaine.')
+        .addFields(
+          {
+            name: '📺 Salon configuré',
+            value: channel ? `${channel}` : '⚠️ Aucun salon configuré',
+            inline: true,
+          },
+          {
+            name: '🕐 Dernier envoi',
+            value: lastSent ? `<t:${Math.floor(new Date(lastSent).getTime() / 1000)}:R>` : 'Jamais',
+            inline: true,
+          },
+          {
+            name: '🛠️ Commandes',
+            value: [
+              '`!ia bilan salon #salon` — configurer le salon',
+              '`!ia bilan maintenant` — déclencher manuellement (admin)',
+              '`!ia bilan désactiver` — désactiver',
+            ].join('\n'),
+            inline: false,
+          }
+        )
+        .setFooter({ text: 'Le bilan inclut : classement, records, top joueurs + analyse IA' })
+        .setTimestamp();
+      return message.reply({ embeds: [embed] });
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 

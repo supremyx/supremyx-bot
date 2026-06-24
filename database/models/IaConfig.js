@@ -6,6 +6,8 @@ const iaConfigSchema = new mongoose.Schema({
   dailyQuota:          { type: Number, default: 0 },
   quotaAlertChannelId: { type: String, default: null },
   debriefChannelId:    { type: String, default: null },
+  bilanChannelId:      { type: String, default: null },
+  bilanLastSentAt:     { type: Date,   default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('IaConfig', iaConfigSchema);
