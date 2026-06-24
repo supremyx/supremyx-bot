@@ -24,7 +24,7 @@ const STAFF_CATEGORIES = [
       { label: '!reinitialiser',                             description: 'Remettre tous les scores à zéro',           subs: [] },
       { label: '!resultats salon #salon',                    description: 'Configurer le salon des résultats auto',    subs: ['salon #salon — Config salon', 'statut <activer|desactiver> — Toggle', 'depuis <jours> — Résultats des N derniers jours'] },
       { label: '!exporter [json|csv|texte]',                 description: 'Exporter toutes les données',               subs: [] },
-      { label: '!sauvegarde',                                description: 'Créer une sauvegarde JSON complète',        subs: [] },
+      { label: '!sauvegarde',                                description: 'Créer et gérer les sauvegardes JSON complètes', subs: ['creer — Créer une nouvelle sauvegarde', 'liste — Voir toutes les sauvegardes', 'info <id> — Détails d\'une sauvegarde', 'supprimer <id> — Supprimer une sauvegarde'] },
       { label: '!restaurer',                                 description: 'Restaurer depuis une sauvegarde',           subs: [] },
       { label: '!annulermatch <id>',                         description: 'Annuler un match enregistré',               subs: [] },
     ],
@@ -36,7 +36,7 @@ const STAFF_CATEGORIES = [
     color: 0xFEE75C,
     commands: [
       { label: '!nouveautournoi <nom>',       description: 'Créer un nouveau tournoi',                  subs: [] },
-      { label: '!finertournoi',               description: 'Terminer le tournoi actif',                 subs: [] },
+      { label: '!finirtournoi',               description: 'Terminer le tournoi actif',                 subs: [] },
       { label: '!supprimertournoi <nom>',     description: 'Supprimer un tournoi',                      subs: [] },
       { label: '!tableau',                    description: 'Générer le bracket (jusqu\'à 32 équipes)',  subs: [] },
       { label: '!trophee <icône> <équipe>',   description: 'Attribuer un trophée à une équipe',         subs: [] },
