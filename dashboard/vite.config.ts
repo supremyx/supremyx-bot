@@ -49,6 +49,14 @@ export default defineConfig({
         target: "http://localhost:3000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
+        configure: (proxy) => {
+          proxy.on("error", (err, _req, res) => {
+            if ("writeHead" in res && typeof res.writeHead === "function") {
+              res.writeHead(503, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ error: "API server not ready yet, please retry." }));
+            }
+          });
+        },
       },
     },
   },
