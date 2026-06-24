@@ -156,6 +156,7 @@ const STAFF_CATEGORIES = [
       { label: '!ia strategie <monEq> vs <adv>',  description: 'Stratégie IA pour battre une équipe adverse',                subs: ['strategie <mon équipe> vs <adversaire> — Plan tactique'] },
       { label: '!ia bilan',                       description: 'Bilan IA complet de la saison/tournoi en cours',              subs: ['bilan — Faits marquants, progressions, records'] },
       { label: '!ia scouting <joueur>',           description: 'Fiche de scouting IA d\'un joueur',                           subs: ['scouting <joueur> — Rapport recrutement IA'] },
+      { label: '!ia debriefing <équipe>',          description: 'Débrief post-match IA : résultat, forces, faiblesses, objectifs', subs: ['debriefing <équipe> — Analyse du dernier match enregistré pour l\'équipe'] },
       { label: '!ia historique',                  description: 'Historique de la conversation IA personnelle',                subs: [] },
       { label: '!ia reinitialiser',               description: 'Réinitialiser sa conversation IA',                            subs: [] },
       { label: '!ia modeles',                     description: 'Liste des modèles IA disponibles',                            subs: [] },

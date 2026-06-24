@@ -782,6 +782,66 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
+    // ── !ia debriefing <équipe> ───────────────────────────────────────────────
+    if (sub === 'debriefing') {
+      const teamName = args.slice(1).join(' ').trim();
+      if (!teamName) return message.reply('Usage : `!ia debriefing <équipe>`');
+
+      const cd = checkCooldown(message.author.id, 'ia-debriefing', 30);
+      if (cd) return replyCooldown(message, cd, 'debriefing');
+
+      const thinking = await message.channel.send('🤖 Génération du débrief post-match...');
+      const esc = s => s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const team = await Team.findOne({ name: new RegExp(`^${esc(teamName)}$`, 'i') });
+      if (!team) return thinking.edit(`❌ Équipe **${teamName}** introuvable.`);
+
+      const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 }).limit(5);
+      if (!matches.length)
+        return thinking.edit(`❌ Aucun match enregistré pour **${team.name}**. Enregistre des résultats d'abord avec \`!resultats\`.`);
+
+      const lastMatch = matches[0];
+      const n = matches.length;
+      const avgKills     = (matches.reduce((s, m) => s + m.kills, 0) / n).toFixed(1);
+      const avgPoints    = (matches.reduce((s, m) => s + m.points, 0) / n).toFixed(1);
+      const avgPlacement = (matches.reduce((s, m) => s + m.placement, 0) / n).toFixed(1);
+      const lastDate     = new Date(lastMatch.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const historyStr   = matches.map((m, i) =>
+        `  ${i === 0 ? '→' : ' '} ${i === 0 ? 'Dernier' : `J-${i}`} : #${m.placement} | ${m.kills}k | ${m.points}pts`
+      ).join('\n');
+
+      const ctx = [
+        `Équipe : ${team.name}`,
+        `Dernier match (${lastDate}) : Placement #${lastMatch.placement} | ${lastMatch.kills} kills | ${lastMatch.points} pts`,
+        `Bilan global : ${team.wins}V / ${team.losses}D | ${team.points} pts totaux`,
+        `Moyennes sur ${n} matchs : placement #${avgPlacement} | ${avgKills}k | ${avgPoints}pts`,
+        `Historique récent :\n${historyStr}`,
+        lastMatch.tournamentName ? `Tournoi : ${lastMatch.tournamentName}` : '',
+      ].filter(Boolean).join('\n');
+
+      const answer = await iaCall(
+        'Tu es un coach esport professionnel spécialisé dans les jeux Battle Royale et de tir compétitif. Tu rédiges des débriefs post-match détaillés, constructifs et motivants pour des équipes. Tu réponds toujours en français, avec un ton dynamique et professionnel. Sois précis, concis et actionable.',
+        `Données du dernier match et historique récent :\n${ctx}\n\nRédige un débrief post-match structuré en 4 parties :\n1) **📊 Résultat & Analyse** — contexte du match, résultat objectif\n2) **✅ Points positifs** — ce qui a fonctionné, à conserver\n3) **⚠️ Points à améliorer** — axes de progression concrets basés sur les stats\n4) **🎯 Objectifs prochain match** — 2-3 actions précises et mesurables à mettre en place`,
+        thinking
+      );
+      if (!answer) return;
+
+      const placementEmoji = lastMatch.placement === 1 ? '🥇' : lastMatch.placement <= 3 ? '🥈' : lastMatch.placement <= 5 ? '🏅' : '📊';
+      const embedColor     = lastMatch.placement === 1 ? 0x57F287 : lastMatch.placement <= 3 ? 0xFEE75C : 0xFF8C00;
+
+      const embed = new EmbedBuilder()
+        .setColor(embedColor)
+        .setAuthor({ name: `${placementEmoji} Débrief IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer)
+        .addFields({
+          name: '📈 Dernière performance',
+          value: `**Placement :** #${lastMatch.placement} · **Kills :** ${lastMatch.kills} · **Points :** +${lastMatch.points}${lastMatch.tournamentName ? ` · *${lastMatch.tournamentName}*` : ''}`,
+          inline: false
+        })
+        .setTimestamp()
+        .setFooter({ text: `Débrief généré par IA · Demandé par ${message.author.username}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 
