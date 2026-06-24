@@ -1,5 +1,6 @@
 [build]
 builder = "RAILPACK"
+buildCommand = "pnpm install --no-frozen-lockfile"
 
 [deploy]
 startCommand = "node index.js"

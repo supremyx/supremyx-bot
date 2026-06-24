@@ -1,0 +1,96 @@
+2026-06-24T03:53:22.698562726Z [inf]  scheduling build on Metal builder "builder-ntvpal"
+2026-06-24T03:53:32.293674002Z [inf]  unpacking archive
+2026-06-24T03:53:32.388921686Z [inf]  using build driver railpack-v0.30.0
+2026-06-24T03:53:32.463044591Z [inf]  uploading snapshot
+2026-06-24T03:53:32.612405412Z [inf]                     
+2026-06-24T03:53:32.612417223Z [inf]  [38;2;125;86;243m╭─────────────────╮[0m
+2026-06-24T03:53:32.612418532Z [inf]  [38;2;125;86;243m│[0m Railpack 0.30.0 [38;2;125;86;243m│[0m
+2026-06-24T03:53:32.612419163Z [inf]  [38;2;125;86;243m╰─────────────────╯[0m
+2026-06-24T03:53:32.612419632Z [inf]  
+2026-06-24T03:53:32.612421272Z [inf]    [97m↳ Detected Node[0m
+2026-06-24T03:53:32.612421792Z [inf]    [97m↳ Custom start command detected, skipping Caddy start[0m
+2026-06-24T03:53:32.612422292Z [inf]    [97m↳ Custom start command detected, skipping Caddy start[0m
+2026-06-24T03:53:32.612423603Z [inf]    [97m↳ Using pnpm package manager[0m
+2026-06-24T03:53:32.612424023Z [inf]    [97m↳ Found workspace with 1 packages[0m
+2026-06-24T03:53:32.612430612Z [inf]    [97m↳ Custom start command detected, skipping Caddy start[0m
+2026-06-24T03:53:32.612431992Z [inf]              
+2026-06-24T03:53:32.612432443Z [inf]    [1mPackages[0m  
+2026-06-24T03:53:32.612433032Z [inf]    [38;5;238m──────────[0m
+2026-06-24T03:53:32.612434523Z [inf]    [95mnode[0m  [38;5;238m│[0m  [96m22.22.3[0m  [38;5;238m│[0m  railpack default (22)
+2026-06-24T03:53:32.612435332Z [inf]    [95mpnpm[0m  [38;5;238m│[0m  [96m9.15.9[0m   [38;5;238m│[0m  pnpm-lock.yaml (9)
+2026-06-24T03:53:32.612435783Z [inf]              
+2026-06-24T03:53:32.612436332Z [inf]    [1mSteps[0m     
+2026-06-24T03:53:32.612436772Z [inf]    [38;5;238m──────────[0m
+2026-06-24T03:53:32.612437252Z [inf]    [95m▸ install[0m
+2026-06-24T03:53:32.612438403Z [inf]      [38;5;245m$[0m [1mpnpm add -g node-gyp[0m
+2026-06-24T03:53:32.612438903Z [inf]      [38;5;245m$[0m [1mpnpm install --frozen-lockfile --prefer-offline[0m
+2026-06-24T03:53:32.612439372Z [inf]              
+2026-06-24T03:53:32.612439763Z [inf]    [1mDeploy[0m    
+2026-06-24T03:53:32.612440223Z [inf]    [38;5;238m──────────[0m
+2026-06-24T03:53:32.612440792Z [inf]      [38;5;245m$[0m [1mnode index.js[0m
+2026-06-24T03:53:32.612441172Z [inf]  
+2026-06-24T03:53:32.699163719Z [inf]  resolve image config for docker-image://ghcr.io/railwayapp/railpack-frontend:v0.30.0
+2026-06-24T03:53:32.842364294Z [inf]  resolve image config for docker-image://ghcr.io/railwayapp/railpack-frontend:v0.30.0
+2026-06-24T03:53:32.842660765Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.30.0@sha256:8120546d9e67be53c7edebec900ed69ef724fbde890d43cb24455dfca4aebcc0
+2026-06-24T03:53:32.842661715Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.30.0@sha256:8120546d9e67be53c7edebec900ed69ef724fbde890d43cb24455dfca4aebcc0
+2026-06-24T03:53:32.842666175Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.30.0@sha256:8120546d9e67be53c7edebec900ed69ef724fbde890d43cb24455dfca4aebcc0
+2026-06-24T03:53:33.040722349Z [inf]  load build definition from ./railpack-plan.json
+2026-06-24T03:53:33.040908309Z [inf]  load build definition from ./railpack-plan.json
+2026-06-24T03:53:33.041019329Z [inf]  load build definition from ./railpack-plan.json
+2026-06-24T03:53:33.233510978Z [inf]  load build definition from ./railpack-plan.json
+2026-06-24T03:53:33.333567666Z [inf]  create mise config
+2026-06-24T03:53:33.333569097Z [inf]  copy pnpm-lock.yaml
+2026-06-24T03:53:33.333569577Z [inf]  pnpm add -g node-gyp
+2026-06-24T03:53:33.333569966Z [inf]  copy dashboard/package-lock.json
+2026-06-24T03:53:33.333570237Z [inf]  copy pnpm-workspace.yaml
+2026-06-24T03:53:33.333570537Z [inf]  install apt packages: libatomic1
+2026-06-24T03:53:33.333570797Z [inf]  copy dashboard/package.json
+2026-06-24T03:53:33.333572926Z [inf]  copy / /app
+2026-06-24T03:53:33.333573357Z [inf]  copy /mise/installs
+2026-06-24T03:53:33.333573757Z [inf]  copy .npmrc
+2026-06-24T03:53:33.333574026Z [inf]  loading .
+2026-06-24T03:53:33.333574517Z [inf]  install mise packages: node, pnpm
+2026-06-24T03:53:33.333574937Z [inf]  mkdir /etc/mise
+2026-06-24T03:53:33.333575346Z [inf]  mkdir -p /app/node_modules/.cache
+2026-06-24T03:53:33.333575657Z [inf]  copy /mise/shims
+2026-06-24T03:53:33.333578317Z [inf]  copy package-lock.json
+2026-06-24T03:53:33.333578877Z [inf]  pnpm install --frozen-lockfile --prefer-offline
+2026-06-24T03:53:33.333579306Z [inf]  copy /etc/mise/config.toml
+2026-06-24T03:53:33.333579786Z [inf]  copy package.json
+2026-06-24T03:53:33.333580326Z [inf]  copy /usr/local/bin/mise
+2026-06-24T03:53:33.333580746Z [inf]  copy /root/.local/state/mise
+2026-06-24T03:53:33.333581157Z [inf]  docker-image://ghcr.io/railwayapp/railpack-runtime:mise-2026.6.12
+2026-06-24T03:53:33.333581546Z [inf]  docker-image://ghcr.io/railwayapp/railpack-runtime:mise-2026.6.12
+2026-06-24T03:53:33.333581946Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.6.12
+2026-06-24T03:53:33.333582226Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.6.12
+2026-06-24T03:53:33.333588657Z [inf]  [railpack] merge $packages:apt:runtime, $packages:mise, $build, $build
+2026-06-24T03:53:33.333590077Z [inf]  copy /app
+2026-06-24T03:53:33.333590486Z [inf]  copy /root/.cache
+2026-06-24T03:53:33.333590766Z [inf]  copy /app/node_modules
+2026-06-24T03:53:33.335069388Z [inf]  loading .
+2026-06-24T03:53:33.347030638Z [inf]  loading .
+2026-06-24T03:53:33.509122141Z [inf]  loading .
+2026-06-24T03:53:33.573971998Z [inf]  mkdir /etc/mise
+2026-06-24T03:53:33.573973558Z [inf]  create mise config
+2026-06-24T03:53:33.573973838Z [inf]  install mise packages: node, pnpm
+2026-06-24T03:53:33.573974208Z [inf]  mkdir -p /app/node_modules/.cache
+2026-06-24T03:53:33.573974488Z [inf]  copy .npmrc
+2026-06-24T03:53:33.573974768Z [inf]  copy dashboard/package-lock.json
+2026-06-24T03:53:33.573975028Z [inf]  copy dashboard/package.json
+2026-06-24T03:53:33.573975298Z [inf]  copy package-lock.json
+2026-06-24T03:53:33.573975558Z [inf]  copy package.json
+2026-06-24T03:53:33.573975818Z [inf]  copy pnpm-lock.yaml
+2026-06-24T03:53:33.573976088Z [inf]  copy pnpm-workspace.yaml
+2026-06-24T03:53:33.573976478Z [inf]  pnpm add -g node-gyp
+2026-06-24T03:53:33.573981358Z [inf]  pnpm install --frozen-lockfile --prefer-offline
+2026-06-24T03:53:34.022563532Z [inf]  Scope: all 2 workspace projects
+
+2026-06-24T03:53:34.095147036Z [inf]   ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" because pnpm-lock.yaml is not up to date with <ROOT>/package.json
+
+Note that in CI environments this setting is true by default. If you still need to run install in such cases, use "pnpm install --no-frozen-lockfile"
+
+    Failure reason:
+    specifiers in the lockfile ({"@hookform/resolvers":"^5.4.0","@radix-ui/react-accordion":"^1.2.14","@radix-ui/react-alert-dialog":"^1.1.17","@radix-ui/react-aspect-ratio":"^1.1.10","@radix-ui/react-avatar":"^1.2.0","@radix-ui/react-checkbox":"^1.3.5","@radix-ui/react-collapsible":"^1.1.14","@radix-ui/react-context-menu":"^2.3.1","@radix-ui/react-dialog":"^1.1.17","@radix-ui/react-dropdown-menu":"^2.1.18","@radix-ui/react-hover-card":"^1.1.17","@radix-ui/react-label":"^2.1.10","@radix-ui/react-menubar":"^1.1.18","@radix-ui/react-navigation-menu":"^1.2.16","@radix-ui/react-popover":"^1.1.17","@radix-ui/react-progress":"^1.1.10","@radix-ui/react-radio-group":"^1.4.1","@radix-ui/react-scroll-area":"^1.2.12","@radix-ui/react-select":"^2.3.1","@radix-ui/react-separator":"^1.1.10","@radix-ui/react-slider":"^1.4.1","@radix-ui/react-slot":"^1.3.0","@radix-ui/react-switch":"^1.3.1","@radix-ui/react-tabs":"^1.1.15","@radix-ui/react-toast":"^1.2.17","@radix-ui/react-toggle":"^1.1.12","@radix-ui/react-toggle-group":"^1.1.13","@radix-ui/react-tooltip":"^1.2.10","@replit/vite-plugin-cartographer":"^0.5.21","@replit/vite-plugin-dev-banner":"^0.1.2","@replit/vite-plugin-runtime-error-modal":"^0.0.6","@tailwindcss/typography":"^0.5.20","@tailwindcss/vite":"^4.3.1","@tanstack/react-query":"^5.101.0","@types/node":"^25.9.4","@types/react":"^19.2.17","@types/react-dom":"^19.2.3","@vitejs/plugin-react":"^6.0.2","class-variance-authority":"^0.7.1","clsx":"^2.1.1","cmdk":"^1.1.1","cors":"^2.8.6","date-fns":"^4.4.0","discord.js":"^14.26.4","dotenv":"^16.6.1","drizzle-zod":"^0.8.3","embla-carousel-react":"^8.6.0","esbuild":"^0.28.1","express":"^5.2.1","express-rate-limit":"^8.5.2","framer-motion":"^12.40.0","input-otp":"^1.4.2","jspdf":"^4.2.1","jspdf-autotable":"^5.0.8","lucide-react":"^1.21.0","mongoose":"^8.24.0","next-themes":"^0.4.6","openai":"^4.104.0","p-limit":"^7.3.0","p-retry":"^7.1.1","react":"^19.2.7","react-day-picker":"^10.0.1","react-dom":"^19.2.7","react-hook-form":"^7.80.0","react-icons":"^5.6.0","react-resizable-panels":"^4.11.2","recharts":"^3.8.1","sonner":"^2.0.7","tailwind-merge":"^3.6.0","tailwindcss":"^4.3.1","tw-animate-css":"^1.4.0","typescript":"^6.0.3","vaul":"^1.1.2","vite":"^8.0.16","wouter":"^3.10.0","zod":"^3.23.8","zod-validation-error":"^3.0.0","husky":"^9.1.7"}) don't match specs in package.json ({"husky":"^9.1.7","@hookform/resolvers":"^5.4.0","@radix-ui/react-accordion":"^1.2.14","@radix-ui/react-alert-dialog":"^1.1.17","@radix-ui/react-aspect-ratio":"^1.1.10","@radix-ui/react-avatar":"^1.2.0","@radix-ui/react-checkbox":"^1.3.5","@radix-ui/react-collapsible":"^1.1.14","@radix-ui/react-context-menu":"^2.3.1","@radix-ui/react-dialog":"^1.1.17","@radix-ui/react-dropdown-menu":"^2.1.18","@radix-ui/react-hover-card":"^1.1.17","@radix-ui/react-label":"^2.1.10","@radix-ui/react-menubar":"^1.1.18","@radix-ui/react-navigation-menu":"^1.2.16","@radix-ui/react-popover":"^1.1.17","@radix-ui/react-progress":"^1.1.10","@radix-ui/react-radio-group":"^1.4.1","@radix-ui/react-scroll-area":"^1.2.12","@radix-ui/react-select":"^2.3.1","@radix-ui/react-separator":"^1.1.10","@radix-ui/react-slider":"^1.4.1","@radix-ui/react-slot":"^1.3.0","@radix-ui/react-switch":"^1.3.1","@radix-ui/react-tabs":"^1.1.15","@radix-ui/react-toast":"^1.2.17","@radix-ui/react-toggle":"^1.1.12","@radix-ui/react-toggle-group":"^1.1.13","@radix-ui/react-tooltip":"^1.2.10","@replit/vite-plugin-cartographer":"^0.5.21","@replit/vite-plugin-dev-banner":"^0.1.2","@replit/vite-plugin-runtime-error-modal":"^0.0.6","@tailwindcss/typography":"^0.5.20","@tailwindcss/vite":"^4.3.1","@tanstack/react-query":"^5.101.0","@types/node":"^25.9.4","@types/react":"^19.2.17","@types/react-dom":"^19.2.3","@vitejs/plugin-react":"^6.0.2","class-variance-authority":"^0.7.1","clsx":"^2.1.1","cmdk":"^1.1.1","cors":"^2.8.6","date-fns":"^4.4.0","discord.js":"^14.26.4","dotenv":"^16.6.1","drizzle-zod":"^0.8.3","embla-carousel-react":"^8.6.0","esbuild":"^0.28.1","express":"^5.2.1","express-rate-limit":"^8.5.2","framer-motion":"^12.40.0","input-otp":"^1.4.2","jspdf":"^4.2.1","jspdf-autotable":"^5.0.8","lucide-react":"^1.21.0","mongoose":"^8.24.1","next-themes":"^0.4.6","openai":"^4.104.0","p-limit":"^7.3.0","p-retry":"^7.1.1","react":"^19.2.7","react-day-picker":"^10.0.1","react-dom":"^19.2.7","react-hook-form":"^7.80.0","react-icons":"^5.6.0","react-resizable-panels":"^4.11.2","recharts":"^3.8.1","sonner":"^2.0.7","tailwind-merge":"^3.6.0","tailwindcss":"^4.3.1","tw-animate-css":"^1.4.0","typescript":"^6.0.3","vaul":"^1.1.2","vite":"^8.0.16","wouter":"^3.10.0","zod":"^3.23.8","zod-validation-error":"^3.0.0"})
+
+2026-06-24T03:53:34.307448413Z [err]  pnpm install --frozen-lockfile --prefer-offline
+2026-06-24T03:53:34.345932127Z [err]  Build Failed: build daemon returned an error < failed to solve: process "pnpm install --frozen-lockfile --prefer-offline" did not complete successfully: exit code: 1 >
