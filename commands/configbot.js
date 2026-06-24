@@ -37,21 +37,21 @@ module.exports = (client) => {
           { name: '🏆 Système de points', value: `\`\`\`${ptRows}\`\`\`` },
           { name: '💀 Bonus kill', value: `${config.killBonus} pt(s) par kill`, inline: true }
         )
-        .setFooter({ text: 'Modifie avec !setpointssystem' })
+        .setFooter({ text: 'Modifie avec !definitpoints' })
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
     }
 
     // --- !setpointssystem <p1:pts> <p2:pts> ... [kill:<pts>] ---
-    if (cmd === '!setpoints') {
+    if (cmd === '!definitpoints' || cmd === '!setpoints') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const pairs = args.slice(1);
       if (!pairs.length)
         return message.reply(
-          'Usage : `!setpoints <place:pts> ... [kill:<pts>]`\n' +
-          'Exemple : `!setpoints 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
+          'Usage : `!definitpoints <place:pts> ... [kill:<pts>]`\n' +
+          'Exemple : `!definitpoints 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
         );
 
       const config = await getOrCreateConfig();

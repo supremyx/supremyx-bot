@@ -69,7 +69,7 @@ module.exports = (client) => {
 
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!event')) return;
+    if (!content.startsWith('!evenement') && !content.startsWith('!event')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -86,7 +86,7 @@ module.exports = (client) => {
       const description = parts[1] || '';
       const date = parts[2] || '';
 
-      if (!title) return message.reply('Usage : `!event creer <titre> | [description] | [date]`\nEx : `!event creer Scrim vendredi | Scrim custom interne | 10/05 20h00`');
+      if (!title) return message.reply('Usage : `!evenement creer <titre> | [description] | [date]`\nEx : `!evenement creer Scrim vendredi | Scrim custom interne | 10/05 20h00`');
 
       const num = await nextEventNumber(message.guild.id);
       const ev = await GuildEvent.create({
@@ -112,7 +112,7 @@ module.exports = (client) => {
     // --- !event liste ---
     if (!sub || sub === 'liste') {
       const events = await GuildEvent.find({ guildId: message.guild.id, cancelled: false }).sort({ eventNumber: -1 }).limit(10);
-      if (!events.length) return message.reply('Aucun événement actif. Crée-en un avec `!event creer`.');
+      if (!events.length) return message.reply('Aucun événement actif. Crée-en un avec `!evenement creer`.');
       const embed = new EmbedBuilder()
         .setTitle('📅 Événements à venir')
         .setColor(0x5865F2)
@@ -127,7 +127,7 @@ module.exports = (client) => {
     if (sub === 'annuler') {
       if (!isStaff) return message.reply('Staff uniquement');
       const num = parseInt(args[2]);
-      if (isNaN(num)) return message.reply('Usage : `!event annuler <id>`');
+      if (isNaN(num)) return message.reply('Usage : `!evenement annuler <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
       if (!ev) return message.reply('❌ Événement introuvable.');
       ev.cancelled = true;
@@ -145,7 +145,7 @@ module.exports = (client) => {
     // --- !event joindre <id> ---
     if (sub === 'joindre' || sub === 'participer') {
       const num = parseInt(args[2]);
-      if (isNaN(num)) return message.reply('Usage : `!event joindre <id>`');
+      if (isNaN(num)) return message.reply('Usage : `!evenement joindre <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
       if (!ev) return message.reply('❌ Événement introuvable.');
       if (ev.cancelled) return message.reply('❌ Cet événement a été annulé.');
@@ -169,7 +169,7 @@ module.exports = (client) => {
     // --- !event quitter <id> ---
     if (sub === 'quitter' || sub === 'decliner') {
       const num = parseInt(args[2]);
-      if (isNaN(num)) return message.reply('Usage : `!event quitter <id>`');
+      if (isNaN(num)) return message.reply('Usage : `!evenement quitter <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
       if (!ev) return message.reply('❌ Événement introuvable.');
       if (ev.cancelled) return message.reply('❌ Cet événement a été annulé.');
@@ -193,7 +193,7 @@ module.exports = (client) => {
     // --- !event participants <id> ---
     if (sub === 'participants' || sub === 'inscrits') {
       const num = parseInt(args[2]);
-      if (isNaN(num)) return message.reply('Usage : `!event participants <id>`');
+      if (isNaN(num)) return message.reply('Usage : `!evenement participants <id>`');
       const ev = await GuildEvent.findOne({ guildId: message.guild.id, eventNumber: num });
       if (!ev) return message.reply('❌ Événement introuvable.');
       const joinedMentions = ev.joined.map(id => `<@${id}>`).join(', ') || '*Personne*';
@@ -210,12 +210,12 @@ module.exports = (client) => {
 
     message.reply(
       '**Commandes `!event` :**\n' +
-      '`!event creer <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
-      '`!event liste` — Voir les événements en cours\n' +
-      '`!event joindre <id>` — S\'inscrire à un événement\n' +
-      '`!event quitter <id>` — Décliner un événement\n' +
-      '`!event participants <id>` — Voir qui participe\n' +
-      '`!event annuler <id>` — Annuler un événement *(staff)*'
+      '`!evenement creer <titre> | [desc] | [date]` — Créer un événement *(staff)*\n' +
+      '`!evenement liste` — Voir les événements en cours\n' +
+      '`!evenement joindre <id>` — S\'inscrire à un événement\n' +
+      '`!evenement quitter <id>` — Décliner un événement\n' +
+      '`!evenement participants <id>` — Voir qui participe\n' +
+      '`!evenement annuler <id>` — Annuler un événement *(staff)*'
     );
   });
 };

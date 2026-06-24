@@ -12,10 +12,10 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator') ?? false;
 
     // --- !setbirthday #channel ---
-    if (content.startsWith('!setanniversaire')) {
+    if (content.startsWith('!salonanniversaires') || content.startsWith('!setanniversaire')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!setanniversaire #salon`');
+      if (!channel) return message.reply('Usage : `!salonanniversaires #salon`');
       await BirthdayConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { guildId: message.guild.id, channelId: channel.id },
@@ -133,7 +133,7 @@ module.exports = (client) => {
       '`!anniversaire prochains [N]` — Prochains anniversaires sur N jours (défaut 30)\n' +
       '`!anniversaire vérifier [@user]` — Vérifier un anniversaire\n' +
       '`!anniversaire supprimer` — Supprimer ton anniversaire\n' +
-      '`!setanniversaire #salon` — Configurer le salon d\'annonce *(staff)*'
+      '`!salonanniversaires #salon` — Configurer le salon d\'annonce *(staff)*'
     );
     } catch (err) {
       console.error('[birthday] Erreur:', err);

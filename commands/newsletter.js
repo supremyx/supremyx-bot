@@ -73,19 +73,20 @@ module.exports = (client) => {
     try {
       if (!message.guild) return;
       if (message.author.bot) return;
-      if (!message.content.startsWith('!newsletter')) return;
+      if (!message.content.startsWith('!infolettre') && !message.content.startsWith('!newsletter')) return;
       if (!message.member) return;
       if (!message.member.permissions.has('Administrator')) return message.reply('⛔ Staff uniquement.');
 
       const content = message.content.trim();
-      const args    = content.slice('!newsletter'.length).trim().split(/\s+/);
+      const _nlLen  = content.startsWith('!infolettre') ? '!infolettre'.length : '!newsletter'.length;
+      const args    = content.slice(_nlLen).trim().split(/\s+/);
       const sub     = args[0]?.toLowerCase();
       const guildId = message.guild.id;
 
       // ── !newsletter salon #salon ──────────────────────────────────────────
       if (sub === 'salon') {
         const chan = message.mentions.channels.first();
-        if (!chan) return message.reply('Usage : `!newsletter salon #salon`');
+        if (!chan) return message.reply('Usage : `!infolettre salon #salon`');
         await NewsletterConfig.findOneAndUpdate({ guildId }, { channelId: chan.id }, { upsert: true });
         return message.reply(`✅ Salon newsletter défini : <#${chan.id}>\nPublication automatique chaque **dimanche à 20h**.`);
       }
@@ -100,7 +101,7 @@ module.exports = (client) => {
       // ── !newsletter tester ────────────────────────────────────────────────
       if (sub === 'tester') {
         const cfg = await NewsletterConfig.findOne({ guildId });
-        if (!cfg?.channelId) return message.reply('❌ Configure d\'abord le salon avec `!newsletter salon #salon`.');
+        if (!cfg?.channelId) return message.reply('❌ Configure d\'abord le salon avec `!infolettre salon #salon`.');
         const chan = message.guild.channels.cache.get(cfg.channelId);
         if (!chan) return message.reply('❌ Salon introuvable.');
         const embed = await buildWeeklyEmbed(client, guildId);
@@ -123,7 +124,7 @@ module.exports = (client) => {
         return message.channel.send({ embeds: [embed] });
       }
 
-      return message.reply('**Sous-commandes :** `salon #salon` · `activer` · `desactiver` · `tester` · `statut`');
+      return message.reply('**Usage `!infolettre` :** `salon #salon` · `activer` · `desactiver` · `tester` · `statut`');
     } catch (err) {
       console.error('[newsletter]', err);
     }

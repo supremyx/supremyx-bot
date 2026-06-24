@@ -21,10 +21,10 @@ module.exports = (client) => {
     const isStaff = message.member?.permissions.has('Administrator');
 
     // --- !setlevelchannel #channel ---
-    if (content.startsWith('!setchannelniveau')) {
+    if (content.startsWith('!salonniveaux') || content.startsWith('!setchannelniveau')) {
       if (!isStaff) return message.reply('Staff uniquement');
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('Usage : `!setchannelniveau #salon`');
+      if (!channel) return message.reply('Usage : `!salonniveaux #salon`');
       await LevelConfig.findOneAndUpdate(
         { guildId: message.guild.id },
         { channelId: channel.id, enabled: true },

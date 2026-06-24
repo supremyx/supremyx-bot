@@ -7,21 +7,22 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
       const content = message.content.trim();
-      if (!content.startsWith('!setlogo')) return;
+      if (!content.startsWith('!configlogo') && !content.startsWith('!setlogo')) return;
       if (!message.guild) return;
       if (message.author.bot) return;
       if (!message.member) return;
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const rest = content.slice('!setlogo'.length).trim();
+      const _slCmd = content.startsWith('!configlogo') ? '!configlogo' : '!setlogo';
+      const rest = content.slice(_slCmd.length).trim();
       const pipeIdx = rest.indexOf('|');
 
       if (pipeIdx === -1 || !rest.slice(0, pipeIdx).trim() || !rest.slice(pipeIdx + 1).trim()) {
         return message.reply(
-          '**Usage :** `!setlogo <équipe> | <url>`\n' +
-          'Exemple : `!setlogo TeamAlpha | https://i.imgur.com/abc.png`\n' +
-          'Pour supprimer : `!setlogo TeamAlpha | supprimer`'
+          '**Usage :** `!configlogo <équipe> | <url>`\n' +
+          'Exemple : `!configlogo TeamAlpha | https://i.imgur.com/abc.png`\n' +
+          'Pour supprimer : `!configlogo TeamAlpha | supprimer`'
         );
       }
 

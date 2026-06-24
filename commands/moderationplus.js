@@ -133,7 +133,7 @@ module.exports = (client) => {
     }
 
     // ── !topwarn ───────────────────────────────────────────────────────────────
-    if (cmd === '!topwarn') {
+    if (cmd === '!topavertissements' || cmd === '!topwarn') {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 

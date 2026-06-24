@@ -17,7 +17,7 @@ module.exports = (client) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !setrankreward <rang> @role [label] ---
-    if (cmd === '!setrecompense') {
+    if (cmd === '!definitrecompense' || cmd === '!setrecompense') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const rank = parseInt(args[1]);
@@ -25,7 +25,7 @@ module.exports = (client) => {
       const label = args.slice(3).join(' ').trim() || `Top ${rank}`;
 
       if (isNaN(rank) || rank < 1 || !role)
-        return message.reply('Usage : `!setrecompense <rang> @role [label]`\nExemple : `!setrecompense 1 @Champion 🥇 Champion`');
+        return message.reply('Usage : `!definitrecompense <rang> @role [label]`\nExemple : `!definitrecompense 1 @Champion 🥇 Champion`');
 
       await RankReward.findOneAndUpdate(
         { rank },
@@ -34,7 +34,7 @@ module.exports = (client) => {
       );
 
       logStaffAction(client, `🏅 **Rank reward défini** — Rang ${rank} → @${role.name} | Par : ${message.author.tag}`);
-      return message.reply(`✅ Rang **#${rank}** → rôle **${role.name}** (${label})\nUtilise \`!syncrangs\` pour appliquer immédiatement.`);
+      return message.reply(`✅ Rang **#${rank}** → rôle **${role.name}** (${label})\nUtilise \`!synchroniserrangs\` pour appliquer immédiatement.`);
     }
 
     // --- !linkteam <nom équipe> @role ---
@@ -67,7 +67,7 @@ module.exports = (client) => {
       ]);
 
       if (!rewards.length)
-        return message.reply('Aucune récompense de rang configurée. Utilise `!setrecompense <rang> @role`.');
+        return message.reply('Aucune récompense de rang configurée. Utilise `!definitrecompense <rang> @role`.');
 
       const embed = new EmbedBuilder()
         .setTitle('🏅 Récompenses de rang')
@@ -87,7 +87,7 @@ module.exports = (client) => {
     }
 
     // --- !syncranks --- 
-    if (cmd === '!syncrangs') {
+    if (cmd === '!synchroniserrangs' || cmd === '!syncrangs') {
       if (!isStaff) return message.reply('Staff uniquement');
 
       const waiting = await message.reply('⏳ Synchronisation des rôles en cours...');

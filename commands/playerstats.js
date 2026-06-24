@@ -19,7 +19,8 @@ module.exports = (client) => {
       !content.startsWith('!matchjoueur') &&
       !content.startsWith('!statsjoueur') &&
       !content.startsWith('!classjoueurs') &&
-      !content.startsWith('!resetjoueur')
+      !content.startsWith('!resetjoueur') &&
+      !content.startsWith('!reinitjoueur')
     ) return;
     if (!message.guild) return;
     if (!message.member) return;
@@ -182,13 +183,13 @@ module.exports = (client) => {
     }
 
     // ─── !playerreset <équipe> <joueur> ──────────────────────────
-    if (cmd === '!resetjoueur') {
+    if (cmd === '!reinitjoueur' || cmd === '!resetjoueur') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const teamName   = args[0];
       const playerName = args.slice(1).join(' ').trim();
       if (!teamName || !playerName)
-        return message.reply('Usage : `!resetjoueur <équipe> <joueur>`');
+        return message.reply('Usage : `!reinitjoueur <équipe> <joueur>`');
 
       const deleted = await PlayerStat.findOneAndDelete({
         guildId: message.guild.id,

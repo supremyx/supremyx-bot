@@ -196,10 +196,11 @@ module.exports = (client) => {
     if (message.author.bot) return;
     if (!message.guild)     return;
     if (!message.member)    return;
-    if (!message.content.startsWith('!waitlist')) return;
+    if (!message.content.startsWith('!listedattente') && !message.content.startsWith('!waitlist')) return;
     if (!isStaff(message.member)) return message.reply('❌ Permissions insuffisantes (Gérer le serveur).');
 
-    const full = message.content.slice('!waitlist'.length).trim();
+    const _wCmd = message.content.startsWith('!listedattente') ? '!listedattente' : '!waitlist';
+    const full = message.content.slice(_wCmd.length).trim();
     const sub  = full.split(/\s+/)[0]?.toLowerCase() || '';
     const rest = full.replace(/^\S+\s*/, '').trim();
 
@@ -209,10 +210,10 @@ module.exports = (client) => {
       if (sub === 'configurer' || sub === 'config') {
         const fields = rest.split('|').map(f => f.trim());
         if (fields.length < 2) return message.reply([
-          '**Usage :** `!waitlist configurer #salon-inscriptions | #salon-waitlist | @rôle | max_places | Titre`',
+          '**Usage :** `!listedattente configurer #salon-inscriptions | #salon-listedattente | @rôle | max_places | Titre`',
           '',
           '**Exemple :**',
-          '`!waitlist configurer #es・inscription | #es・waitlist | @Participant | 16 | PUBG MOBILE AFRICA — ELITE SCRIMS (WAITLIST)`',
+          '`!listedattente configurer #es・inscription | #es・listedattente | @Participant | 16 | PUBG MOBILE AFRICA — ELITE SCRIMS (LISTE D\'ATTENTE)`',
           '',
           '`@rôle`, `max_places` et le titre sont **optionnels**.',
         ].join('\n'));
@@ -252,7 +253,7 @@ module.exports = (client) => {
             { name: '🔢 Places max',         value: String(maxSlots),                          inline: true },
             { name: '🏆 Titre',             value: cleanTitle,                                inline: false },
           )
-          .setFooter({ text: `Lance !waitlist initialiser pour publier l'embed. Les équipes utilisent %inscrire dans #${regCh.name}.` });
+          .setFooter({ text: `Lance !listedattente initialiser pour publier l'embed. Les équipes utilisent %inscrire dans #${regCh.name}.` });
 
         await message.reply({ embeds: [embed] });
         await staffLog(client, {
@@ -266,7 +267,7 @@ module.exports = (client) => {
       // ── !waitlist initialiser ────────────────────────────────────────────
       if (sub === 'initialiser' || sub === 'init') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
-        if (!config) return message.reply('❌ Configure d\'abord : `!waitlist configurer #reg | #waitlist | @rôle | places | Titre`');
+        if (!config) return message.reply('❌ Configure d\'abord : `!listedattente configurer #reg | #listedattente | @rôle | places | Titre`');
         await InscriptionConfig.findByIdAndUpdate(config._id, { waitlistMessageId: '' });
         config.waitlistMessageId = '';
         const msg = await buildAndUpdateEmbed(client, config);
@@ -422,7 +423,7 @@ module.exports = (client) => {
       // ── !waitlist info ───────────────────────────────────────────────────
       if (sub === 'infos') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
-        if (!config) return message.reply('❌ Système non configuré. Lance : `!waitlist setup #reg | #waitlist | @rôle | slots | Titre`');
+        if (!config) return message.reply('❌ Système non configuré. Lance : `!listedattente configurer #reg | #listedattente | @rôle | places | Titre`');
 
         const count = await Registration.countDocuments({ guildId: message.guild.id, status: { $ne: 'rejected' } });
         const embed = new EmbedBuilder()
@@ -441,17 +442,17 @@ module.exports = (client) => {
 
       // ── Aide ──────────────────────────────────────────────────────────────
       return message.reply([
-        '**Commandes `!waitlist` :**',
+        '**Commandes `!listedattente` :**',
         '',
-        '`!waitlist configurer #reg | #waitlist | @rôle | places | Titre` — configurer le système',
-        '`!waitlist initialiser` — publier/rafraîchir l\'embed waitlist',
-        '`!waitlist liste` — voir toutes les inscriptions',
-        '`!waitlist confirmer <TAG>` — confirmer une équipe',
-        '`!waitlist retirer <TAG>` — retirer une équipe',
-        '`!waitlist vip <TAG>` — activer/désactiver le statut VIP ⭐',
-        '`!waitlist places <n>` — changer le nombre de places',
-        '`!waitlist réinitialiser` — effacer toutes les inscriptions',
-        '`!waitlist infos` — voir la configuration actuelle',
+        '`!listedattente configurer #reg | #listedattente | @rôle | places | Titre` — configurer le système',
+        '`!listedattente initialiser` — publier/rafraîchir l\'embed liste d\'attente',
+        '`!listedattente liste` — voir toutes les inscriptions',
+        '`!listedattente confirmer <TAG>` — confirmer une équipe',
+        '`!listedattente retirer <TAG>` — retirer une équipe',
+        '`!listedattente vip <TAG>` — activer/désactiver le statut VIP ⭐',
+        '`!listedattente places <n>` — changer le nombre de places',
+        '`!listedattente réinitialiser` — effacer toutes les inscriptions',
+        '`!listedattente infos` — voir la configuration actuelle',
         '',
         '> Les équipes s\'inscrivent avec `%inscrire` dans le salon configuré.',
       ].join('\n'));

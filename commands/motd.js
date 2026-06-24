@@ -41,11 +41,12 @@ module.exports = (client, sendOnStartup = false) => {
     const isStaff = message.member.permissions.has('Administrator');
 
     // --- !setmotd <texte> ---
-    if (cmd === '!setmessagejour') {
+    if (cmd === '!configmdj' || cmd === '!setmessagejour') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const text = content.slice('!setmessagejour'.length).trim();
-      if (!text) return message.reply('Usage : `!setmessagejour <message du jour>`');
+      const _mdLen = cmd === '!configmdj' ? '!configmdj'.length : '!setmessagejour'.length;
+      const text = content.slice(_mdLen).trim();
+      if (!text) return message.reply('Usage : `!configmdj <message du jour>`');
 
       const config = await getOrCreateConfig();
       config.motd = text;
@@ -53,13 +54,13 @@ module.exports = (client, sendOnStartup = false) => {
       await config.save();
 
       logStaffAction(client, `📢 **MOTD défini** par ${message.author.tag}`);
-      return message.reply(`✅ Message du jour enregistré. Il sera envoyé dans le salon d'annonce au prochain démarrage du bot.\nUtilise \`!motd\` pour l'afficher maintenant.`);
+      return message.reply(`✅ Message du jour enregistré. Il sera envoyé dans le salon d'annonce au prochain démarrage du bot.\nUtilise \`!messagejour\` pour l'afficher maintenant.`);
     }
 
     // --- !motd ---
     if (cmd === '!messagejour') {
       const config = await getOrCreateConfig();
-      if (!config.motd) return message.reply('Aucun message du jour défini. Utilise `!setmessagejour <texte>` pour en créer un.');
+      if (!config.motd) return message.reply('Aucun message du jour défini. Utilise `!configmdj <texte>` pour en créer un.');
 
       const embed = new EmbedBuilder()
         .setTitle('📢 Message du jour')
