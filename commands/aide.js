@@ -145,6 +145,7 @@ const CATEGORIES = [
     color: 0x57F287,
     commands: [
       { label: '!chercher <terme>',             description: 'Rechercher une commande par mot-clé',                        subs: [] },
+      { label: '!repertoire',                   description: 'Répertoire paginé de toutes les commandes du bot (vue compacte)', subs: [] },
       { label: '!absent [message]',             description: 'Passer en mode AFK (bot répond à ta place)',                 subs: [] },
       { label: '!anniversaire definir <JJ/MM>', description: 'Enregistrer sa date d\'anniversaire',                       subs: ['definir <JJ/MM[/AAAA]> — Enregistrer', 'supprimer — Supprimer', 'liste — Voir tous les anniversaires', 'prochains [N] — Anniversaires dans les N prochains jours', 'verifier [@user] — Vérifier la date'] },
       { label: '!rebours <date> [événement]',   description: 'Compte à rebours jusqu\'à une date (ex : 25/12/2026 Noël)', subs: [] },
