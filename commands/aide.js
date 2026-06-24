@@ -113,7 +113,7 @@ const CATEGORIES = [
       { label: '!ia rapport',            description: 'Rapport IA complet d\'un joueur',           subs: ['rapport <joueur> — Rapport détaillé'] },
       { label: '!ia entrainement',       description: 'Plan d\'entraînement IA pour une équipe',   subs: ['entrainement <équipe> — Programme 1 semaine adapté aux stats'] },
       { label: '!ia strategie',          description: 'Stratégie IA pour battre une équipe',       subs: ['strategie <mon équipe> vs <adversaire> — Plan tactique'] },
-      { label: '!ia bilan',              description: 'Bilan IA complet de la saison/tournoi',     subs: ['bilan — Faits marquants, progressions, records'] },
+      { label: '!ia bilan',              description: 'Bilan hebdomadaire automatique (stats + analyse IA envoyé chaque dimanche à 20h30)', subs: ['(sans arg) — Afficher le statut (salon configuré, dernier envoi)', 'salon #salon — Configurer le salon de réception *(staff)*', 'maintenant — Envoyer le bilan immédiatement *(staff)*', 'désactiver — Désactiver l\'envoi automatique *(staff)*'] },
       { label: '!ia scouting',           description: 'Fiche de scouting IA d\'un joueur',         subs: ['scouting <joueur> — Rapport recrutement IA'] },
       { label: '!ia debriefing <équipe>', description: 'Débrief post-match IA : analyse, points forts/faibles, objectifs', subs: ['debriefing <équipe> — Débrief du dernier match', 'debriefing statut — Voir le canal auto configuré'] },
       { label: '!ia historique',         description: 'Historique de la conversation IA',          subs: [] },
