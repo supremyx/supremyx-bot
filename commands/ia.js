@@ -348,7 +348,7 @@ module.exports = (client) => {
           max_tokens: 1024,
         });
         const { alias: usedAlias } = await getGuildModel(guildId);
-        await IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: usedAlias }).catch(() => {});
+        await IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: usedAlias, commandType: sub || 'chat' }).catch(() => {});
         const newUsed = await getDailyUsage(guildId);
         checkAndNotifyQuota(guildId, newUsed, quota, client).catch(() => {});
         return res.choices[0]?.message?.content ?? 'Aucune réponse.';
@@ -952,10 +952,11 @@ module.exports = (client) => {
 
       // Enregistrer l'utilisation et vérifier le quota
       await IaUsage.create({
-        guildId:    guildId,
-        userId:     message.author.id,
-        username:   message.author.username,
+        guildId:     guildId,
+        userId:      message.author.id,
+        username:    message.author.username,
         modelAlias,
+        commandType: 'chat',
       }).catch(err => console.error('[IA] Erreur tracking:', err));
       const newUsedMain = await getDailyUsage(guildId);
       checkAndNotifyQuota(guildId, newUsedMain, quotaMain, client).catch(() => {});

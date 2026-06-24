@@ -113,10 +113,11 @@ async function autoDebrief(client, guildId, teamName) {
 
     await IaUsage.create({
       guildId,
-      userId:     'auto',
-      username:   'AutoDebrief',
+      userId:      'auto',
+      username:    'AutoDebrief',
       modelAlias,
-      usedAt:     new Date(),
+      commandType: 'debrief-auto',
+      usedAt:      new Date(),
     }).catch(() => {});
 
     const placementEmoji = lastMatch.placement === 1 ? '🥇' : lastMatch.placement <= 3 ? '🥈' : lastMatch.placement <= 5 ? '🏅' : '📊';

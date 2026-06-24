@@ -973,6 +973,38 @@ router.get('/ia/usage', publicLimiter, async (req, res) => {
   }
 });
 
+// ── GET /api/ia/history ───────────────────────────────────────────────────────
+router.get('/ia/history', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, days = 30, limit = 50 } = req.query;
+    const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000);
+    const filter = { usedAt: { $gte: since } };
+    if (guildId) filter.guildId = guildId;
+
+    const records = await IaUsage.find(filter)
+      .sort({ usedAt: -1 })
+      .limit(Number(limit))
+      .lean();
+
+    // Répartition par type de commande
+    const typeMap = new Map();
+    const allRecords = await IaUsage.find(filter).lean();
+    for (const r of allRecords) {
+      const t = r.commandType || 'chat';
+      typeMap.set(t, (typeMap.get(t) || 0) + 1);
+    }
+    const total = allRecords.length;
+    const byType = [...typeMap.entries()]
+      .map(([type, count]) => ({ type, count, pct: total > 0 ? Math.round((count / total) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    res.json({ records, byType, total });
+  } catch (err) {
+    console.error('[API /ia/history]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ── GET /api/pronostics ───────────────────────────────────────────────────────
 router.get('/pronostics', publicLimiter, async (req, res) => {
   try {
