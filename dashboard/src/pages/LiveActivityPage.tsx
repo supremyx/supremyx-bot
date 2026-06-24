@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { apiUrl } from "../lib/api";
 import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent } from "../hooks/useMatchNotifications";
 
@@ -266,6 +268,136 @@ const TYPE_LABELS: Record<string, string> = {
   tournamentEnd: "Fins",
 };
 
+function labelForType(type: FeedItem["type"]): string {
+  if (type === "match") return "Match";
+  if (type === "tournamentStart") return "Tournoi démarré";
+  return "Tournoi terminé";
+}
+
+function exportCSV(items: FeedItem[], filterLabel: string) {
+  const date = new Date().toISOString().slice(0, 10);
+  const header = ["Type", "Équipe / Tournoi", "Détail", "Date"];
+  const rows = items.map(item => {
+    const d = item.data;
+    let who = "";
+    let detail = "";
+    if (item.type === "match") {
+      const m = d as MatchEvent;
+      const medal = m.placement > 0 ? (MEDAL[m.placement] ?? `#${m.placement}`) : "";
+      who = m.team;
+      detail = [medal, `+${m.points} pts`, `${m.kills} kills`, m.tournamentName].filter(Boolean).join(" · ");
+    } else if (item.type === "tournamentStart") {
+      const t = d as TournamentStartEvent;
+      who = t.name;
+      detail = `Lancé par ${t.startedBy}`;
+    } else {
+      const t = d as TournamentEndEvent;
+      who = t.name;
+      detail = t.winner
+        ? `Vainqueur: ${t.winner} (${t.winnerPts} pts) · ${t.matchCount} matchs`
+        : `Aucun vainqueur · ${t.matchCount} matchs`;
+    }
+    const dateStr = item.time.toLocaleString("fr-FR");
+    return [labelForType(item.type), who, detail, dateStr];
+  });
+
+  const csv = [header, ...rows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `supremyx-activite-${filterLabel}-${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF(items: FeedItem[], filterLabel: string) {
+  const date = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const slug = new Date().toISOString().slice(0, 10);
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+  doc.setFillColor(212, 150, 58);
+  doc.rect(0, 0, 297, 18, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text(`SUPREMYX CI — Activité en direct (${filterLabel})`, 14, 12);
+
+  doc.setFillColor(30, 28, 40);
+  doc.rect(0, 18, 297, 9, "F");
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(180, 180, 190);
+  doc.text(`Généré le ${date}  ·  ${items.length} événement${items.length > 1 ? "s" : ""}`, 14, 24.5);
+
+  autoTable(doc, {
+    startY: 31,
+    head: [["Type", "Équipe / Tournoi", "Détail", "Live", "Date"]],
+    body: items.map(item => {
+      const d = item.data;
+      let who = "";
+      let detail = "";
+      if (item.type === "match") {
+        const m = d as MatchEvent;
+        const medal = m.placement > 0 ? (MEDAL[m.placement] ?? `#${m.placement}`) : "";
+        who = m.team;
+        detail = [medal, `+${m.points} pts`, `${m.kills} kills`, m.tournamentName].filter(Boolean).join(" · ");
+      } else if (item.type === "tournamentStart") {
+        const t = d as TournamentStartEvent;
+        who = t.name;
+        detail = `Lancé par ${t.startedBy}`;
+      } else {
+        const t = d as TournamentEndEvent;
+        who = t.name;
+        detail = t.winner
+          ? `Vainqueur: ${t.winner} (${t.winnerPts} pts) · ${t.matchCount} matchs`
+          : `Aucun vainqueur · ${t.matchCount} matchs`;
+      }
+      return [
+        labelForType(item.type),
+        who,
+        detail,
+        item.isLive ? "LIVE" : "—",
+        item.time.toLocaleString("fr-FR"),
+      ];
+    }),
+    styles: {
+      fontSize: 8,
+      cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+      textColor: [220, 220, 230],
+      fillColor: [22, 21, 30],
+      lineColor: [50, 48, 65],
+      lineWidth: 0.2,
+    },
+    headStyles: {
+      fillColor: [40, 38, 55],
+      textColor: [212, 150, 58],
+      fontStyle: "bold",
+      fontSize: 7.5,
+    },
+    columnStyles: {
+      0: { cellWidth: 32 },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 110 },
+      3: { cellWidth: 18, halign: "center", textColor: [52, 211, 153] as [number, number, number] },
+      4: { cellWidth: 42 },
+    },
+    alternateRowStyles: { fillColor: [26, 24, 38] },
+  });
+
+  const pageH = doc.internal.pageSize.height;
+  doc.setFillColor(30, 28, 40);
+  doc.rect(0, pageH - 9, 297, 9, "F");
+  doc.setFontSize(6.5);
+  doc.setTextColor(120, 120, 130);
+  doc.text("© 2026 SUPREMYX — Côte d'Ivoire", 14, pageH - 3.5);
+
+  doc.save(`supremyx-activite-${filterLabel}-${slug}.pdf`);
+}
+
 function NotifToggleButton({ permission, enabled, supported, onClick }: {
   permission: NotifPermission;
   enabled: boolean;
@@ -464,17 +596,39 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
 
         {/* Feed header */}
-        <div className="px-4 py-3 flex items-center justify-between"
+        <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
           style={{ borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.02)" }}>
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
-            {filter === "all" ? "Tous les événements" : TYPE_LABELS[filter]}
-            {!loading && <span className="ml-2 opacity-60">({filtered.length})</span>}
-          </span>
-          {liveCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(52,211,153,0.15)", color: "#34d399", border: "1px solid rgba(52,211,153,0.3)" }}>
-              +{liveCount} nouveau{liveCount > 1 ? "x" : ""}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
+              {filter === "all" ? "Tous les événements" : TYPE_LABELS[filter]}
+              {!loading && <span className="ml-2 opacity-60">({filtered.length})</span>}
             </span>
+            {liveCount > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(52,211,153,0.15)", color: "#34d399", border: "1px solid rgba(52,211,153,0.3)" }}>
+                +{liveCount} nouveau{liveCount > 1 ? "x" : ""}
+              </span>
+            )}
+          </div>
+          {!loading && filtered.length > 0 && (
+            <div className="flex items-center gap-2">
+              <button
+                data-testid="button-export-csv"
+                onClick={() => exportCSV(filtered, TYPE_LABELS[filter] ?? "tous")}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                style={{ background: "var(--muted)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }}
+              >
+                ⬇ CSV
+              </button>
+              <button
+                data-testid="button-export-pdf"
+                onClick={() => exportPDF(filtered, TYPE_LABELS[filter] ?? "tous")}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                style={{ background: "rgba(212,150,58,0.12)", color: "var(--primary)", border: "1px solid rgba(212,150,58,0.3)" }}
+              >
+                📄 PDF
+              </button>
+            </div>
           )}
         </div>
 
