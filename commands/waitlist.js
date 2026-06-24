@@ -12,11 +12,9 @@ function isStaff(member) {
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function fmtUpdated(date) {
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const d   = new Date(date);
-  const day = d.getUTCDate();
-  const s   = day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th';
-  return `${months[d.getUTCMonth()]} ${day}${s} ${d.getUTCFullYear()}, ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+  const mois = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const d = new Date(date);
+  return `${d.getUTCDate()} ${mois[d.getUTCMonth()]} ${d.getUTCFullYear()} à ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
 }
 
 // ─── Build & update waitlist embed ───────────────────────────────────────────
@@ -45,16 +43,16 @@ async function buildAndUpdateEmbed(client, config) {
   const desc = [
     bodyList,
     '',
-    `\`Free slots\` **${free}**`,
-    `\`Slots awaiting confirmation\` **${pending}**`,
-    `\`VIP slots\` **${vipCount}**`,
+    `\`Places libres\` **${free}**`,
+    `\`En attente de confirmation\` **${pending}**`,
+    `\`Places VIP\` **${vipCount}**`,
   ].join('\n');
 
   const embed = new EmbedBuilder()
     .setTitle(config.tournamentTitle || 'INSCRIPTIONS')
     .setColor(0xF1C40F)
     .setDescription(desc)
-    .setFooter({ text: `Updated ${fmtUpdated(new Date())}` });
+    .setFooter({ text: `Mis à jour le ${fmtUpdated(new Date())}` });
 
   const channel = client.channels.cache.get(config.waitlistChannelId);
   if (!channel) return null;
@@ -207,16 +205,16 @@ module.exports = (client) => {
 
     try {
 
-      // ── !waitlist setup #reg | #waitlist | @rôle | slots | Titre ───────────
-      if (sub === 'setup' || sub === 'config') {
+      // ── !waitlist configurer #reg | #waitlist | @rôle | places | Titre ──────
+      if (sub === 'configurer' || sub === 'config') {
         const fields = rest.split('|').map(f => f.trim());
         if (fields.length < 2) return message.reply([
-          '**Usage :** `!waitlist setup #salon-inscriptions | #salon-waitlist | @rôle | max_slots | Titre`',
+          '**Usage :** `!waitlist configurer #salon-inscriptions | #salon-waitlist | @rôle | max_places | Titre`',
           '',
           '**Exemple :**',
-          '`!waitlist setup #es・registration | #es・waitlist | @Participant | 16 | PUBG MOBILE AFRICA — ELITE SCRIMS (WAITLIST)`',
+          '`!waitlist configurer #es・inscription | #es・waitlist | @Participant | 16 | PUBG MOBILE AFRICA — ELITE SCRIMS (WAITLIST)`',
           '',
-          '`@rôle`, `max_slots` et le titre sont **optionnels**.',
+          '`@rôle`, `max_places` et le titre sont **optionnels**.',
         ].join('\n'));
 
         const chMentions = [...message.mentions.channels.values()];
@@ -254,7 +252,7 @@ module.exports = (client) => {
             { name: '🔢 Places max',         value: String(maxSlots),                          inline: true },
             { name: '🏆 Titre',             value: cleanTitle,                                inline: false },
           )
-          .setFooter({ text: `Lance !waitlist init pour publier l'embed. Les équipes utilisent %inscrire dans #${regCh.name}.` });
+          .setFooter({ text: `Lance !waitlist initialiser pour publier l'embed. Les équipes utilisent %inscrire dans #${regCh.name}.` });
 
         await message.reply({ embeds: [embed] });
         await staffLog(client, {
@@ -265,10 +263,10 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !waitlist init ───────────────────────────────────────────────────
-      if (sub === 'init') {
+      // ── !waitlist initialiser ────────────────────────────────────────────
+      if (sub === 'initialiser' || sub === 'init') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
-        if (!config) return message.reply('❌ Configure d\'abord : `!waitlist setup #reg | #waitlist | @rôle | slots | Titre`');
+        if (!config) return message.reply('❌ Configure d\'abord : `!waitlist configurer #reg | #waitlist | @rôle | places | Titre`');
         await InscriptionConfig.findByIdAndUpdate(config._id, { waitlistMessageId: '' });
         config.waitlistMessageId = '';
         const msg = await buildAndUpdateEmbed(client, config);
@@ -300,6 +298,7 @@ module.exports = (client) => {
       // ── !waitlist confirmer <TAG> ────────────────────────────────────────
       if (sub === 'confirmer') {
         if (!rest) return message.reply('**Usage :** `!waitlist confirmer <TAG>`');
+
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
 
@@ -379,10 +378,10 @@ module.exports = (client) => {
         return message.reply(`${newVip ? '⭐ VIP activé' : '🔹 VIP retiré'} pour **${reg.teamName}** (\`${reg.tag}\`).`);
       }
 
-      // ── !waitlist slots <n> ──────────────────────────────────────────────
-      if (sub === 'slots') {
+      // ── !waitlist places <n> ─────────────────────────────────────────────
+      if (sub === 'places' || sub === 'slots') {
         const n = parseInt(rest);
-        if (isNaN(n) || n < 1) return message.reply('**Usage :** `!waitlist slots <nombre>` (ex: `!waitlist slots 16`)');
+        if (isNaN(n) || n < 1) return message.reply('**Usage :** `!waitlist places <nombre>` (ex: `!waitlist places 16`)');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Système non configuré.');
         await InscriptionConfig.findByIdAndUpdate(config._id, { maxSlots: n });
@@ -436,7 +435,7 @@ module.exports = (client) => {
             { name: '🔢 Places',             value: `${count} / ${config.maxSlots}`,                                                        inline: true },
             { name: '🏆 Titre',             value: config.tournamentTitle,                                                                  inline: false },
           )
-          .setFooter({ text: 'Commandes : setup · init · liste · confirmer · retirer · vip · slots · réinitialiser · infos' });
+          .setFooter({ text: 'Commandes : configurer · initialiser · liste · confirmer · retirer · vip · places · réinitialiser · infos' });
         return message.reply({ embeds: [embed] });
       }
 
@@ -444,13 +443,13 @@ module.exports = (client) => {
       return message.reply([
         '**Commandes `!waitlist` :**',
         '',
-        '`!waitlist setup #reg | #waitlist | @rôle | slots | Titre` — configurer',
-        '`!waitlist init` — publier/rafraîchir l\'embed waitlist',
+        '`!waitlist configurer #reg | #waitlist | @rôle | places | Titre` — configurer le système',
+        '`!waitlist initialiser` — publier/rafraîchir l\'embed waitlist',
         '`!waitlist liste` — voir toutes les inscriptions',
         '`!waitlist confirmer <TAG>` — confirmer une équipe',
         '`!waitlist retirer <TAG>` — retirer une équipe',
-        '`!waitlist vip <TAG>` — toggle statut VIP ⭐',
-        '`!waitlist slots <n>` — changer le nombre de places',
+        '`!waitlist vip <TAG>` — activer/désactiver le statut VIP ⭐',
+        '`!waitlist places <n>` — changer le nombre de places',
         '`!waitlist réinitialiser` — effacer toutes les inscriptions',
         '`!waitlist infos` — voir la configuration actuelle',
         '',
