@@ -49,6 +49,8 @@ const CATEGORIES = [
       { label: '!objectif <équipe>',         description: 'Voir l\'objectif de saison d\'une équipe',             subs: ['voir <équipe> — Voir l\'objectif', 'progression <équipe> — Avancement vers l\'objectif'] },
       { label: '!scout <joueur>',            description: 'Fiche de scouting complète d\'un joueur',              subs: ['<joueur> — Fiche complète', 'comparer <J1> vs <J2> — Comparer deux joueurs'] },
       { label: '!agentslibres',             description: 'Liste des joueurs enregistrés sans équipe active',      subs: [] },
+      { label: '!capitaine <équipe>',       description: 'Voir le capitaine (IGL) d\'une équipe',                 subs: [] },
+      { label: '!comparerjoueur <J1> | <J2>', description: 'Comparer les stats détaillées de deux joueurs',       subs: [] },
     ],
   },
   {
@@ -188,6 +190,8 @@ const CATEGORIES = [
     ],
   },
 ];
+
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function buildMainEmbed() {
