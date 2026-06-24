@@ -56,6 +56,8 @@ const STAFF_CATEGORIES = [
       { label: '!absence declarer [raison]',                   description: 'Déclarer son absence au prochain match',              subs: ['declarer [raison] — Déclarer', 'annuler — Annuler son absence', 'liste <équipe> — Absences d\'une équipe'] },
       { label: '!objectif <équipe>',                           description: 'Voir l\'objectif de saison d\'une équipe',             subs: ['voir <équipe> — Voir l\'objectif', 'progression <équipe> — Avancement'] },
       { label: '!scout <joueur>',                              description: 'Fiche de scouting complète d\'un joueur',              subs: ['<joueur> — Fiche complète', 'comparer <J1> vs <J2> — Comparer deux joueurs'] },
+      { label: '!capitaine <équipe>',                          description: 'Voir le capitaine (IGL) d\'une équipe',                 subs: ['<équipe> — Voir le capitaine', '<équipe> | @user — Définir le capitaine (Staff)'] },
+      { label: '!comparerjoueur <J1> | <J2>',                 description: 'Comparer les stats détaillées de deux joueurs',         subs: [] },
       { label: '!agentslibres',                                description: 'Liste des joueurs enregistrés sans équipe active',     subs: [] },
       { label: '!enregistrer <nom>',                           description: 'Enregistrer une nouvelle équipe (Staff)',               subs: [] },
       { label: '!desenregistrer <nom>',                        description: 'Supprimer une équipe et son historique (Staff)',        subs: [] },
