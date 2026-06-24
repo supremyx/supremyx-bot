@@ -22,7 +22,7 @@ const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
 const rateLimit = require('express-rate-limit');
 const app  = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ─── Rate limiters ───────────────────────────────────────────────────────────
 // Requests with a valid BOT_API_KEY bypass all limits (internal bot calls)
@@ -1018,6 +1018,53 @@ router.get('/ia/bilans', publicLimiter, async (req, res) => {
     res.json({ bilans, total: bilans.length });
   } catch (err) {
     console.error('[API /ia/bilans]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/ia/config ────────────────────────────────────────────────────────
+router.get('/ia/config', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const configs = await IaConfig.find(filter).lean();
+    const models = [
+      { alias: 'gpt-4o-mini',   label: 'GPT-4o Mini',       emoji: '🟢', desc: 'Rapide et efficace (défaut)',        provider: 'OpenAI' },
+      { alias: 'gpt-4o',        label: 'GPT-4o',             emoji: '🔵', desc: 'Très puissant',                     provider: 'OpenAI' },
+      { alias: 'claude-haiku',  label: 'Claude 3.5 Haiku',  emoji: '🟣', desc: 'Rapide et précis',                  provider: 'Anthropic' },
+      { alias: 'claude-sonnet', label: 'Claude 3.5 Sonnet', emoji: '🟤', desc: 'Très puissant',                     provider: 'Anthropic' },
+      { alias: 'gemini-flash',  label: 'Gemini 2.0 Flash',  emoji: '🔴', desc: 'Ultra rapide · gratuit',            provider: 'Google' },
+      { alias: 'mistral',       label: 'Mistral 7B',         emoji: '⚪', desc: 'Open-source léger · gratuit',       provider: 'Mistral' },
+      { alias: 'llama',         label: 'LLaMA 3.1 8B',      emoji: '🟡', desc: 'Open-source (Meta) · gratuit',      provider: 'Meta' },
+    ];
+    res.json({ configs, models });
+  } catch (err) {
+    console.error('[API /ia/config]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── PUT /api/ia/config ────────────────────────────────────────────────────────
+router.put('/ia/config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, model, dailyQuota, quotaAlertChannelId, debriefChannelId, bilanChannelId } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const validModels = ['gpt-4o-mini','gpt-4o','claude-haiku','claude-sonnet','gemini-flash','mistral','llama'];
+    if (model && !validModels.includes(model)) return res.status(400).json({ error: 'Modèle invalide' });
+    const update = {};
+    if (model              !== undefined) update.model              = model;
+    if (dailyQuota         !== undefined) update.dailyQuota         = Number(dailyQuota);
+    if (quotaAlertChannelId !== undefined) update.quotaAlertChannelId = quotaAlertChannelId;
+    if (debriefChannelId   !== undefined) update.debriefChannelId   = debriefChannelId;
+    if (bilanChannelId     !== undefined) update.bilanChannelId     = bilanChannelId;
+    const config = await IaConfig.findOneAndUpdate(
+      { guildId },
+      { $set: update },
+      { upsert: true, new: true }
+    ).lean();
+    res.json({ config });
+  } catch (err) {
+    console.error('[API /ia/config PUT]', err);
     res.status(500).json({ error: 'Erreur interne' });
   }
 });
