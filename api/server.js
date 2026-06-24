@@ -1,5 +1,6 @@
 const express = require('express');
 const cors    = require('cors');
+const path    = require('path');
 const eventBus = require('../utils/eventBus');
 const Team          = require('../database/models/Team');
 const Match         = require('../database/models/Match');
@@ -1207,6 +1208,15 @@ router.get('/admin/config', requireApiKey, (_req, res) => {
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
+
+// ─── Dashboard (production static build) ─────────────────────────────────────
+const DASHBOARD_DIST = path.join(__dirname, '../dashboard/dist/public');
+if (require('fs').existsSync(DASHBOARD_DIST)) {
+  app.use(express.static(DASHBOARD_DIST));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DASHBOARD_DIST, 'index.html'));
+  });
+}
 
 function startApiServer() {
   const server = app.listen(PORT, () => {

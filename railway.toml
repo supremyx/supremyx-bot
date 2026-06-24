@@ -1,6 +1,6 @@
 [build]
 builder = "RAILPACK"
-buildCommand = "pnpm install --no-frozen-lockfile"
+buildCommand = "pnpm install --no-frozen-lockfile && cd dashboard && npx vite build --config vite.config.ts"
 
 [deploy]
 startCommand = "node index.js"
