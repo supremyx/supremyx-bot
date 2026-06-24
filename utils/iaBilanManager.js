@@ -2,6 +2,7 @@ const OpenAI        = require('openai');
 const { EmbedBuilder } = require('discord.js');
 const IaConfig      = require('../database/models/IaConfig');
 const IaUsage       = require('../database/models/IaUsage');
+const BilanHebdo    = require('../database/models/BilanHebdo');
 const Match         = require('../database/models/Match');
 const Team          = require('../database/models/Team');
 const PlayerStat    = require('../database/models/PlayerStat');
@@ -228,11 +229,12 @@ async function sendBilan(client, guildId, channelId, triggeredBy = null) {
   await channel.send({ embeds: [statsEmbed] });
 
   // ── Embed 2 : Analyse IA ─────────────────────────────────────────────────
+  let iaText = null;
   const ai = getAI();
   if (ai) {
     try {
       const thinkingMsg = await channel.send('🤖 Génération du commentaire IA en cours…');
-      const iaText = await generateBilanIA(data, modelAlias);
+      iaText = await generateBilanIA(data, modelAlias);
 
       if (iaText) {
         const iaEmbed = new EmbedBuilder()
@@ -262,7 +264,28 @@ async function sendBilan(client, guildId, channelId, triggeredBy = null) {
     }
   }
 
-  // Mise à jour de la date du dernier envoi
+  // ── Sauvegarde en base pour l'historique dashboard ───────────────────────
+  await BilanHebdo.create({
+    guildId,
+    weekFrom:    data.weekFrom,
+    weekTo:      new Date(),
+    triggeredBy: triggeredBy ?? 'auto',
+    modelAlias,
+    iaText,
+    stats: {
+      totalMatches:    data.totalMatches,
+      totalKills:      data.totalKills,
+      avgKills:        data.avgKills,
+      wins:            data.wins,
+      topTeams:        data.topTeams,
+      topWeekTeams:    data.topWeekTeams,
+      topWeekPlayers:  data.topWeekPlayers,
+      bestKillMatch:   data.bestKillMatch ?? null,
+      activeTournament:data.activeTournament ?? null,
+    },
+  }).catch(err => console.error('[iaBilan] Erreur sauvegarde BilanHebdo:', err));
+
+  // ── Mise à jour de la date du dernier envoi ──────────────────────────────
   await IaConfig.findOneAndUpdate(
     { guildId },
     { bilanLastSentAt: new Date() },

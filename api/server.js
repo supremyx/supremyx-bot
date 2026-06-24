@@ -16,6 +16,7 @@ const Blacklist     = require('../database/models/Blacklist');
 const CommandStat   = require('../database/models/CommandStat');
 const IaConfig      = require('../database/models/IaConfig');
 const IaUsage       = require('../database/models/IaUsage');
+const BilanHebdo    = require('../database/models/BilanHebdo');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -1001,6 +1002,22 @@ router.get('/ia/history', publicLimiter, async (req, res) => {
     res.json({ records, byType, total });
   } catch (err) {
     console.error('[API /ia/history]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/ia/bilans ────────────────────────────────────────────────────────
+router.get('/ia/bilans', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, limit = 20 } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const bilans = await BilanHebdo.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .lean();
+    res.json({ bilans, total: bilans.length });
+  } catch (err) {
+    console.error('[API /ia/bilans]', err);
     res.status(500).json({ error: 'Erreur interne' });
   }
 });

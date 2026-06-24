@@ -16,6 +16,7 @@ import SaisonsPage from "./pages/SaisonsPage";
 import ModerationPage from "./pages/ModerationPage";
 import BotStatsPage from "./pages/BotStatsPage";
 import IaAnalyticsPage from "./pages/IaAnalyticsPage";
+import BilanPage from "./pages/BilanPage";
 import EventsPage from "./pages/EventsPage";
 import TicketsPage from "./pages/TicketsPage";
 import BirthdaysPage from "./pages/BirthdaysPage";
@@ -30,7 +31,7 @@ import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity";
 
 interface Team {
   rank: number;
@@ -54,6 +55,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "moderation",   label: "Modération",    icon: "🛡️" },
   { key: "botstats",     label: "Stats Bot",     icon: "🤖" },
   { key: "ia-analytics", label: "Analytiques IA", icon: "🧠" },
+  { key: "bilan",        label: "Bilans hebdo",   icon: "📋" },
   { key: "events",       label: "Événements",    icon: "📅" },
   { key: "tickets",      label: "Tickets",       icon: "🎫" },
   { key: "birthdays",    label: "Anniversaires", icon: "🎂" },
@@ -784,6 +786,7 @@ export default function App() {
       {page === "moderation"   && <ModerationPage />}
       {page === "botstats"     && <BotStatsPage />}
       {page === "ia-analytics" && <IaAnalyticsPage />}
+      {page === "bilan"        && <BilanPage />}
       {page === "events"       && <EventsPage />}
       {page === "tickets"      && <TicketsPage />}
       {page === "birthdays"    && <BirthdaysPage />}
