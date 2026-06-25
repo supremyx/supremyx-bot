@@ -11,6 +11,51 @@ const {
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const { findSimilar } = require('../utils/fuzzySearch');
 const SearchHistory = require('../database/models/SearchHistory');
+const fs = require('fs');
+const path = require('path');
+const COMMAND_META = require('../utils/commandMeta');
+
+// ─── Nouveautés : fichiers de commandes triés par date de modification ────────
+function buildNouveautesEmbed(client) {
+  const cmdDir = path.join(__dirname);
+  const files = fs.readdirSync(cmdDir).filter(f => f.endsWith('.js'));
+
+  const entries = files
+    .map(f => {
+      const meta = COMMAND_META[f];
+      if (!meta || meta.staff === true) return null; // ignorer les staff-only
+      try {
+        const stat = fs.statSync(path.join(cmdDir, f));
+        return { file: f, mtime: stat.mtimeMs, meta };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.mtime - a.mtime)
+    .slice(0, 10);
+
+  const embed = new EmbedBuilder()
+    .setColor(0xFF8C00)
+    .setAuthor({ name: '🆕 Nouveautés — Commandes récemment modifiées', iconURL: client.user.displayAvatarURL() })
+    .setDescription('Les **10 fichiers de commandes** modifiés le plus récemment.\n`[P]` Public · `[M]` Mixte (public + staff)')
+    .setFooter({ text: 'SUPREMYX Esports · !aide pour le menu complet · !aidestaff pour les commandes staff' })
+    .setTimestamp();
+
+  for (const entry of entries) {
+    const tag = entry.meta.staff === 'mixed' ? '[M]' : '[P]';
+    const ts = Math.floor(entry.mtime / 1000);
+    const cmds = entry.meta.commands.slice(0, 3).map(c => `\`${c}\``).join(', ');
+    const more = entry.meta.commands.length > 3 ? ` +${entry.meta.commands.length - 3}` : '';
+    embed.addFields({
+      name: `${tag} ${entry.file.replace('.js', '')} — <t:${ts}:R>`,
+      value: cmds + more,
+      inline: false,
+    });
+  }
+
+  return embed;
+}
 
 // ─── Données par catégorie ────────────────────────────────────────────────────
 const CATEGORIES = [
@@ -145,6 +190,7 @@ const CATEGORIES = [
     emoji: '🛠️',
     color: 0x57F287,
     commands: [
+      { label: '!aide nouveautes',              description: 'Voir les 10 fichiers de commandes modifiés le plus récemment', subs: [] },
       { label: '!chercher <terme>',             description: 'Rechercher une commande par mot-clé',                        subs: [] },
       { label: '!repertoire',                   description: 'Répertoire paginé de toutes les commandes du bot (vue compacte)', subs: [] },
       { label: '!absent [message]',             description: 'Passer en mode AFK (bot répond à ta place)',                 subs: [] },
@@ -380,6 +426,22 @@ module.exports = (client) => {
       }, 5 * 60 * 1000);
     } catch (err) {
       console.error('[aide messageCreate]', err);
+    }
+  });
+
+  // ─── !aide nouveautes ─────────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (message.content.trim() !== '!aide nouveautes') return;
+
+      const cd = checkCooldown(message.author.id, 'aide_nouveautes', 15);
+      if (cd) return replyCooldown(message, cd, 'aide nouveautes');
+
+      return message.channel.send({ embeds: [buildNouveautesEmbed(client)] });
+    } catch (err) {
+      console.error('[aide nouveautes]', err);
     }
   });
 

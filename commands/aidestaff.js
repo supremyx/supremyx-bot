@@ -11,6 +11,51 @@ const {
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 const { findSimilar } = require('../utils/fuzzySearch');
 const SearchHistory = require('../database/models/SearchHistory');
+const fs = require('fs');
+const path = require('path');
+const COMMAND_META = require('../utils/commandMeta');
+
+// ─── Nouveautés staff : fichiers triés par date de modification ───────────────
+function buildNouveautesStaffEmbed(client) {
+  const cmdDir = path.join(__dirname);
+  const files = fs.readdirSync(cmdDir).filter(f => f.endsWith('.js'));
+
+  const entries = files
+    .map(f => {
+      const meta = COMMAND_META[f];
+      if (!meta) return null;
+      try {
+        const stat = fs.statSync(path.join(cmdDir, f));
+        return { file: f, mtime: stat.mtimeMs, meta };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.mtime - a.mtime)
+    .slice(0, 10);
+
+  const embed = new EmbedBuilder()
+    .setColor(0xED4245)
+    .setAuthor({ name: '🆕 Nouveautés Staff — Fichiers récemment modifiés', iconURL: client.user.displayAvatarURL() })
+    .setDescription('Les **10 fichiers de commandes** modifiés le plus récemment.\n`[S]` Staff · `[P]` Public · `[M]` Mixte')
+    .setFooter({ text: 'SUPREMYX Esports · Staff · !aidestaff pour le menu complet' })
+    .setTimestamp();
+
+  for (const entry of entries) {
+    const tag = entry.meta.staff === true ? '[S]' : entry.meta.staff === 'mixed' ? '[M]' : '[P]';
+    const ts = Math.floor(entry.mtime / 1000);
+    const cmds = entry.meta.commands.slice(0, 3).map(c => `\`${c}\``).join(', ');
+    const more = entry.meta.commands.length > 3 ? ` +${entry.meta.commands.length - 3}` : '';
+    embed.addFields({
+      name: `${tag} ${entry.file.replace('.js', '')} — <t:${ts}:R>`,
+      value: cmds + more,
+      inline: false,
+    });
+  }
+
+  return embed;
+}
 
 // ─── Données par catégorie ────────────────────────────────────────────────────
 const STAFF_CATEGORIES = [
@@ -359,6 +404,7 @@ const STAFF_CATEGORIES = [
     color: 0x5865F2,
     commands: [
       { label: '!rapporthebdo salon #salon',  description: 'Configurer et gérer le rapport hebdomadaire automatique (Staff)',  subs: ['salon #salon — Configurer le salon', 'activer — Activer l\'envoi chaque dimanche 20h', 'desactiver — Désactiver', 'tester — Envoyer un aperçu maintenant', 'statut — Voir la configuration'] },
+      { label: '!aidestaff nouveautes',      description: 'Voir les 10 fichiers de commandes modifiés le plus récemment (Staff)', subs: [] },
       { label: '!chercher staff <terme>',     description: 'Rechercher une commande staff par mot-clé (Staff)',                subs: [] },
       { label: '!statsbot',                   description: 'Statistiques globales d\'utilisation du bot (Staff)',              subs: [] },
       { label: '!journaux',                   description: 'Historique des actions staff avec filtres (Staff)',                subs: ['vider — Effacer tout', 'stats — Statistiques par catégorie', 'aujourdhui — Logs du jour', '<catégorie> [page] — Filtrer par catégorie', '<mot-clé> — Recherche plein texte'] },
@@ -564,6 +610,26 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     } catch (err) {
       console.error('[aidestaff historique]', err);
+    }
+  });
+
+  // ─── !aidestaff nouveautes ────────────────────────────────────────────────
+  client.on('messageCreate', async message => {
+    try {
+      if (!message.guild) return;
+      if (message.author.bot) return;
+      if (!message.member) return;
+      if (message.content.trim() !== '!aidestaff nouveautes') return;
+
+      if (!message.member.permissions.has('Administrator'))
+        return message.reply('⛔ Commande réservée au staff.');
+
+      const cd = checkCooldown(message.author.id, 'aidestaff_nouveautes', 15);
+      if (cd) return replyCooldown(message, cd, 'aidestaff nouveautes');
+
+      return message.channel.send({ embeds: [buildNouveautesStaffEmbed(client)] });
+    } catch (err) {
+      console.error('[aidestaff nouveautes]', err);
     }
   });
 
