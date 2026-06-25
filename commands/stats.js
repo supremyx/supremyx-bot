@@ -6,12 +6,12 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
-    if (message.content.startsWith('!stats')) {
-      const cd = checkCooldown(message.author.id, 'stats', 5);
-      if (cd) return replyCooldown(message, cd, 'stats');
+    if (message.content.startsWith('!statistiques')) {
+      const cd = checkCooldown(message.author.id, 'statistiques', 5);
+      if (cd) return replyCooldown(message, cd, 'statistiques');
 
       const name = message.content.split(' ').slice(1).join(' ').trim();
-      if (!name) return message.reply('Usage : `!stats <nom>`');
+      if (!name) return message.reply('Usage : `!statistiques <nom>`');
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${name}** introuvable.`);

@@ -25,7 +25,7 @@ module.exports = (client) => {
     const now = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
 
     // --- CSV classement ---
-    if (!arg || arg === 'ranking') {
+    if (!arg || arg === 'classement') {
       const matchCounts = {};
       for (const m of matches) {
         matchCounts[m.team] = (matchCounts[m.team] || 0) + 1;
@@ -76,6 +76,6 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed], files: [file] });
     }
 
-    message.reply('Usage : `!exporter` — classement\n`!exporter matchs` — historique des matchs');
+    message.reply('Usage : `!exporter` ou `!exporter classement` — classement\n`!exporter matchs` — historique des matchs');
   });
 };

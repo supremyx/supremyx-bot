@@ -23,7 +23,7 @@ function sanitize(str) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content.trim() !== '!gitpush') return;
+    if (message.content.trim() !== '!envoyergit') return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;

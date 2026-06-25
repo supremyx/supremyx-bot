@@ -37,7 +37,7 @@ module.exports = (client) => {
           { name: '⚔️ Kills/match', value: `${avgKills}`, inline: true },
           { name: '📅 Dernier match', value: lastDate, inline: true }
         )
-        .setFooter({ text: 'Utilisez !stats <nom> pour plus de détails' })
+        .setFooter({ text: 'Utilisez !statistiques <nom> pour plus de détails' })
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
@@ -52,7 +52,7 @@ module.exports = (client) => {
       .setTitle(`🔍 Résultats pour "${query}"`)
       .setDescription(list)
       .setColor(0x5865F2)
-      .setFooter({ text: `${teams.length} équipe(s) trouvée(s) — !stats <nom> pour les détails` })
+      .setFooter({ text: `${teams.length} équipe(s) trouvée(s) — !statistiques <nom> pour les détails` })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

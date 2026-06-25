@@ -10,24 +10,24 @@ module.exports = (client) => {
     try {
       if (!message.guild) return;
       if (message.author.bot) return;
-      if (!message.content.startsWith('!scout')) return;
+      if (!message.content.startsWith('!depistage')) return;
       if (!message.member) return;
 
       const content = message.content.trim();
-      const args    = content.slice('!scout'.length).trim();
+      const args    = content.slice('!depistage'.length).trim();
       const guildId = message.guild.id;
 
-      const cd = checkCooldown(message.author.id, 'scout', 15);
-      if (cd) return replyCooldown(message, cd, 'scout');
+      const cd = checkCooldown(message.author.id, 'depistage', 15);
+      if (cd) return replyCooldown(message, cd, 'depistage');
 
-      // ── !scout comparer <J1> vs <J2> ─────────────────────────────────────
+      // ── !depistage comparer <J1> vs <J2> ─────────────────────────────────────
       const vsIdx = args.toLowerCase().indexOf(' vs ');
       if (args.toLowerCase().startsWith('comparer ') || vsIdx !== -1) {
         const rest = args.toLowerCase().startsWith('comparer ')
           ? args.slice('comparer '.length).trim()
           : args;
         const vsI = rest.toLowerCase().indexOf(' vs ');
-        if (vsI === -1) return message.reply('Usage : `!scout comparer <J1> vs <J2>`');
+        if (vsI === -1) return message.reply('Usage : `!depistage comparer <J1> vs <J2>`');
 
         const name1 = rest.slice(0, vsI).trim();
         const name2 = rest.slice(vsI + 4).trim();
@@ -53,14 +53,14 @@ module.exports = (client) => {
             { name: s1.displayName,      value: `${s1.totalMatches}\n${s1.totalKills}\n${rec(avg1, avg2)} ${avg1}\n${s1.bestKills}\n${s1.teamName}`, inline: true },
             { name: s2.displayName,      value: `${s2.totalMatches}\n${s2.totalKills}\n${rec(avg2, avg1)} ${avg2}\n${s2.bestKills}\n${s2.teamName}`, inline: true },
           )
-          .setFooter({ text: '!scout <joueur> pour une fiche complète' })
+          .setFooter({ text: '!depistage <joueur> pour une fiche complète' })
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 
-      // ── !scout <joueur> ───────────────────────────────────────────────────
+      // ── !depistage <joueur> ───────────────────────────────────────────────────
       const playerName = args.trim();
-      if (!playerName) return message.reply('Usage : `!scout <joueur>` ou `!scout comparer <J1> vs <J2>`');
+      if (!playerName) return message.reply('Usage : `!depistage <joueur>` ou `!depistage comparer <J1> vs <J2>`');
 
       const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const stat = await PlayerStat.findOne({ guildId, displayName: new RegExp(`^${esc(playerName)}$`, 'i') });
@@ -105,7 +105,7 @@ module.exports = (client) => {
           { name: '📈 Tendance',        value: tendance, inline: false },
           { name: '📋 Note staff',      value: noteStr, inline: false },
         )
-        .setFooter({ text: '!scout comparer <J1> vs <J2> pour comparer deux joueurs' })
+        .setFooter({ text: '!depistage comparer <J1> vs <J2> pour comparer deux joueurs' })
         .setTimestamp();
       return message.channel.send({ embeds: [embed] });
 

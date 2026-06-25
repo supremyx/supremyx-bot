@@ -77,7 +77,7 @@ module.exports = (client) => {
         { name: `👥 Roster (${roster?.members.length ?? 0} membre${(roster?.members.length ?? 0) !== 1 ? 's' : ''})`,
           value: rosterLine, inline: false }
       )
-      .setFooter({ text: 'SUPREMYX CI · !stats pour stats détaillées · !liste pour le roster complet' })
+      .setFooter({ text: 'SUPREMYX CI · !statistiques pour stats détaillées · !liste pour le roster complet' })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

@@ -756,14 +756,14 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
-    // ── !ia scouting <joueur> ─────────────────────────────────────────────────
-    if (sub === 'scouting') {
+    // ── !ia depistage <joueur> ─────────────────────────────────────────────────
+    if (sub === 'depistage') {
       const playerName = args.slice(1).join(' ').trim();
-      if (!playerName) return message.reply('Usage : `!ia scouting <nom_du_joueur>`');
+      if (!playerName) return message.reply('Usage : `!ia depistage <nom_du_joueur>`');
       const guildId = message.guild.id;
       const stat = await PlayerStat.findOne({ guildId, displayName: new RegExp(`^${playerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
       if (!stat) return message.reply(`❌ Joueur **${playerName}** introuvable.`);
-      const thinking = await message.channel.send(`🤖 Rapport de scouting pour **${stat.displayName}** en cours...`);
+      const thinking = await message.channel.send(`🤖 Rapport de dépistage pour **${stat.displayName}** en cours...`);
       const n = stat.totalMatches || 1;
       const avgK = (stat.totalKills / n).toFixed(2);
       const recent = (stat.history ?? []).slice(-5);
@@ -782,23 +782,23 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
-    // ── !ia debriefing ────────────────────────────────────────────────────────
-    if (sub === 'debriefing') {
+    // ── !ia debrief ────────────────────────────────────────────────────────
+    if (sub === 'debrief') {
       const { setDebriefChannel, clearDebriefChannel, getDebriefChannelId } = require('../utils/iaDebrief');
       const arg1 = args[1]?.toLowerCase();
 
-      // !ia debriefing salon #salon ─ configure le canal auto (admin)
+      // !ia debrief salon #salon ─ configure le canal auto (admin)
       if (arg1 === 'salon') {
         if (!message.member?.permissions.has('Administrator'))
           return message.reply('⛔ Réservé aux administrateurs.');
         const channel = message.mentions.channels.first() ||
           (args[2] ? message.guild.channels.cache.get(args[2]) : null);
-        if (!channel) return message.reply('Usage : `!ia debriefing salon #salon`');
+        if (!channel) return message.reply('Usage : `!ia debrief salon #salon`');
         await setDebriefChannel(message.guild.id, channel.id);
         return message.reply(`✅ Les débriefs IA automatiques seront postés dans <#${channel.id}> après chaque \`!resultats\`.`);
       }
 
-      // !ia debriefing desactiver ─ désactive le canal auto (admin)
+      // !ia debrief desactiver ─ désactive le canal auto (admin)
       if (arg1 === 'desactiver' || arg1 === 'désactiver') {
         if (!message.member?.permissions.has('Administrator'))
           return message.reply('⛔ Réservé aux administrateurs.');
@@ -806,7 +806,7 @@ module.exports = (client) => {
         return message.reply('✅ Débriefs IA automatiques désactivés.');
       }
 
-      // !ia debriefing statut ─ affiche la configuration
+      // !ia debrief statut ─ affiche la configuration
       if (arg1 === 'statut') {
         const channelId = await getDebriefChannelId(message.guild.id);
         const statusLine = channelId
@@ -818,24 +818,24 @@ module.exports = (client) => {
           .setDescription(statusLine)
           .addFields({
             name: '⚙️ Commandes',
-            value: '`!ia debriefing salon #salon` — Activer et choisir le canal *(Admin)*\n`!ia debriefing desactiver` — Désactiver *(Admin)*',
+            value: '`!ia debrief salon #salon` — Activer et choisir le canal *(Admin)*\n`!ia debrief desactiver` — Désactiver *(Admin)*',
           })
           .setTimestamp();
         return message.reply({ embeds: [cfgEmbed] });
       }
 
-      // !ia debriefing <équipe> ─ génère un débrief maintenant
+      // !ia debrief <équipe> ─ génère un débrief maintenant
       const teamName = args.slice(1).join(' ').trim();
       if (!teamName) return message.reply(
-        '**Usage `!ia debriefing` :**\n' +
-        '`!ia debriefing <équipe>` — Débrief du dernier match enregistré\n' +
-        '`!ia debriefing salon #salon` — Configurer le salon auto *(Admin)*\n' +
-        '`!ia debriefing desactiver` — Désactiver le débrief auto *(Admin)*\n' +
-        '`!ia debriefing statut` — Voir la configuration'
+        '**Usage `!ia debrief` :**\n' +
+        '`!ia debrief <équipe>` — Débrief du dernier match enregistré\n' +
+        '`!ia debrief salon #salon` — Configurer le salon auto *(Admin)*\n' +
+        '`!ia debrief desactiver` — Désactiver le débrief auto *(Admin)*\n' +
+        '`!ia debrief statut` — Voir la configuration'
       );
 
-      const cd = checkCooldown(message.author.id, 'ia-debriefing', 30);
-      if (cd) return replyCooldown(message, cd, 'debriefing');
+      const cd = checkCooldown(message.author.id, 'ia-debrief', 30);
+      if (cd) return replyCooldown(message, cd, 'debrief');
 
       const thinking = await message.channel.send('🤖 Génération du débrief post-match...');
       const esc = s => s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

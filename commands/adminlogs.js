@@ -9,7 +9,7 @@ const CAT_EMOJI  = { données: '💾', config: '⚙️', modération: '🔨', ma
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     const content = message.content.trim();
-    if (!content.startsWith('!adminlogs') && !content.startsWith('!alogs')) return;
+    if (!content.startsWith('!journauxadmin') && !content.startsWith('!jadmin')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
@@ -19,7 +19,7 @@ module.exports = (client) => {
     const args = content.split(/\s+/).slice(1);
     const sub  = args[0]?.toLowerCase();
 
-    if (sub === 'stats') {
+    if (sub === 'statistiques') {
       const [total, todayCount, bySev, byCat] = await Promise.all([
         AdminLog.countDocuments({ guildId: message.guild.id }),
         AdminLog.countDocuments({ guildId: message.guild.id, createdAt: { $gte: new Date(new Date().setHours(0,0,0,0)) } }),
@@ -43,7 +43,7 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    if (sub === 'critique' || sub === 'critical') {
+    if (sub === 'critique') {
       const entries = await AdminLog.find({ guildId: message.guild.id, severity: 'critical' })
         .sort({ createdAt: -1 }).limit(15).lean();
       if (!entries.length) return message.reply('✅ Aucun log critique.');
@@ -64,9 +64,9 @@ module.exports = (client) => {
       } catch { return message.channel.send('❌ Annulé.'); }
     }
 
-    if (sub === 'user') {
+    if (sub === 'utilisateur') {
       const userId = args[1];
-      if (!userId) return message.reply('Usage : `!adminlogs user <userId>`');
+      if (!userId) return message.reply('Usage : `!journauxadmin utilisateur <userId>`');
       const entries = await AdminLog.find({ guildId: message.guild.id, userId }).sort({ createdAt: -1 }).limit(15).lean();
       if (!entries.length) return message.reply('📭 Aucun log pour cet utilisateur.');
       const lines = entries.map(e => {
@@ -77,7 +77,7 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [new EmbedBuilder().setTitle(`📋 Logs — <@${userId}>`).setColor(0x5865F2).setDescription(lines).setTimestamp()] });
     }
 
-    // !adminlogs [categorie] [page]
+    // !journauxadmin [categorie] [page]
     const CATEGORIES = ['données', 'config', 'modération', 'match', 'tournoi', 'général'];
     let category = null;
     let page = 1;
@@ -105,7 +105,7 @@ module.exports = (client) => {
       .setTitle(category ? `📋 Logs admin — ${category}` : '📋 Logs d\'administration')
       .setColor(color)
       .setDescription(lines)
-      .setFooter({ text: `Page ${page}/${pages} • ${total} entrée(s) — !adminlogs stats | critique | user <id> | vider` })
+      .setFooter({ text: `Page ${page}/${pages} • ${total} entrée(s) — !journauxadmin statistiques | critique | utilisateur <id> | vider` })
       .setTimestamp();
 
     return message.channel.send({ embeds: [embed] });

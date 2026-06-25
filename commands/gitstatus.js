@@ -18,7 +18,7 @@ function sanitize(str) {
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content.trim() !== '!gitstatus') return;
+    if (message.content.trim() !== '!statutgit') return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;

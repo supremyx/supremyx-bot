@@ -206,7 +206,7 @@ module.exports = (client) => {
     try {
 
       // ── !listedattente configurer #reg | #listedattente | @rôle | places | Titre ──────
-      if (sub === 'configurer' || sub === 'config') {
+      if (sub === 'configurer') {
         const fields = rest.split('|').map(f => f.trim());
         if (fields.length < 2) return message.reply([
           '**Usage :** `!listedattente configurer #salon-inscriptions | #salon-listedattente | @rôle | max_places | Titre`',
@@ -264,7 +264,7 @@ module.exports = (client) => {
       }
 
       // ── !listedattente initialiser ────────────────────────────────────────────
-      if (sub === 'initialiser' || sub === 'init') {
+      if (sub === 'initialiser') {
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });
         if (!config) return message.reply('❌ Configure d\'abord : `!listedattente configurer #reg | #listedattente | @rôle | places | Titre`');
         await InscriptionConfig.findByIdAndUpdate(config._id, { waitlistMessageId: '' });
@@ -379,7 +379,7 @@ module.exports = (client) => {
       }
 
       // ── !listedattente places <n> ────────────────────────────────────────
-      if (sub === 'places' || sub === 'slots') {
+      if (sub === 'places') {
         const n = parseInt(rest);
         if (isNaN(n) || n < 1) return message.reply('**Usage :** `!listedattente places <nombre>` (ex: `!listedattente places 16`)');
         const config = await InscriptionConfig.findOne({ guildId: message.guild.id });

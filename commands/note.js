@@ -73,7 +73,7 @@ module.exports = (client) => {
     }
 
     // --- !supprimenote <id> ---
-    if (cmd === '!supprimenote' || cmd === '!delnote') {
+    if (cmd === '!supprimenote') {
       const id = args[1];
       if (!id) return message.reply('Usage : `!supprimenote <id>`\nL\'ID est visible dans `!notes`.');
 

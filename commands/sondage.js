@@ -98,7 +98,7 @@ module.exports = (client) => {
         '`!sondage prog liste` — voir les sondages programmés\n' +
         '`!sondage prog annuler <n°>` — annuler un sondage programmé\n' +
         '`!sondage historique` — afficher les sondages clôturés avec leurs résultats\n' +
-        '`!sondage stats` — statistiques globales des sondages du serveur'
+        '`!sondage statistiques` — statistiques globales des sondages du serveur'
       );
     }
 
@@ -181,8 +181,8 @@ module.exports = (client) => {
       return;
     }
 
-    // ══ !sondage stats ════════════════════════════════════════════════════════
-    if (sub === 'stats') {
+    // ══ !sondage statistiques ════════════════════════════════════════════════════════
+    if (sub === 'statistiques') {
       const guildId = message.guild.id;
 
       const [totalCount, closedAll, openAll] = await Promise.all([

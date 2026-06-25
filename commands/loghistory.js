@@ -44,8 +44,8 @@ module.exports = (client) => {
       }
     }
 
-    // --- !logs stats ---
-    if (sub === 'stats') {
+    // --- !journaux statistiques ---
+    if (sub === 'statistiques') {
       const total = await StaffLogEntry.countDocuments();
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayCount = await StaffLogEntry.countDocuments({ createdAt: { $gte: today } });

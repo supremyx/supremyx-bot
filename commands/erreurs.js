@@ -25,8 +25,8 @@ module.exports = (client) => {
 
     try {
 
-      // --- !erreurs stats ---
-      if (sub === 'stats') {
+      // --- !erreurs statistiques ---
+      if (sub === 'statistiques') {
         const total      = await ErrorLog.countDocuments();
         const unresolved = await ErrorLog.countDocuments({ resolved: false });
         const today      = new Date(); today.setHours(0, 0, 0, 0);
@@ -127,7 +127,7 @@ module.exports = (client) => {
           '`!erreurs` — Dernières erreurs (paginé)\n' +
           '`!erreurs nonresolues` — Erreurs non résolues\n' +
           '`!erreurs command` — Erreurs de commandes\n' +
-          '`!erreurs stats` — Statistiques globales\n' +
+          '`!erreurs statistiques` — Statistiques globales\n' +
           '`!erreurs resoudre <id>` — Marquer comme résolue\n' +
           '`!erreurs vider` — Effacer tout l\'historique'
         );
@@ -151,7 +151,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder()
         .setTitle(`🚨 ${srcLabel || 'Erreurs bot'} — Page ${page}/${totalPages}`)
         .setColor(0xED4245)
-        .setFooter({ text: `${total} erreur(s) au total • !erreurs stats pour un résumé` })
+        .setFooter({ text: `${total} erreur(s) au total • !erreurs statistiques pour un résumé` })
         .setTimestamp();
 
       for (const e of entries) {

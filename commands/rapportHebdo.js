@@ -61,7 +61,7 @@ module.exports = (client) => {
       }
 
       // ── !rapporthebdo statut ──────────────────────────────────────────────
-      if (sub === 'statut' || sub === 'status' || !sub) {
+      if (sub === 'statut' || !sub) {
         const embed = new EmbedBuilder()
           .setColor(cfg?.active ? 0x57F287 : 0xED4245)
           .setTitle('📊 Rapport Hebdomadaire — Configuration')
