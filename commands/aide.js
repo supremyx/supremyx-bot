@@ -31,6 +31,7 @@ const CATEGORIES = [
       { label: '!recherche <nom>',             description: 'Rechercher une équipe ou un joueur par nom',          subs: [] },
       { label: '!formrecente <équipe> [N]',    description: 'Forme récente : N derniers matchs avec résultats et moyennes', subs: [] },
       { label: '!top3 [30|saison]',            description: 'Top 3 joueurs par kills sur la période choisie',     subs: ['— 7 derniers jours (défaut)', '30 — 30 derniers jours', 'saison — Toute la saison archivée'] },
+      { label: '!config',                       description: 'Afficher le barème de points par placement et le bonus kills configuré', subs: [] },
     ],
   },
   {
@@ -96,7 +97,7 @@ const CATEGORIES = [
       { label: '!statut',                description: 'Statut du bot et aperçu des tournois en cours',              subs: [] },
       { label: '!tempsenligne',          description: 'Temps de fonctionnement du bot depuis le dernier démarrage', subs: [] },
       { label: '!commandes',             description: 'Classement des commandes les plus utilisées sur le serveur', subs: [] },
-      { label: '!mémoire',               description: 'Utilisation mémoire (RAM) du bot en temps réel',             subs: [] },
+      { label: '!tableaudebord',         description: 'Afficher le résumé en direct du serveur ou accéder au tableau de bord web', subs: ['(sans arg) — Résumé : tickets, sanctions, XP, tournoi', 'lien — Lien vers le tableau de bord web'] },
     ],
   },
   {
@@ -152,6 +153,7 @@ const CATEGORIES = [
       { label: '!tirageteam [T1,T2,...]',       description: 'Tirage au sort aléatoire d\'équipes 2 par 2',                subs: [] },
       { label: '!pileface',                     description: 'Lancer une pièce (pile ou face)',                            subs: [] },
       { label: '!lienbot',                      description: 'Obtenir le lien d\'invitation du bot',                      subs: [] },
+      { label: '%logo <équipe>',                description: 'Soumettre le logo de ton équipe (image en pièce jointe) dans le salon dédié', subs: [] },
     ],
   },
   {
@@ -168,6 +170,7 @@ const CATEGORIES = [
       { label: '!regles',                   description: 'Afficher les règles simples du serveur',                    subs: [] },
       { label: '!reglement',               description: 'Afficher le règlement avancé du serveur (sections détaillées)', subs: [] },
       { label: '!sondage historique',       description: 'Voir l\'historique des sondages terminés sur le serveur',   subs: ['historique — Lister les sondages passés', 'stats — Statistiques globales des sondages'] },
+      { label: '!listenoiree liste',        description: 'Consulter la liste noire des équipes et joueurs bannis',       subs: ['liste — Voir toutes les entrées', 'verifier <nom> — Vérifier si un nom est blacklisté'] },
     ],
   },
   {
