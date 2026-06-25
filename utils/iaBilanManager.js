@@ -145,7 +145,7 @@ async function generateBilanIA(data, modelAlias) {
     max_tokens: 900,
   });
 
-  return res.choices[0]?.message?.content ?? null;
+  return { text: res.choices[0]?.message?.content ?? null, fallbackModel: res._fallbackModel ?? null };
 }
 
 // ── Construction et envoi du bilan complet ────────────────────────────────────
@@ -226,9 +226,11 @@ async function sendBilan(client, guildId, channelId, triggeredBy = null) {
   if (ai) {
     try {
       const thinkingMsg = await channel.send('🤖 Génération du commentaire IA en cours…');
-      iaText = await generateBilanIA(data, modelAlias);
+      const iaResult = await generateBilanIA(data, modelAlias);
+      iaText = iaResult?.text ?? null;
 
       if (iaText) {
+        const fallbackNote = iaResult.fallbackModel ? ` · ⚡ Fallback: ${iaResult.fallbackModel}` : '';
         const iaEmbed = new EmbedBuilder()
           .setColor(0x5865F2)
           .setAuthor({
@@ -236,7 +238,7 @@ async function sendBilan(client, guildId, channelId, triggeredBy = null) {
             iconURL: client.user.displayAvatarURL(),
           })
           .setDescription(iaText.slice(0, 4000))
-          .setFooter({ text: `Généré via OpenRouter · Modèle : ${modelAlias}` })
+          .setFooter({ text: `Généré via OpenRouter · Modèle : ${modelAlias}${fallbackNote}` })
           .setTimestamp();
 
         await thinkingMsg.edit({ content: '', embeds: [iaEmbed] });

@@ -319,7 +319,11 @@ module.exports = (client) => {
     }
 
     // ── Helpers IA contextuels ────────────────────────────────────────────────
+    let _lastFallback = null;
+    const fbNote = () => _lastFallback ? ` · ⚡ Fallback: ${_lastFallback}` : '';
+
     async function iaCall(systemPrompt, userPrompt, thinkingMsg) {
+      _lastFallback = null;
       const ai = getOpenRouter();
       if (!ai) { await thinkingMsg.edit('❌ Clé OpenRouter manquante.'); return null; }
       const guildId = message.guild.id;
@@ -335,6 +339,7 @@ module.exports = (client) => {
           messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
           max_tokens: 1024,
         });
+        _lastFallback = res._fallbackModel ?? null;
         const { alias: usedAlias } = await getGuildModel(guildId);
         await IaUsage.create({ guildId, userId: message.author.id, username: message.author.username, modelAlias: usedAlias, commandType: sub || 'chat' }).catch(() => {});
         const newUsed = await getDailyUsage(guildId);
@@ -373,7 +378,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0xFF8C00)
         .setAuthor({ name: `🤖 Analyse IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Demandé par ${message.author.username}` });
+        .setFooter({ text: `Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -403,7 +408,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0x5865F2)
         .setAuthor({ name: `🔮 Prédiction IA — ${t1.name} vs ${t2.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Demandé par ${message.author.username} · Prédiction non garantie` });
+        .setFooter({ text: `Demandé par ${message.author.username} · Prédiction non garantie${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -431,7 +436,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0xF1C40F)
         .setAuthor({ name: `💡 Conseils IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Demandé par ${message.author.username}` });
+        .setFooter({ text: `Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -458,7 +463,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0xFF8C00)
         .setAuthor({ name: `📋 Résumé IA — ${tourn?.name ?? 'SUPREMYX'}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Résumé généré par IA · Demandé par ${message.author.username}` });
+        .setFooter({ text: `Résumé généré par IA · Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -540,7 +545,7 @@ module.exports = (client) => {
           { name: '📊 Stats clés', value: [`🔫 **${stat.totalKills}** kills au total`, `⭐ Meilleur : **${stat.bestKills}** kills`, `📈 Moy : **${avgKills}** kills/match`].join('\n'), inline: true },
           { name: '🎮 Expérience', value: [`**${stat.totalMatches}** matchs joués`, `**${tourneyCount}** tournoi(s)`, `Constance : σ **${stdDev}**`].join('\n'), inline: true },
         )
-        .setFooter({ text: `Rapport IA · Équipe ${stat.teamName} · Demandé par ${message.author.username}` })
+        .setFooter({ text: `Rapport IA · Équipe ${stat.teamName} · Demandé par ${message.author.username}${fbNote()}` })
         .setTimestamp();
 
       await thinking.edit({ content: '', embeds: [embed] });
@@ -684,7 +689,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0x57F287)
         .setAuthor({ name: `🏋️ Plan d\'entraînement IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Demandé par ${message.author.username} · Basé sur ${n} matchs` });
+        .setFooter({ text: `Demandé par ${message.author.username} · Basé sur ${n} matchs${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -713,7 +718,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0xED4245)
         .setAuthor({ name: `⚔️ Stratégie IA — ${t1.name} contre ${t2.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Demandé par ${message.author.username} · Analyse non garantie` });
+        .setFooter({ text: `Demandé par ${message.author.username} · Analyse non garantie${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -740,7 +745,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0xFEE75C)
         .setAuthor({ name: `📰 Bilan IA — ${tourn?.name ?? 'Saison courante'}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Bilan généré par IA · Demandé par ${message.author.username}` });
+        .setFooter({ text: `Bilan généré par IA · Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -766,7 +771,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder().setColor(0x5865F2)
         .setAuthor({ name: `🔍 Scouting IA — ${stat.displayName}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Équipe : ${stat.teamName ?? 'free agent'} · Demandé par ${message.author.username}` });
+        .setFooter({ text: `Équipe : ${stat.teamName ?? 'free agent'} · Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -873,7 +878,7 @@ module.exports = (client) => {
           inline: false
         })
         .setTimestamp()
-        .setFooter({ text: `Débrief généré par IA · Demandé par ${message.author.username}` });
+        .setFooter({ text: `Débrief généré par IA · Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
@@ -1047,7 +1052,7 @@ module.exports = (client) => {
         .setColor(0xFF8C00)
         .setAuthor({ name: `SUPREMYX IA · ${model.emoji} ${model.label}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(chunks[0])
-        .setFooter({ text: `Demandé par ${message.author.username} · !ia réinitialiser pour effacer l'historique` })
+        .setFooter({ text: `Demandé par ${message.author.username} · !ia réinitialiser pour effacer l'historique${response._fallbackModel ? ` · ⚡ Fallback: ${response._fallbackModel}` : ''}` })
         .setTimestamp();
 
       await thinking.edit({ content: '', embeds: [embed] });

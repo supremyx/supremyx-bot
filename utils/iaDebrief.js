@@ -121,7 +121,7 @@ async function autoDebrief(client, guildId, teamName) {
         inline: false,
       })
       .setTimestamp()
-      .setFooter({ text: 'Débrief automatique · Généré par IA après enregistrement des résultats' });
+      .setFooter({ text: `Débrief automatique · Généré par IA après enregistrement des résultats${res._fallbackModel ? ` · ⚡ Fallback: ${res._fallbackModel}` : ''}` });
 
     await channel.send({ embeds: [embed] });
   } catch (err) {
