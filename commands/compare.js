@@ -117,13 +117,13 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ── !compare season <équipe1> vs <équipe2> ──────────────────────────
-    if (args[0]?.toLowerCase() === 'season') {
+    // ── !comparer saison <équipe1> vs <équipe2> ──────────────────────────
+    if (args[0]?.toLowerCase() === 'saison') {
       const rest = args.slice(1);
       const vsIndex = rest.findIndex(a => a.toLowerCase() === 'vs');
 
       if (vsIndex < 1 || vsIndex === rest.length - 1)
-        return message.reply('Usage : `!comparer season <équipe1> vs <équipe2>`');
+        return message.reply('Usage : `!comparer saison <équipe1> vs <équipe2>`');
 
       const name1 = rest.slice(0, vsIndex).join(' ').trim();
       const name2 = rest.slice(vsIndex + 1).join(' ').trim();
@@ -260,7 +260,7 @@ module.exports = (client) => {
       return message.reply(
         'Usage :\n' +
         '`!comparer <équipe1> vs <équipe2>` — Équipes en direct\n' +
-        '`!comparer season <équipe1> vs <équipe2>` — Historique des saisons\n' +
+        '`!comparer saison <équipe1> vs <équipe2>` — Historique des saisons\n' +
         '`!comparer joueur <joueur1> vs <joueur2>` — Duel entre deux joueurs'
       );
 

@@ -18,7 +18,7 @@ module.exports = (client) => {
     if (sub === 'auto') {
       const action = args[1]?.toLowerCase();
       const hours  = parseInt(args[2]) || 24;
-      if (action === 'désactiver' || action === 'stop' || action === 'off') {
+      if (action === 'désactiver' || action === 'desactiver' || action === 'arreter' || action === 'arrêter') {
         stopAutoBackup();
         await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: 'Sauvegarde automatique désactivée', category: 'données', severity: 'warn' });
         return message.reply('🔴 Sauvegarde automatique **désactivée**.');

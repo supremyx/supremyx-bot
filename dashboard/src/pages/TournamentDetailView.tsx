@@ -108,7 +108,7 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
-  const [tab, setTab] = useState<"standings" | "rounds">("standings");
+  const [tab, setTab] = useState<"classement" | "manches">("classement");
 
   useEffect(() => {
     setLoading(true);
@@ -159,7 +159,7 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
           {[
             { label: "Équipes", value: teamCount },
             { label: "Matchs enregistrés", value: matchCount },
-            { label: "Rounds", value: rounds.length },
+            { label: "Manches", value: rounds.length },
           ].map(({ label, value }, i) => (
             <div key={label} className="py-4 text-center" style={{ borderRight: i < 2 ? "1px solid var(--border)" : "none" }}>
               <div className="text-2xl font-black" style={{ color: "var(--primary)" }}>{value}</div>
@@ -179,17 +179,17 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
       )}
 
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        {(["standings", "rounds"] as const).map(t => (
+        {(["classement", "manches"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className="px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
             style={{ background: tab === t ? "var(--primary)" : "transparent", color: tab === t ? "var(--primary-foreground)" : "var(--muted-foreground)" }}
           >
-            {t === "standings" ? "📊 Classement" : `🎮 Rounds (${rounds.length})`}
+            {t === "classement" ? "📊 Classement" : `🎮 Manches (${rounds.length})`}
           </button>
         ))}
       </div>
 
-      {tab === "standings" && (
+      {tab === "classement" && (
         <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
           {standings.length === 0 ? (
             <div className="py-16 text-center" style={{ color: "var(--muted-foreground)" }}>
@@ -313,7 +313,7 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
         </div>
       )}
 
-      {tab === "rounds" && (
+      {tab === "manches" && (
         <div className="space-y-3">
           {rounds.length === 0 ? (
             <div className="py-16 text-center rounded-xl" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>

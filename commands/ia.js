@@ -926,7 +926,7 @@ module.exports = (client) => {
       }
 
       // !ia bilan maintenant — déclenche manuellement
-      if (action === 'maintenant' || action === 'now') {
+      if (action === 'maintenant') {
         if (!message.member?.permissions.has('Administrator')) {
           return message.reply('❌ Seuls les administrateurs peuvent déclencher le bilan manuellement.');
         }

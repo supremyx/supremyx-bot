@@ -17,8 +17,8 @@ module.exports = (client) => {
     const tournamentName = message.content.split(' ').slice(1).join(' ').trim();
     const lcTournament = tournamentName.toLowerCase();
 
-    // --- !classement kills ---
-    if (lcTournament === 'kills') {
+    // --- !classement eliminations ---
+    if (lcTournament === 'eliminations' || lcTournament === 'kills') {
       const teams = await Team.find().sort({ kills: -1 });
       if (!teams.length) return message.channel.send('Aucune équipe enregistrée.');
       const rows = teams.map((t, i) => {
@@ -37,7 +37,7 @@ module.exports = (client) => {
     }
 
     // --- !classement ratio ---
-    if (lcTournament === 'ratio') {
+    if (lcTournament === 'ratio' || lcTournament === 'moyenne') {
       const teams = await Team.find();
       if (!teams.length) return message.channel.send('Aucune équipe enregistrée.');
       const sorted = teams

@@ -9,13 +9,13 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 function medal(n) { return { 1: '🥇', 2: '🥈', 3: '🥉' }[n] ?? `#${n}`; }
 function avg(a, b) { return b > 0 ? (a / b).toFixed(1) : '0'; }
 
-const PERIOD_KEYS = new Set(['24h', '1', '7', '30', 'mois', 'saison', 'all']);
+const PERIOD_KEYS = new Set(['24h', '1', '7', '30', 'mois', 'saison', 'tout']);
 
 function parsePeriod(arg) {
   if (!arg || arg === '24h' || arg === '1') return { ms: 86_400_000,      label: '24 dernières heures', short: '24h'   };
   if (arg === '7')                          return { ms: 7  * 86_400_000, label: '7 derniers jours',    short: '7j'    };
   if (arg === '30' || arg === 'mois')       return { ms: 30 * 86_400_000, label: '30 derniers jours',   short: '30j'   };
-  if (arg === 'saison' || arg === 'all')    return { ms: null,            label: 'toute la saison',     short: 'saison'};
+  if (arg === 'saison' || arg === 'tout')   return { ms: null,            label: 'toute la saison',     short: 'saison'};
   const n = parseInt(arg, 10);
   if (!isNaN(n) && n > 0)                  return { ms: n  * 86_400_000, label: `${n} derniers jours`, short: `${n}j` };
   return null; // not a period → treat as tournament name

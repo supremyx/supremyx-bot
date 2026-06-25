@@ -262,8 +262,8 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ══ !sondage prog liste ════════════════════════════════════════════════════
-    if (sub === 'prog') {
+    // ══ !sondage planifie liste ════════════════════════════════════════════════
+    if (sub === 'planifie') {
       const subArgs = args.slice(4).trim();
       const subSub  = subArgs.split(' ')[0].toLowerCase();
 
@@ -303,7 +303,7 @@ module.exports = (client) => {
         return message.reply(`✅ Sondage **"${target.question}"** annulé.`);
       }
 
-      return message.reply('❌ Sous-commande inconnue. Utilise `prog liste` ou `prog annuler <n°>`.');
+      return message.reply('❌ Sous-commande inconnue. Utilise `planifie liste` ou `planifie annuler <n°>`.');
     }
 
     // ══ !sondage programmer ════════════════════════════════════════════════════
