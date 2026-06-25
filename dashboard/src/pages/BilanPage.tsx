@@ -32,6 +32,113 @@ interface Bilan {
 
 const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
 
+function exportBilanPDF(bilan: Bilan) {
+  const s = bilan.stats;
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const fmtS = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+
+  const topTeamsRows = s.topTeams.map((t, i) =>
+    `<tr><td>${["🥇","🥈","🥉","4","5"][i] ?? i+1}</td><td><strong>${t.name}</strong></td><td>${t.points ?? "—"} pts</td><td>${t.kills ?? "—"} kills</td></tr>`
+  ).join("");
+
+  const topPlayersRows = s.topWeekPlayers.map((p, i) =>
+    `<tr><td>${["🥇","🥈","🥉","4","5"][i] ?? i+1}</td><td><strong>${p.name}</strong></td><td>${p.team}</td><td>${p.kills} kills</td></tr>`
+  ).join("");
+
+  const iaBlock = bilan.iaText
+    ? `<section class="ia-block"><h2>🧠 Analyse IA — ${bilan.modelAlias}</h2><p class="ia-text">${bilan.iaText.replace(/\n/g, "<br/>")}</p></section>`
+    : "";
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Bilan Hebdomadaire SUPREMYX — ${fmtS(bilan.weekFrom)} au ${fmtS(bilan.weekTo)}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 32px 40px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #d4963a; padding-bottom: 16px; margin-bottom: 24px; }
+  .logo { font-size: 22px; font-weight: 900; color: #d4963a; letter-spacing: 1px; }
+  .logo span { color: #1a1a2e; }
+  .header-right { text-align: right; }
+  .header-right h1 { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .header-right p { font-size: 11px; color: #666; margin-top: 4px; }
+  .pills { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .pill { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; text-align: center; }
+  .pill .val { font-size: 26px; font-weight: 900; }
+  .pill .lbl { font-size: 10px; color: #666; margin-top: 2px; }
+  section { margin-bottom: 24px; }
+  h2 { font-size: 13px; font-weight: 700; color: #d4963a; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; text-transform: uppercase; letter-spacing: 0.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 6px 8px; background: #f9fafb; font-size: 10px; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; }
+  td { padding: 7px 8px; border-top: 1px solid #f3f4f6; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .record-box { display: inline-block; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 20px; text-align: center; background: #fff5f5; }
+  .record-box .kills { font-size: 32px; font-weight: 900; color: #ef4444; }
+  .record-box .sub { font-size: 11px; color: #666; }
+  .ia-block { border: 1px solid #e0d4f7; border-radius: 10px; padding: 16px; background: #f9f5ff; page-break-before: always; }
+  .ia-block h2 { border-color: #a855f7; color: #7c3aed; }
+  .ia-text { font-size: 12px; line-height: 1.8; color: #374151; white-space: pre-wrap; margin-top: 8px; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; }
+  @media print { body { padding: 16px 24px; } @page { margin: 1cm; size: A4; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">SUPREMYX<span> IA</span></div>
+  <div class="header-right">
+    <h1>Bilan Hebdomadaire — ${fmtS(bilan.weekFrom)} → ${fmtS(bilan.weekTo)}</h1>
+    <p>Généré le ${fmt(bilan.createdAt)} · ${bilan.triggeredBy === "auto" ? "Automatique (dimanche)" : `Déclenché par ${bilan.triggeredBy}`}</p>
+    ${s.activeTournament ? `<p>🎮 Tournoi actif : ${s.activeTournament}</p>` : ""}
+  </div>
+</div>
+
+<div class="pills">
+  <div class="pill"><div class="val" style="color:#d4963a">${s.totalMatches}</div><div class="lbl">Matchs joués</div></div>
+  <div class="pill"><div class="val" style="color:#ef4444">${s.totalKills}</div><div class="lbl">Kills totaux</div></div>
+  <div class="pill"><div class="val" style="color:#f97316">${s.avgKills}</div><div class="lbl">Moy. kills/match</div></div>
+  <div class="pill"><div class="val" style="color:#22c55e">${s.wins}</div><div class="lbl">Victoires (#1)</div></div>
+</div>
+
+${s.topTeams.length > 0 ? `
+<section>
+  <h2>🏆 Classement général (Top 5)</h2>
+  <table><thead><tr><th>#</th><th>Équipe</th><th>Points</th><th>Kills</th></tr></thead>
+  <tbody>${topTeamsRows}</tbody></table>
+</section>` : ""}
+
+${s.topWeekPlayers.length > 0 ? `
+<section>
+  <h2>🌟 Top joueurs de la semaine</h2>
+  <table><thead><tr><th>#</th><th>Joueur</th><th>Équipe</th><th>Kills</th></tr></thead>
+  <tbody>${topPlayersRows}</tbody></table>
+</section>` : ""}
+
+${s.bestKillMatch ? `
+<section>
+  <h2>🔥 Record de la semaine</h2>
+  <div class="record-box">
+    <div class="kills">${s.bestKillMatch.kills}</div>
+    <div class="sub">kills en un match · <strong>${s.bestKillMatch.team}</strong> · ${fmtS(s.bestKillMatch.createdAt)}</div>
+  </div>
+</section>` : ""}
+
+${iaBlock}
+
+<div class="footer">
+  <span>SUPREMYX Dashboard — Bilan IA automatique</span>
+  <span>Modèle : ${bilan.modelAlias} · openrouter.ai</span>
+</div>
+<script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 }
@@ -195,6 +302,13 @@ export default function BilanPage() {
                     <p className="text-xs mt-1" style={{ color: "#f59e0b" }}>🎮 Tournoi : {s.activeTournament}</p>
                   )}
                 </div>
+                <button
+                  onClick={() => exportBilanPDF(selected)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-80 shrink-0 cursor-pointer"
+                  style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                >
+                  📄 Exporter PDF
+                </button>
               </div>
 
               {/* Stat pills */}
