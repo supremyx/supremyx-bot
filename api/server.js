@@ -789,6 +789,47 @@ router.get('/botstats', async (req, res) => {
   }
 });
 
+// ── GET /api/bot/health ───────────────────────────────────────────────────────
+router.get('/bot/health', publicLimiter, (req, res) => {
+  try {
+    const { getFormatted }       = require('../utils/botMonitor');
+    const { getAntiCrashMetrics } = require('../utils/antiCrash');
+    const { isEnabled: backupEnabled, getIntervalHrs } = require('../utils/autoBackup');
+
+    const mon   = getFormatted();
+    const crash = getAntiCrashMetrics();
+    const mem   = process.memoryUsage();
+
+    res.json({
+      status:         mon.status,
+      uptime:         mon.uptime,
+      uptimeMs:       Date.now() - (global._botStartedAt || Date.now()),
+      ping:           mon.ping,
+      memoryMB:       mon.memoryMB,
+      memoryRssMB:    mon.rssMemMB,
+      memoryHeapMB:   Math.round(mem.heapUsed  / 1024 / 1024),
+      memoryTotalMB:  Math.round(mem.heapTotal / 1024 / 1024),
+      alerts:         mon.alerts,
+      alertCount:     mon.alerts.length,
+      crash: {
+        count:          crash.crashCount,
+        lastCrashAt:    crash.lastCrashAt,
+        reconnectCount: crash.reconnectCount,
+        errorsPerMin:   crash.errorsPerMin,
+        safeModeActive: crash.safeModeActive,
+      },
+      backup: {
+        enabled:     backupEnabled(),
+        intervalHrs: getIntervalHrs(),
+      },
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[API /bot/health]', err);
+    res.status(500).json({ error: 'Erreur interne', status: 'unknown' });
+  }
+});
+
 // ── GET /events (SSE) ─────────────────────────────────────────────────────────
 router.get('/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
