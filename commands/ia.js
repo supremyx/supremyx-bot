@@ -1,6 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
-const OpenAI = require('openai');
+const { getOpenRouterClient } = require('../utils/openrouterClient');
 const IaConfig   = require('../database/models/IaConfig');
 const IaUsage    = require('../database/models/IaUsage');
 const Team       = require('../database/models/Team');
@@ -8,20 +8,8 @@ const Match      = require('../database/models/Match');
 const Tournament = require('../database/models/Tournament');
 const PlayerStat = require('../database/models/PlayerStat');
 
-let openrouter = null;
 function getOpenRouter() {
-  if (!openrouter) {
-    if (!process.env.OPENROUTER_API_KEY) return null;
-    openrouter = new OpenAI({
-      apiKey: process.env.OPENROUTER_API_KEY,
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': 'https://discord.com',
-        'X-Title': 'SUPREMYX Bot',
-      },
-    });
-  }
-  return openrouter;
+  return getOpenRouterClient();
 }
 
 const MODELS = {

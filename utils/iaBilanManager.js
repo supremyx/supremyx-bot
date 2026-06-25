@@ -1,4 +1,4 @@
-const OpenAI        = require('openai');
+const { getOpenRouterClient } = require('./openrouterClient');
 const { EmbedBuilder } = require('discord.js');
 const IaConfig      = require('../database/models/IaConfig');
 const IaUsage       = require('../database/models/IaUsage');
@@ -19,16 +19,8 @@ const MODEL_IDS = {
 };
 const DEFAULT_MODEL = 'gpt-4o-mini';
 
-let _ai = null;
 function getAI() {
-  if (!_ai && process.env.OPENROUTER_API_KEY) {
-    _ai = new OpenAI({
-      apiKey: process.env.OPENROUTER_API_KEY,
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: { 'HTTP-Referer': 'https://discord.com', 'X-Title': 'SUPREMYX Bot' },
-    });
-  }
-  return _ai;
+  return getOpenRouterClient();
 }
 
 // ── Collecte des données de la semaine ────────────────────────────────────────
