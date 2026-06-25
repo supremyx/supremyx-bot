@@ -1,60 +1,71 @@
-const Team = require('../database/models/Team');
-const Match = require('../database/models/Match');
-const Tournament = require('../database/models/Tournament');
-const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
+const { checkPerm, permDenied, LEVELS } = require('../utils/permissions');
+const { runBackup, startAutoBackup, stopAutoBackup, setBackupChannel, isEnabled, getIntervalHrs } = require('../utils/autoBackup');
+const { logAdmin } = require('../utils/adminLog');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content !== '!sauvegarde') return;
+    if (!message.content.trim().startsWith('!sauvegarde')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
-    if (!message.member.permissions.has('Administrator'))
-      return message.reply('Staff uniquement');
 
-    const [teams, matches, tournaments] = await Promise.all([
-      Team.find().lean(),
-      Match.find().lean(),
-      Tournament.find().lean()
-    ]);
+    if (!await checkPerm(message, LEVELS.ADMIN)) return permDenied(message, LEVELS.ADMIN);
 
-    const backup = {
-      exportedAt: new Date().toISOString(),
-      exportedBy: message.author.tag,
-      stats: {
-        teams: teams.length,
-        matches: matches.length,
-        tournaments: tournaments.length
-      },
-      data: { teams, matches, tournaments }
-    };
+    const args = message.content.trim().split(/\s+/).slice(1);
+    const sub  = args[0]?.toLowerCase();
 
-    const json = JSON.stringify(backup, null, 2);
-    const buffer = Buffer.from(json, 'utf-8');
-    const now = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
-    const file = new AttachmentBuilder(buffer, { name: `backup_moseto_${now}.json` });
+    if (sub === 'auto') {
+      const action = args[1]?.toLowerCase();
+      const hours  = parseInt(args[2]) || 24;
+      if (action === 'désactiver' || action === 'stop' || action === 'off') {
+        stopAutoBackup();
+        await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: 'Sauvegarde automatique désactivée', category: 'données', severity: 'warn' });
+        return message.reply('🔴 Sauvegarde automatique **désactivée**.');
+      }
+      startAutoBackup(client, hours);
+      await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: `Sauvegarde automatique activée (${hours}h)`, category: 'données', severity: 'info' });
+      return message.reply(`✅ Sauvegarde automatique **activée** toutes les **${hours}h**.\nFichiers envoyés dans le canal configuré.`);
+    }
 
-    const embed = new EmbedBuilder()
-      .setTitle('💾 Sauvegarde — Base de données')
-      .setColor(0xEB459E)
-      .addFields(
-        { name: '👥 Équipes', value: `${teams.length}`, inline: true },
-        { name: '🎮 Matchs', value: `${matches.length}`, inline: true },
-        { name: '🏁 Tournois', value: `${tournaments.length}`, inline: true }
-      )
-      .setDescription('Le fichier JSON complet a été envoyé en message privé.')
-      .setFooter({ text: `Demandé par ${message.author.tag}` })
-      .setTimestamp();
+    if (sub === 'canal') {
+      const channel = message.mentions.channels.first();
+      if (!channel) return message.reply('❌ Mentionne un salon : `!sauvegarde canal #salon`');
+      setBackupChannel(channel.id);
+      await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: `Canal de sauvegarde → #${channel.name}`, category: 'config', severity: 'info' });
+      return message.reply(`✅ Canal de sauvegarde défini : ${channel}`);
+    }
 
+    if (sub === 'statut') {
+      const embed = new EmbedBuilder()
+        .setTitle('💾 Statut — Sauvegarde automatique')
+        .setColor(isEnabled() ? 0x57F287 : 0xED4245)
+        .addFields(
+          { name: '🔄 État',       value: isEnabled() ? '✅ Activée' : '🔴 Désactivée', inline: true },
+          { name: '⏱️ Intervalle', value: isEnabled() ? `${getIntervalHrs()}h` : '—',   inline: true },
+        )
+        .setTimestamp();
+      return message.channel.send({ embeds: [embed] });
+    }
+
+    message.channel.sendTyping().catch(() => {});
     try {
-      const dm = await message.author.createDM();
-      await dm.send({
-        content: '**💾 Sauvegarde SUPREMYX** — Conserve ce fichier en lieu sûr.',
-        files: [file]
+      const { embed, file } = await runBackup(client, {
+        manual: true,
+        requesterId: message.author.id,
+        requesterTag: message.author.tag,
       });
-      message.channel.send({ embeds: [embed] });
-    } catch {
-      message.reply('❌ Impossible d\'envoyer la sauvegarde en DM. Vérifie que tes messages privés sont ouverts.');
+      try {
+        const dm = await message.author.createDM();
+        await dm.send({ content: '**💾 Sauvegarde SUPREMYX** — Conserve ce fichier en lieu sûr.', files: [file] });
+        embed.setDescription((embed.data.description ?? '') + '\n\n📬 Fichier JSON envoyé en DM.');
+      } catch {
+        embed.setDescription((embed.data.description ?? '') + '\n\n⚠️ Impossible d\'envoyer en DM (messages privés fermés).');
+      }
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[backup] Erreur:', err);
+      return message.reply('❌ Erreur lors de la sauvegarde.');
     }
   });
 };

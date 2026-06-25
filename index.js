@@ -26,6 +26,9 @@ const { startScheduleManager } = require('./utils/scheduleManager');
 const { startScheduledEmbedManager } = require('./utils/scheduledEmbedManager');
 const { startRapportHebdo } = require('./utils/rapportHebdo');
 const { startIaBilanManager } = require('./utils/iaBilanManager');
+const { startAutoBackup } = require('./utils/autoBackup');
+const { startBotMonitor } = require('./utils/botMonitor');
+const { setupAntiCrash } = require('./utils/antiCrash');
 require('dotenv').config();
 
 const client = new Client({
@@ -45,6 +48,7 @@ mongoose.connect(process.env.MONGO_URI)
 client.setMaxListeners(150);
 setupErrorHandler(client);
 setupMaintenanceGuard(client);
+setupAntiCrash(client);
 
 client.once('clientReady', async () => {
   console.log(`🔥 SUPREMYX connecté en tant que ${client.user.tag}`);
@@ -102,6 +106,8 @@ client.once('clientReady', async () => {
   startRapportHebdo(client);
   startIaBilanManager(client);
   console.log('📋 Bilan IA hebdomadaire activé (dimanche 20h30)');
+  startBotMonitor(client, 5 * 60 * 1000);
+  startAutoBackup(client, 24);
 });
 
 // --- Intelligence Artificielle ---
@@ -151,6 +157,7 @@ require('./commands/resetmatch')(client);
 require('./commands/export')(client);
 require('./commands/backup')(client);
 require('./commands/restore')(client);
+require('./commands/adminlogs')(client);
 
 // --- Stats ---
 require('./commands/ranking')(client);
