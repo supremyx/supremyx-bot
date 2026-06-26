@@ -44,7 +44,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd dashboard && PORT=5000 BASE_PATH=/ pnpm run dev"
+args = "cd dashboard && PORT=5000 BASE_PATH=/ npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
