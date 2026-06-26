@@ -474,6 +474,11 @@ function buildButtonRows() {
         .setEmoji('🔍')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
+        .setCustomId('staff_nouveautes')
+        .setLabel('Nouveautés')
+        .setEmoji('🆕')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
         .setCustomId('staff_history')
         .setLabel('Historique')
         .setEmoji('📋')
@@ -705,6 +710,14 @@ module.exports = (client) => {
   // Interactions : boutons + menus déroulants
   client.on('interactionCreate', async interaction => {
     try {
+      // ── Bouton nouveautés → embed éphémère ───────────────────────────────
+      if (interaction.isButton() && interaction.customId === 'staff_nouveautes') {
+        if (!interaction.member?.permissions.has('Administrator')) {
+          return interaction.reply({ content: '⛔ Staff uniquement.', ephemeral: true });
+        }
+        return interaction.reply({ ephemeral: true, embeds: [buildNouveautesStaffEmbed(client)] });
+      }
+
       // ── Bouton historique → embed éphémère ───────────────────────────────
       if (interaction.isButton() && interaction.customId === 'staff_history') {
         if (!interaction.member?.permissions.has('Administrator')) {

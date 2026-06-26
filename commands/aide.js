@@ -287,6 +287,11 @@ function buildButtonRows() {
         .setEmoji('🔍')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
+        .setCustomId('aide_nouveautes')
+        .setLabel('Nouveautés')
+        .setEmoji('🆕')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
         .setCustomId('aide_history')
         .setLabel('Historique')
         .setEmoji('📋')
@@ -550,6 +555,11 @@ module.exports = (client) => {
   // Interactions : boutons + menus déroulants
   client.on('interactionCreate', async interaction => {
     try {
+      // ── Bouton nouveautés → embed éphémère ───────────────────────────────
+      if (interaction.isButton() && interaction.customId === 'aide_nouveautes') {
+        return interaction.reply({ ephemeral: true, embeds: [buildNouveautesEmbed(client)] });
+      }
+
       // ── Bouton historique → embed éphémère ───────────────────────────────
       if (interaction.isButton() && interaction.customId === 'aide_history') {
         const doc = await SearchHistory.findOne({
