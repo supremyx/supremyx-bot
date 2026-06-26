@@ -77,6 +77,7 @@ const HELP_TEXT = [
   '**✨ Embed riche (avec thumbnail, auteur, liens) :**',
   '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
   '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
+  '`!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon | pied de page` — éditer un embed riche existant (`-` pour conserver un champ)',
   'Dans la description, utilise `[texte](https://lien)` pour créer des liens cliquables.',
   '',
   '**📋 Gérer les embeds existants :**',
@@ -615,16 +616,23 @@ module.exports = (client) => {
       if (sub === 'riche') {
         const isPreview    = args?.startsWith('aperçu');
         const isProgrammer = args?.startsWith('programmer');
+        const isModifier   = args?.startsWith('modifier');
         const rest = isPreview
           ? args.replace(/^aperçu\s*\|?\s*/, '').trim()
           : isProgrammer
             ? args.replace(/^programmer\s*\|?\s*/, '').trim()
-            : (args || '');
+            : isModifier
+              ? args.replace(/^modifier\s*\|?\s*/, '').trim()
+              : (args || '');
 
         const RICHE_USAGE = [
           '**✨ Embed riche — Publication immédiate :**',
           '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
           '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
+          '',
+          '**✏️ Embed riche — Modifier un embed existant :**',
+          '`!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
+          '> Utilise `-` pour un champ afin de **conserver** la valeur actuelle de l\'embed.',
           '',
           '**🕐 Embed riche — Planifié :**',
           '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',
@@ -653,6 +661,83 @@ module.exports = (client) => {
         const authorIcon   = parts[7] || '';
         const footer       = parts[8] || '';
         const dateRaw      = parts[9] || '';   // uniquement pour la planification
+
+        // ── Mode modification d'un embed riche existant ────────────────────
+        if (isModifier) {
+          const mParts       = rest.split('|').map(p => p.trim());
+          const mChannelArg  = mParts[0] || '';
+          const mMsgId       = (mParts[1] || '').replace(/\D/g, '');
+          const mTitle       = mParts[2] || '';
+          const mDesc        = mParts[3] || '';
+          const mColorRaw    = mParts[4] || '';
+          const mImageUrl    = mParts[5] || '';
+          const mThumbUrl    = mParts[6] || '';
+          const mAuthorName  = mParts[7] || '';
+          const mAuthorIcon  = mParts[8] || '';
+          const mFooter      = mParts[9] || '';
+
+          if (!mChannelArg || !mMsgId) return message.reply([
+            '**Usage :** `!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon | pied de page`',
+            '> Utilise `-` pour un champ afin de **conserver** la valeur actuelle de l\'embed.',
+            '',
+            '**Exemple :**',
+            '`!embed riche modifier #annonces | 1234567890 | 🏆 Nouveau titre | - | or | - | https://logo.png | - | - | Bonne chance !`',
+          ].join('\n'));
+
+          const mTarget = resolveTarget(message, mChannelArg);
+          if (!mTarget) return message.reply('❌ Salon introuvable. Mentionne-le avec `#` ou écris `ici`.');
+
+          let mMsg;
+          try { mMsg = await mTarget.messages.fetch(mMsgId); }
+          catch { return message.reply('❌ Message introuvable. Vérifie l\'ID et le salon.'); }
+
+          if (mMsg.author.id !== client.user.id)
+            return message.reply('❌ Je ne peux modifier que mes propres messages.');
+          if (!mMsg.embeds.length)
+            return message.reply('❌ Ce message ne contient pas d\'embed.');
+
+          // Lire les valeurs actuelles de l'embed
+          const prev = mMsg.embeds[0];
+          const keep = v => (!v || v === '-');   // '-' ou vide = conserver
+
+          const newTitle      = keep(mTitle)      ? (prev.title       || '')       : mTitle;
+          const newDesc       = keep(mDesc)       ? (prev.description || '')       : mDesc;
+          const newColor      = keep(mColorRaw)   ? (prev.color       ?? 0xFFA500) : parseColor(mColorRaw);
+          const newImage      = keep(mImageUrl)   ? (prev.image?.url  || null)     : mImageUrl || null;
+          const newThumb      = keep(mThumbUrl)   ? (prev.thumbnail?.url || null)  : mThumbUrl || null;
+          const newAuthorName = keep(mAuthorName) ? (prev.author?.name || '')      : mAuthorName;
+          const newAuthorIcon = keep(mAuthorIcon) ? (prev.author?.iconURL || '')   : mAuthorIcon;
+          const newFooter     = keep(mFooter)     ? (prev.footer?.text || '')      : mFooter;
+
+          const updated = new EmbedBuilder()
+            .setColor(newColor)
+            .setTimestamp();
+          if (newTitle)      updated.setTitle(newTitle);
+          if (newDesc)       updated.setDescription(newDesc);
+          if (newImage)      updated.setImage(newImage);
+          if (newThumb)      updated.setThumbnail(newThumb);
+          if (newFooter)     updated.setFooter({ text: newFooter });
+          if (newAuthorName) updated.setAuthor({ name: newAuthorName, iconURL: newAuthorIcon || undefined });
+
+          await mMsg.edit({ embeds: [updated], components: mMsg.components });
+          await message.delete().catch(() => {});
+          message.channel.send(`✅ Embed riche modifié dans <#${mTarget.id}>.`)
+            .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+          await staffLog(client, {
+            action: 'embed riche modifier',
+            details: [
+              `**Salon :** <#${mTarget.id}>`,
+              `**Message :** \`${mMsgId}\``,
+              newTitle      ? `**Titre :** ${newTitle}`           : null,
+              newThumb      ? `**Thumbnail :** ${newThumb}`       : null,
+              newAuthorName ? `**Auteur :** ${newAuthorName}`     : null,
+              newFooter     ? `**Footer :** ${newFooter}`         : null,
+            ].filter(Boolean).join('\n'),
+            author: message.author.tag,
+          });
+          return;
+        }
 
         if (!channelArg) return message.reply('❌ Précise le salon cible. Ex : `!embed riche #annonces | ...`');
 
