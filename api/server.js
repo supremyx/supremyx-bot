@@ -874,6 +874,7 @@ router.get('/events', (req, res) => {
 });
 
 // ─── Modèles supplémentaires ─────────────────────────────────────────────────
+const IaLatency   = require('../database/models/IaLatency');
 const GuildEvent  = require('../database/models/GuildEvent');
 const Ticket      = require('../database/models/Ticket');
 const Birthday    = require('../database/models/Birthday');
@@ -1359,6 +1360,96 @@ router.get('/admin/config', requireApiKey, (_req, res) => {
     botApiKeyMasked: masked,
     keyLength: key.length,
   });
+});
+
+// ── GET /ia-fallback — disponibilité des modèles + historique latences ────────
+router.get('/ia-fallback', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, hours = 24 } = req.query;
+    const since = new Date(Date.now() - Number(hours) * 3600 * 1000);
+
+    const latencyFilter = { measuredAt: { $gte: since } };
+    if (guildId) latencyFilter.guildId = guildId;
+
+    const allLatencies = await IaLatency.find(latencyFilter).sort({ measuredAt: -1 }).limit(2000).lean();
+
+    const modelMap = new Map();
+    for (const l of allLatencies) {
+      if (!modelMap.has(l.model)) modelMap.set(l.model, []);
+      modelMap.get(l.model).push(l);
+    }
+
+    const modelStats = [];
+    for (const [model, records] of modelMap.entries()) {
+      const successes = records.filter(r => r.success);
+      const failures  = records.filter(r => !r.success);
+      const avgLatency = successes.length
+        ? Math.round(successes.reduce((s, r) => s + r.latencyMs, 0) / successes.length)
+        : null;
+      const lastRecord = records[0];
+      const successRate = records.length ? Math.round((successes.length / records.length) * 100) : null;
+      modelStats.push({
+        model,
+        total: records.length,
+        successes: successes.length,
+        failures: failures.length,
+        avgLatency,
+        minLatency: successes.length ? Math.min(...successes.map(r => r.latencyMs)) : null,
+        maxLatency: successes.length ? Math.max(...successes.map(r => r.latencyMs)) : null,
+        successRate,
+        lastSeen: lastRecord?.measuredAt ?? null,
+        lastStatus: lastRecord?.success ? 'ok' : 'error',
+      });
+    }
+
+    const fallbackFilter = { category: 'ia-fallback', createdAt: { $gte: since } };
+    const fallbackEvents = await StaffLogEntry.find(fallbackFilter)
+      .sort({ createdAt: -1 }).limit(100).lean();
+
+    const hourBuckets = [];
+    for (let i = Number(hours) - 1; i >= 0; i--) {
+      const t = new Date(Date.now() - i * 3600 * 1000);
+      const label = t.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+      hourBuckets.push({ hour: label, timestamp: t.toISOString(), calls: 0, fallbacks: 0 });
+    }
+    for (const l of allLatencies) {
+      const age = (Date.now() - new Date(l.measuredAt).getTime()) / 3600000;
+      const idx = Math.floor(Number(hours) - age - 1);
+      if (idx >= 0 && idx < hourBuckets.length) {
+        hourBuckets[idx].calls++;
+        if (l.isFallback) hourBuckets[idx].fallbacks++;
+      }
+    }
+
+    const latencyHistory = [];
+    const step = Math.max(1, Math.floor(allLatencies.length / 60));
+    for (let i = allLatencies.length - 1; i >= 0; i -= step) {
+      const r = allLatencies[i];
+      latencyHistory.push({
+        t: new Date(r.measuredAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }),
+        ms: r.success ? r.latencyMs : null,
+        model: r.model,
+        ok: r.success,
+      });
+    }
+
+    res.json({
+      models: modelStats,
+      fallbackEvents: fallbackEvents.map(e => ({
+        _id: e._id,
+        message: e.message,
+        createdAt: e.createdAt,
+      })),
+      hourlyActivity: hourBuckets,
+      latencyHistory,
+      totalCalls: allLatencies.length,
+      totalFallbacks: allLatencies.filter(l => l.isFallback).length,
+      since: since.toISOString(),
+    });
+  } catch (err) {
+    console.error('[API /ia-fallback]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
 });
 
 // ─── Mount ───────────────────────────────────────────────────────────────────

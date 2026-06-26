@@ -1,18 +1,26 @@
 const eventBus = require('./eventBus');
 
-// Free fallback models tried in order when the primary model fails
 const FALLBACK_MODELS = [
   'google/gemini-2.0-flash-exp:free',
   'meta-llama/llama-3.1-8b-instruct:free',
   'mistralai/mistral-7b-instruct:free',
 ];
 
-// HTTP status codes that warrant a fallback retry
 const FALLBACK_ON_STATUS = new Set([429, 500, 502, 503, 504]);
 
 let _client = null;
 
-async function callOpenRouter(apiKey, model, messages, max_tokens) {
+async function saveLatency(model, latencyMs, success, isFallback, status, guildId) {
+  try {
+    const IaLatency = require('../database/models/IaLatency');
+    await IaLatency.create({ model, latencyMs, success, isFallback, status, guildId });
+  } catch (e) {
+    console.warn('[OpenRouter] Impossible de sauvegarder la latence:', e.message);
+  }
+}
+
+async function callOpenRouter(apiKey, model, messages, max_tokens, guildId, isFallback = false) {
+  const t0 = Date.now();
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -24,13 +32,17 @@ async function callOpenRouter(apiKey, model, messages, max_tokens) {
     body: JSON.stringify({ model, messages, max_tokens }),
   });
 
+  const latencyMs = Date.now() - t0;
+
   if (!res.ok) {
     const body = await res.text().catch(() => res.statusText);
+    await saveLatency(model, latencyMs, false, isFallback, res.status, guildId);
     const err = new Error(`OpenRouter ${res.status}: ${body}`);
     err.status = res.status;
     throw err;
   }
 
+  await saveLatency(model, latencyMs, true, isFallback, res.status, guildId);
   return res.json();
 }
 
@@ -61,11 +73,10 @@ function getOpenRouterClient() {
   _client = {
     chat: {
       completions: {
-        async create({ model, messages, max_tokens }) {
-          // Try primary model first
+        async create({ model, messages, max_tokens, guildId }) {
           let primaryErr;
           try {
-            return await callOpenRouter(apiKey, model, messages, max_tokens);
+            return await callOpenRouter(apiKey, model, messages, max_tokens, guildId, false);
           } catch (err) {
             primaryErr = err;
             const shouldFallback = FALLBACK_ON_STATUS.has(err.status);
@@ -73,11 +84,10 @@ function getOpenRouterClient() {
             console.warn(`[OpenRouter] Modèle "${model}" indisponible (${err.status}) — tentative avec fallback gratuit…`);
           }
 
-          // Try each free fallback model in order
           for (const fallback of FALLBACK_MODELS) {
             if (fallback === model) continue;
             try {
-              const result = await callOpenRouter(apiKey, fallback, messages, max_tokens);
+              const result = await callOpenRouter(apiKey, fallback, messages, max_tokens, guildId, true);
               console.log(`[OpenRouter] Fallback réussi avec "${fallback}"`);
               result._fallbackModel = fallback;
               await logFallback(model, fallback, primaryErr.status ?? primaryErr.message);
