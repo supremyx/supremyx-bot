@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent } from "../hooks/useMatchNotifications";
+import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent, IaFallbackEvent } from "../hooks/useMatchNotifications";
 
 const AUTO_DISMISS_MS = 15_000;
 
@@ -31,6 +31,18 @@ function NotifContent({ notif }: { notif: Notification }) {
       </div>
     );
   }
+  if (notif.type === "iaFallback") {
+    const f = notif.data as IaFallbackEvent;
+    const short = (m: string) => m.split("/").pop()?.replace(":free", "") ?? m;
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-bold text-sm">⚡ Fallback IA — <span style={{ color: "#f97316" }}>{short(f.primaryModel)}</span> indisponible</span>
+        <span className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+          Basculement sur "{short(f.fallbackModel)}" · Code {f.reason}
+        </span>
+      </div>
+    );
+  }
   const t = notif.data as TournamentEndEvent;
   return (
     <div className="flex flex-col gap-0.5">
@@ -45,6 +57,7 @@ function NotifContent({ notif }: { notif: Notification }) {
 function accentColor(type: Notification["type"]) {
   if (type === "match")           return "#d4963a";
   if (type === "tournamentStart") return "#34d399";
+  if (type === "iaFallback")      return "#f97316";
   return "#facc15";
 }
 

@@ -855,15 +855,21 @@ router.get('/events', (req, res) => {
     res.write(`event: endTournament\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
+  const onIaFallback = (data) => {
+    res.write(`event: iaFallback\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
   eventBus.on('newMatch', onMatch);
   eventBus.on('newTournament', onTournamentStart);
   eventBus.on('endTournament', onTournamentEnd);
+  eventBus.on('iaFallback', onIaFallback);
 
   req.on('close', () => {
     clearInterval(heartbeat);
     eventBus.off('newMatch', onMatch);
     eventBus.off('newTournament', onTournamentStart);
     eventBus.off('endTournament', onTournamentEnd);
+    eventBus.off('iaFallback', onIaFallback);
   });
 });
 
@@ -1273,6 +1279,19 @@ router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /ia/fallbacks — historique des fallbacks IA ──────────────────────────
+router.get('/ia/fallbacks', publicLimiter, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const entries = await StaffLogEntry.find({ category: 'ia-fallback' })
+      .sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({ success: true, total: entries.length, fallbacks: entries });
+  } catch (err) {
+    console.error('[API /ia/fallbacks]', err);
+    return res.status(500).json({ error: 'Erreur interne' });
   }
 });
 

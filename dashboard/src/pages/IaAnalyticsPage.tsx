@@ -115,8 +115,10 @@ export default function IaAnalyticsPage() {
   const [loadingU, setLoadingU]   = useState(true);
   const [loadingH, setLoadingH]   = useState(true);
   const [loadingC, setLoadingC]   = useState(false);
+  const [fallbacks, setFallbacks] = useState<{ _id: string; message: string; createdAt: string }[]>([]);
+  const [loadingF, setLoadingF]   = useState(false);
   const [days, setDays]           = useState(7);
-  const [tab, setTab]             = useState<"overview" | "history" | "config">("overview");
+  const [tab, setTab]             = useState<"overview" | "history" | "fallbacks" | "config">("overview");
 
   const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
   const [quotaInput, setQuotaInput]       = useState<string>("0");
@@ -140,6 +142,15 @@ export default function IaAnalyticsPage() {
       .then(d => { setHistory(d); setLoadingH(false); })
       .catch(() => setLoadingH(false));
   }, [days]);
+
+  useEffect(() => {
+    if (tab !== "fallbacks") return;
+    setLoadingF(true);
+    fetch(apiUrl("/api/ia/fallbacks?limit=100"))
+      .then(r => r.json())
+      .then(d => { setFallbacks(d.fallbacks ?? []); setLoadingF(false); })
+      .catch(() => setLoadingF(false));
+  }, [tab]);
 
   useEffect(() => {
     if (tab !== "config") return;
@@ -222,7 +233,7 @@ export default function IaAnalyticsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
-        {(["overview", "history", "config"] as const).map(t => (
+        {(["overview", "history", "fallbacks", "config"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer"
             style={{
@@ -230,7 +241,7 @@ export default function IaAnalyticsPage() {
               color:      tab === t ? "var(--foreground)" : "var(--muted-foreground)",
               boxShadow:  tab === t ? "0 1px 4px rgba(0,0,0,0.3)" : "none",
             }}>
-            {{ overview: "📊 Vue d'ensemble", history: "📋 Historique", config: "⚙️ Configuration" }[t]}
+            {{ overview: "📊 Vue d'ensemble", history: "📋 Historique", fallbacks: "⚡ Fallbacks", config: "⚙️ Configuration" }[t]}
           </button>
         ))}
       </div>
@@ -437,6 +448,72 @@ export default function IaAnalyticsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── FALLBACKS ────────────────────────────────────────────────────── */}
+      {tab === "fallbacks" && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div>
+              <h2 className="font-bold">⚡ Historique des fallbacks IA</h2>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                Déclenchés quand le modèle principal est indisponible (429, 500…)
+              </p>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-full font-bold"
+              style={{ background: "rgba(249,115,22,0.12)", color: "#f97316", border: "1px solid rgba(249,115,22,0.3)" }}>
+              {fallbacks.length} entrée{fallbacks.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {loadingF && (
+            <div className="py-16 text-center text-sm animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>
+          )}
+
+          {!loadingF && fallbacks.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: "var(--muted-foreground)" }}>
+              <span className="text-4xl">✅</span>
+              <p className="text-sm text-center">Aucun fallback enregistré.<br />Tous les appels IA ont abouti sur le modèle principal.</p>
+            </div>
+          )}
+
+          {!loadingF && fallbacks.length > 0 && (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs" style={{ borderBottom: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
+                  <th className="py-2.5 px-5 text-left">Date</th>
+                  <th className="py-2.5 px-5 text-left">Détail</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fallbacks.map((f, i) => {
+                  const match = f.message.match(/"([^"]+)" indisponible \(([^)]+)\) → basculement sur "([^"]+)"/);
+                  const primary  = match?.[1] ?? "?";
+                  const reason   = match?.[2] ?? "?";
+                  const fallback = match?.[3] ?? "?";
+                  const short = (m: string) => m.split("/").pop()?.replace(":free", "") ?? m;
+                  return (
+                    <tr key={f._id} style={{ borderBottom: "1px solid var(--border)", background: i % 2 !== 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                      <td className="py-3 px-5 text-xs shrink-0 whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>
+                        {new Date(f.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                        {" "}
+                        {new Date(f.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      <td className="py-3 px-5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}>{short(primary)}</span>
+                          <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>→</span>
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>{short(fallback)}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(249,115,22,0.1)", color: "#f97316" }}>code {reason}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       )}

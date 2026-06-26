@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { apiUrl } from "../lib/api";
 
-export type NotifType = "match" | "tournamentStart" | "tournamentEnd";
+export type NotifType = "match" | "tournamentStart" | "tournamentEnd" | "iaFallback";
 
 export interface MatchEvent {
   team: string;
@@ -23,6 +23,13 @@ export interface TournamentEndEvent {
   winnerPts: number;
   matchCount: number;
   endedBy: string;
+}
+
+export interface IaFallbackEvent {
+  primaryModel: string;
+  fallbackModel: string;
+  reason: string | number;
+  date: string;
 }
 
 export interface Notification {
@@ -62,6 +69,14 @@ function showTournamentEndToast(t: TournamentEndEvent) {
   toast(`🏆 Tournoi terminé — ${t.name}`, {
     description: `${winnerLine}  ·  ${t.matchCount} match${t.matchCount > 1 ? "s" : ""} joué${t.matchCount > 1 ? "s" : ""}`,
     duration: 12000,
+  });
+}
+
+function showIaFallbackToast(f: IaFallbackEvent) {
+  const short = (m: string) => m.split("/").pop()?.replace(":free", "") ?? m;
+  toast.warning(`⚡ Fallback IA déclenché`, {
+    description: `"${short(f.primaryModel)}" indisponible (${f.reason}) → basculement sur "${short(f.fallbackModel)}"`,
+    duration: 10000,
   });
 }
 
@@ -112,6 +127,14 @@ export function useMatchNotifications() {
           const data: TournamentEndEvent = JSON.parse(e.data);
           showTournamentEndToast(data);
           push("tournamentEnd", data);
+        } catch { /* ignore */ }
+      });
+
+      es.addEventListener("iaFallback", (e) => {
+        try {
+          const data: IaFallbackEvent = JSON.parse(e.data);
+          showIaFallbackToast(data);
+          push("iaFallback", data);
         } catch { /* ignore */ }
       });
 

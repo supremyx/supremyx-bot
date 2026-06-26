@@ -1,3 +1,5 @@
+const eventBus = require('./eventBus');
+
 // Free fallback models tried in order when the primary model fails
 const FALLBACK_MODELS = [
   'google/gemini-2.0-flash-exp:free',
@@ -32,6 +34,25 @@ async function callOpenRouter(apiKey, model, messages, max_tokens) {
   return res.json();
 }
 
+async function logFallback(primaryModel, fallbackModel, reason) {
+  try {
+    const StaffLogEntry = require('../database/models/StaffLogEntry');
+    await StaffLogEntry.create({
+      message: `⚡ Fallback IA : "${primaryModel}" indisponible (${reason}) → basculement sur "${fallbackModel}"`,
+      category: 'ia-fallback',
+    });
+  } catch (e) {
+    console.warn('[OpenRouter] Impossible de logger le fallback:', e.message);
+  }
+
+  eventBus.emit('iaFallback', {
+    primaryModel,
+    fallbackModel,
+    reason,
+    date: new Date().toISOString(),
+  });
+}
+
 function getOpenRouterClient() {
   if (_client) return _client;
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -42,23 +63,24 @@ function getOpenRouterClient() {
       completions: {
         async create({ model, messages, max_tokens }) {
           // Try primary model first
+          let primaryErr;
           try {
             return await callOpenRouter(apiKey, model, messages, max_tokens);
-          } catch (primaryErr) {
-            const shouldFallback = FALLBACK_ON_STATUS.has(primaryErr.status);
-            if (!shouldFallback) throw primaryErr;
-
-            console.warn(`[OpenRouter] Modèle "${model}" indisponible (${primaryErr.status}) — tentative avec fallback gratuit…`);
+          } catch (err) {
+            primaryErr = err;
+            const shouldFallback = FALLBACK_ON_STATUS.has(err.status);
+            if (!shouldFallback) throw err;
+            console.warn(`[OpenRouter] Modèle "${model}" indisponible (${err.status}) — tentative avec fallback gratuit…`);
           }
 
           // Try each free fallback model in order
           for (const fallback of FALLBACK_MODELS) {
-            if (fallback === model) continue; // skip if already the same
+            if (fallback === model) continue;
             try {
               const result = await callOpenRouter(apiKey, fallback, messages, max_tokens);
               console.log(`[OpenRouter] Fallback réussi avec "${fallback}"`);
-              // Tag the response so callers know a fallback was used
               result._fallbackModel = fallback;
+              await logFallback(model, fallback, primaryErr.status ?? primaryErr.message);
               return result;
             } catch (fallbackErr) {
               console.warn(`[OpenRouter] Fallback "${fallback}" échoué (${fallbackErr.status ?? fallbackErr.message})`);
