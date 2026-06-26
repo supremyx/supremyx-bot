@@ -44,7 +44,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd dashboard && PORT=5000 BASE_PATH=/ npx vite --config vite.config.ts --host 0.0.0.0"
+args = "cd dashboard && PORT=5000 BASE_PATH=/ node_modules/.bin/vite --config vite.config.ts --host 0.0.0.0"
 waitForPort = 5000
 
 [[workflows.workflow]]
