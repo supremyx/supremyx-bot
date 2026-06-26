@@ -87,6 +87,7 @@ const HELP_TEXT = [
   '',
   '**🕐 Planification :**',
   '`!embed programmer #salon | Titre | Description | couleur | YYYY-MM-DD HH:MM`',
+  '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',
   '`!embed programmes` — voir les embeds en attente de publication',
   '`!embed déprogrammer <id>` — annuler un embed planifié',
   '',
@@ -565,7 +566,14 @@ module.exports = (client) => {
             const ts      = Math.floor(doc.scheduledAt.getTime() / 1000);
             const shortId = doc._id.toString().slice(-6);
             const titre   = doc.title ? `**${doc.title}**` : '*(sans titre)*';
-            return `**${i + 1}.** \`${shortId}\` — ${titre} → <#${doc.channelId}>\n↳ <t:${ts}:F> (<t:${ts}:R>) · par ${doc.createdBy}`;
+            const richTags = [
+              doc.thumbnailUrl ? '🖼️' : '',
+              doc.authorName   ? '👤' : '',
+              doc.imageUrl     ? '📷' : '',
+              doc.footer       ? '📄' : '',
+            ].filter(Boolean).join('');
+            const richLabel = richTags ? ` \`[riche: ${richTags}]\`` : '';
+            return `**${i + 1}.** \`${shortId}\`${richLabel} — ${titre} → <#${doc.channelId}>\n↳ <t:${ts}:F> (<t:${ts}:R>) · par ${doc.createdBy}`;
           }).join('\n\n'))
           .setFooter({ text: `${pending.length} embed(s) · !embed déprogrammer <id> pour annuler` })
           .setTimestamp();
@@ -605,24 +613,34 @@ module.exports = (client) => {
 
       // ── !embed riche ───────────────────────────────────────────────────────
       if (sub === 'riche') {
-        const isPreview = args?.startsWith('preview');
+        const isPreview    = args?.startsWith('preview');
+        const isProgrammer = args?.startsWith('programmer');
         const rest = isPreview
           ? args.replace(/^preview\s*\|?\s*/, '').trim()
-          : (args || '');
+          : isProgrammer
+            ? args.replace(/^programmer\s*\|?\s*/, '').trim()
+            : (args || '');
 
-        if (!rest) return message.reply([
-          '**Usage :** `!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
+        const RICHE_USAGE = [
+          '**✨ Embed riche — Publication immédiate :**',
+          '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
+          '`!embed riche preview | #salon | ...` — prévisualiser avant publication',
           '',
-          '> **Champs optionnels :** tous sauf #salon.',
+          '**🕐 Embed riche — Planifié :**',
+          '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',
+          '',
+          '> **Champs optionnels :** tous sauf #salon (et la date pour la planification).',
           '> Dans la description : `[texte](https://url)` crée un lien cliquable.',
           '',
-          '**Exemple (lien vers réseaux) :**',
+          '**Exemple :**',
           '```',
-          '!embed riche #follow-us | 🤝 Let\'s get social!',
-          '  | ♡ [TELEGRAM](https://t.me/mongroupe)\\n♡ [INSTAGRAM](https://instagram.com/moi)',
-          '  | or | https://mon-image.jpg | https://mon-logo.png | SUPREMYX CI',
+          '!embed riche programmer #annonces | 🏆 Tournoi | Inscriptions ouvertes !',
+          '  | or | https://img.jpg | https://logo.png | SUPREMYX CI | | Bonne chance à tous',
+          '  | 2025-08-01 20:00',
           '```',
-        ].join('\n'));
+        ].join('\n');
+
+        if (!rest) return message.reply(RICHE_USAGE);
 
         const parts        = rest.split('|').map(p => p.trim());
         const channelArg   = parts[0] || '';
@@ -634,12 +652,92 @@ module.exports = (client) => {
         const authorName   = parts[6] || '';
         const authorIcon   = parts[7] || '';
         const footer       = parts[8] || '';
+        const dateRaw      = parts[9] || '';   // uniquement pour la planification
 
         if (!channelArg) return message.reply('❌ Précise le salon cible. Ex : `!embed riche #annonces | ...`');
 
         const target = resolveTarget(message, channelArg);
         if (!target) return message.reply('❌ Salon introuvable. Mentionne-le avec `#` ou écris `ici`.');
 
+        // ── Mode planification ──────────────────────────────────────────────
+        if (isProgrammer) {
+          if (!dateRaw) return message.reply(
+            '❌ La date est requise pour planifier.\n' +
+            '**Format :** `YYYY-MM-DD HH:MM` (ex : `2025-08-01 20:00`)\n' +
+            '→ Ajoute-la comme **10ᵉ champ** séparé par `|`.'
+          );
+
+          const match = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$/);
+          if (!match) return message.reply('❌ Format de date invalide. Utilise `YYYY-MM-DD HH:MM` (ex : `2025-08-01 20:00`)');
+
+          const [, y, mo, d, h, mi] = match;
+          const scheduledAt = new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi));
+          if (isNaN(scheduledAt.getTime())) return message.reply('❌ Date invalide.');
+          if (scheduledAt <= new Date()) return message.reply('❌ La date doit être dans le futur.');
+
+          // Prévisualisation de l'embed avant de sauvegarder
+          const previewEmbed = new EmbedBuilder().setColor(parseColor(colorRaw)).setTimestamp();
+          if (title)        previewEmbed.setTitle(title);
+          if (desc)         previewEmbed.setDescription(desc);
+          if (imageUrl)     previewEmbed.setImage(imageUrl);
+          if (thumbnailUrl) previewEmbed.setThumbnail(thumbnailUrl);
+          if (footer)       previewEmbed.setFooter({ text: footer });
+          if (authorName)   previewEmbed.setAuthor({ name: authorName, iconURL: authorIcon || undefined });
+
+          const confirmed = await awaitConfirmation(message, previewEmbed);
+          if (!confirmed) return message.reply('❌ Planification annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+
+          const doc = await ScheduledEmbed.create({
+            guildId:      message.guild.id,
+            channelId:    target.id,
+            title,
+            description:  desc,
+            color:        parseColor(colorRaw),
+            imageUrl,
+            thumbnailUrl,
+            authorName,
+            authorIconUrl: authorIcon,
+            footer,
+            scheduledAt,
+            createdBy:    message.author.tag,
+          });
+
+          const shortId = doc._id.toString().slice(-6);
+          const ts      = Math.floor(scheduledAt.getTime() / 1000);
+
+          const confirm = new EmbedBuilder()
+            .setColor(0x57F287)
+            .setTitle('✅ Embed riche programmé')
+            .addFields(
+              { name: '📍 Salon',       value: `<#${target.id}>`,                    inline: true },
+              { name: '🕐 Publication', value: `<t:${ts}:F> (<t:${ts}:R>)`,          inline: true },
+              { name: '🆔 ID court',    value: `\`${shortId}\``,                     inline: true },
+              { name: '📋 Titre',       value: title        || '*(aucun)*',           inline: true },
+              { name: '👤 Auteur',      value: authorName   || '*(aucun)*',           inline: true },
+              { name: '🖼️ Thumbnail',   value: thumbnailUrl ? '✅ Défini' : '*(aucun)*', inline: true },
+              { name: '📝 Aperçu desc', value: desc.slice(0, 200) || '*(vide)*',     inline: false },
+            )
+            .setFooter({ text: `!embed déprogrammer ${shortId} pour annuler` })
+            .setTimestamp();
+
+          await message.reply({ embeds: [confirm] });
+
+          await staffLog(client, {
+            action: 'embed riche programmer',
+            details: [
+              `**Salon :** <#${target.id}>`,
+              `**Date :** <t:${ts}:F>`,
+              `**Titre :** ${title || '—'}`,
+              `**ID :** \`${shortId}\``,
+              thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}` : null,
+              authorName   ? `**Auteur :** ${authorName}`      : null,
+            ].filter(Boolean).join('\n'),
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        // ── Mode publication immédiate ──────────────────────────────────────
         const embed = new EmbedBuilder()
           .setColor(parseColor(colorRaw))
           .setTimestamp();
@@ -668,10 +766,10 @@ module.exports = (client) => {
           details: [
             `**Salon :** <#${target.id}>`,
             `**Titre :** ${title || '—'}`,
-            imageUrl     ? `**Image :** ${imageUrl}`        : null,
-            thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}` : null,
-            authorName   ? `**Auteur :** ${authorName}`      : null,
-            isPreview    ? '*(prévisualisé)*'                 : null,
+            imageUrl     ? `**Image :** ${imageUrl}`          : null,
+            thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}`   : null,
+            authorName   ? `**Auteur :** ${authorName}`        : null,
+            isPreview    ? '*(prévisualisé)*'                   : null,
           ].filter(Boolean).join('\n'),
           author: message.author.tag,
         });
