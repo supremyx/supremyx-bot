@@ -192,6 +192,7 @@ const CATEGORIES = [
     color: 0x57F287,
     commands: [
       { label: '!aide nouveautes',              description: 'Voir les 10 fichiers de commandes modifiés le plus récemment', subs: [] },
+      { label: '!aide historique',              description: 'Voir l\'historique de tes 5 dernières recherches dans l\'aide', subs: [] },
       { label: '!chercher <terme>',             description: 'Rechercher une commande par mot-clé',                        subs: [] },
       { label: '!repertoire',                   description: 'Répertoire paginé de toutes les commandes du bot (vue compacte)', subs: [] },
       { label: '!absent [message]',             description: 'Passer en mode AFK (bot répond à ta place)',                 subs: [] },

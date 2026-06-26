@@ -179,7 +179,7 @@ const STAFF_CATEGORIES = [
       { label: '!statut',                        description: 'Statut du bot et aperçu des tournois en cours',                  subs: [] },
       { label: '!tempsenligne',                  description: 'Temps de fonctionnement du bot depuis le dernier démarrage',     subs: [] },
       { label: '!commandes',                     description: 'Classement des commandes les plus utilisées sur le serveur',     subs: [] },
-      { label: '!memoire',                       description: 'Utilisation mémoire (RAM) du bot en temps réel',                 subs: [] },
+      { label: '!memoire',                       description: 'Utilisation mémoire (RAM) du bot en temps réel (Staff)',        subs: [] },
       { label: '!donnerxp @membre <quantité>',   description: 'Donner de l\'XP à un membre (Staff)',                            subs: [] },
       { label: '!retirerxp @membre <qté>',       description: 'Retirer de l\'XP à un membre (Staff)',                           subs: [] },
       { label: '!niveau reinitialiser @membre',  description: 'Remettre XP et niveau d\'un membre à zéro (Staff)',              subs: [] },
@@ -209,6 +209,7 @@ const STAFF_CATEGORIES = [
       { label: '!ia quota',                       description: 'Consulter le quota IA journalier restant',                    subs: [] },
       { label: '!ia modele <alias>',              description: 'Changer le modèle IA actif (Staff)',                          subs: ['modele <alias> — Changer de modèle', 'modeles — Voir tous les modèles disponibles'] },
       { label: '!ia quota <valeur>',              description: 'Gérer le quota d\'utilisations IA journalier (Staff)',        subs: ['quota <nombre> — Fixer la limite', 'quota off — Désactiver (illimité)', 'quota reset — Remettre le compteur à zéro', 'quota salon #salon — Salon d\'alerte'] },
+      { label: '!ia fallback',                    description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
     ],
   },
   {
@@ -259,6 +260,7 @@ const STAFF_CATEGORIES = [
       { label: '!regles',                   description: 'Afficher les règles simples du serveur',                              subs: [] },
       { label: '!reglement',               description: 'Afficher le règlement avancé du serveur (sections détaillées)',        subs: [] },
       { label: '!sondage historique',       description: 'Voir l\'historique des sondages terminés sur le serveur',             subs: ['historique — Lister les sondages passés', 'stats — Statistiques globales des sondages'] },
+      { label: '!listenoiree liste',        description: 'Consulter la liste noire des équipes et joueurs bannis',                  subs: ['liste — Voir toutes les entrées', 'verifier <nom> — Vérifier si un nom est blacklisté'] },
     ],
   },
   {
@@ -317,6 +319,7 @@ const STAFF_CATEGORIES = [
       { label: '!embed programmer #salon | Titre | Desc | couleur | YYYY-MM-DD HH:MM', description: 'Programmer la publication d\'un embed à une date précise (Staff)', subs: [] },
       { label: '!embed programmes',           description: 'Voir tous les embeds programmés en attente (Staff)',                subs: [] },
       { label: '!embed déprogrammer <id>',    description: 'Annuler un embed programmé avant sa publication (Staff)',           subs: [] },
+      { label: '!embedplus',                  description: 'Constructeur d\'embed interactif étape par étape via boutons (Staff)',  subs: [] },
     ],
   },
   {
