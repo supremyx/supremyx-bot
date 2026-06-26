@@ -543,7 +543,7 @@ export default function EmbedsProgrammesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
                 { cmd: "!embed riche #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer", desc: "Embed complet (thumbnail, auteur, liens)" },
-                { cmd: "!embed riche preview | #salon | …",              desc: "Prévisualiser avant de publier" },
+                { cmd: "!embed riche aperçu | #salon | …",              desc: "Prévisualiser avant de publier" },
                 { cmd: "!embed programmer #salon | Titre | Desc | couleur | YYYY-MM-DD HH:MM", desc: "Programmer un embed simple" },
                 { cmd: "!embed déprogrammer <id>",                       desc: "Annuler un embed planifié" },
               ].map(({ cmd, desc }) => (

@@ -974,8 +974,8 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
-    // ── !ia fallback ───────────────────────────────────────────────────────────
-    if (sub === 'fallback') {
+    // ── !ia basculement ────────────────────────────────────────────────────────
+    if (sub === 'basculement') {
       const apiKey = process.env.OPENROUTER_API_KEY;
       if (!apiKey) return message.reply('❌ Clé OpenRouter manquante.');
 
@@ -1023,7 +1023,7 @@ module.exports = (client) => {
       const lines = modelEntries.map(([alias, m], i) => {
         const r = results[i].status === 'fulfilled' ? results[i].value : { ok: false, status: '?' };
         const isPrimary  = alias === current ? ' ← **principal**' : '';
-        const isFallback = FALLBACK_MODELS.includes(m.id) ? ' *(fallback)*' : '';
+        const isFallback = FALLBACK_MODELS.includes(m.id) ? ' *(secours)*' : '';
 
         if (r.ok) {
           const dot = r.latency < 1500 ? '🟢' : r.latency < 3500 ? '🟡' : '🟠';
@@ -1045,7 +1045,7 @@ module.exports = (client) => {
         .addFields(
           { name: '🎯 Modèle principal', value: `${currentModel.emoji} **${currentModel.label}**`, inline: true },
           { name: '✅ Disponibles',      value: `**${available}** / ${modelEntries.length}`,       inline: true },
-          { name: '🔄 Fallbacks config', value: `**${FALLBACK_MODELS.length}** modèle(s)`,         inline: true },
+          { name: '🔄 Modèles de secours', value: `**${FALLBACK_MODELS.length}** modèle(s)`,        inline: true },
         )
         .setFooter({ text: `Testé par ${message.author.username} · Timeout : ${TEST_TIMEOUT_MS / 1000}s/modèle · 🟢<1.5s 🟡<3.5s 🟠>3.5s` })
         .setTimestamp();
@@ -1068,8 +1068,8 @@ module.exports = (client) => {
         { upsert: true, new: true }
       );
 
-      // !ia alerte status
-      if (!action || action === 'status') {
+      // !ia alerte statut
+      if (!action || action === 'statut') {
         const ch = config.perfAlertChannelId ? `<#${config.perfAlertChannelId}>` : '❌ Non configuré';
         const embed = new EmbedBuilder()
           .setTitle('📡 Alertes performance IA')

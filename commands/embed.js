@@ -65,18 +65,18 @@ const HELP_TEXT = [
   '**📤 Publier un embed dans un salon :**',
   '`!embed envoyer #salon | Titre | Description | couleur`',
   '`!embed envoyer ici | Titre | Description | couleur`',
-  '`!embed envoyer preview | #salon | Titre | Description | couleur` — prévisualiser avant publication',
+  '`!embed envoyer aperçu | #salon | Titre | Description | couleur` — prévisualiser avant publication',
   '',
   '**🔘 Embed avec boutons URL :**',
   '`!embed boutons #salon | Titre | Description | Texte >> https://... | couleur`',
-  '`!embed boutons preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+  '`!embed boutons aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
   '',
   '**⚙️ Embed avancé (dans le salon courant) :**',
   '`!embed avancé Titre | Description | couleur | image_url | pied de page`',
   '',
   '**✨ Embed riche (avec thumbnail, auteur, liens) :**',
   '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
-  '`!embed riche preview | #salon | ...` — prévisualiser avant publication',
+  '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
   'Dans la description, utilise `[texte](https://lien)` pour créer des liens cliquables.',
   '',
   '**📋 Gérer les embeds existants :**',
@@ -119,12 +119,12 @@ module.exports = (client) => {
       // ── !embed envoyer ─────────────────────────────────────────────────────
       if (sub === 'envoyer') {
         if (!args) return message.reply(
-          '**Usage :** `!embed envoyer [preview] #salon | Titre | Description | couleur`\n' +
+          '**Usage :** `!embed envoyer [aperçu] #salon | Titre | Description | couleur`\n' +
           '`!embed envoyer ici | Titre | Description | couleur`'
         );
 
         const parts = args.split('|').map(p => p.trim());
-        const isPreview  = parts[0].toLowerCase() === 'preview';
+        const isPreview  = parts[0].toLowerCase() === 'aperçu';
         const channelArg = isPreview ? parts[1] : parts[0];
         const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
         const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
@@ -162,12 +162,12 @@ module.exports = (client) => {
       // ── !embed boutons ─────────────────────────────────────────────────────
       if (sub === 'boutons') {
         if (!args) return message.reply(
-          '**Usage :** `!embed boutons [preview] #salon | Titre | Description | Texte >> https://... | couleur`\n' +
+          '**Usage :** `!embed boutons [aperçu] #salon | Titre | Description | Texte >> https://... | couleur`\n' +
           'Maximum **5 boutons**. URLs commençant par `https://`.'
         );
 
         const parts = args.split('|').map(p => p.trim());
-        const isPreview  = parts[0].toLowerCase() === 'preview';
+        const isPreview  = parts[0].toLowerCase() === 'aperçu';
         const channelArg = isPreview ? parts[1] : parts[0];
         const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
         const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
@@ -613,10 +613,10 @@ module.exports = (client) => {
 
       // ── !embed riche ───────────────────────────────────────────────────────
       if (sub === 'riche') {
-        const isPreview    = args?.startsWith('preview');
+        const isPreview    = args?.startsWith('aperçu');
         const isProgrammer = args?.startsWith('programmer');
         const rest = isPreview
-          ? args.replace(/^preview\s*\|?\s*/, '').trim()
+          ? args.replace(/^aperçu\s*\|?\s*/, '').trim()
           : isProgrammer
             ? args.replace(/^programmer\s*\|?\s*/, '').trim()
             : (args || '');
@@ -624,7 +624,7 @@ module.exports = (client) => {
         const RICHE_USAGE = [
           '**✨ Embed riche — Publication immédiate :**',
           '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
-          '`!embed riche preview | #salon | ...` — prévisualiser avant publication',
+          '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
           '',
           '**🕐 Embed riche — Planifié :**',
           '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',

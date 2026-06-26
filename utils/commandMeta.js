@@ -47,7 +47,7 @@ module.exports = {
   'gitstatus.js':      { commands: ['!statutgit'],                                                                                            staff: true },
   'giveaway.js':       { commands: ['!concours <durée> <prix>', '!retirer <messageId>'],                                                      staff: true },
   'history.js':        { commands: ['!historique <équipe>'],                                                                                  staff: false },
-  'ia.js':             { commands: ['!ia <question>', '!ia analyser|predire|conseil|resume|rapport|entrainement|strategie|bilan|depistage|debrief|historique|reinitialiser|modeles|modele|statistiques|quota'], staff: 'mixed' },
+  'ia.js':             { commands: ['!ia <question>', '!ia analyser|predire|conseil|resume|rapport|entrainement|strategie|bilan|depistage|debrief|historique|reinitialiser|modeles|modele|statistiques|quota|basculement'], staff: 'mixed' },
   'inscription.js':    { commands: ['!inscription ouvrir|fermer|liste|valider|refuser|max|salon|annonces|reinitialiser'],                    staff: true },
   'inscrire.js':       { commands: ['!inscrire <équipe> | <J1,J2,…>'],                                                                       staff: false },
   'level.js':          { commands: ['!niveau [@membre]', '!classniveau', '!classxp', '!salonniveaux #salon'],                                staff: 'mixed' },

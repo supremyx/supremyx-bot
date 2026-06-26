@@ -141,18 +141,18 @@ module.exports = (client) => {
         '`!embed ici | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
         '**Prévisualiser avant de publier :**',
-        '`!embed preview | #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
+        '`!embed aperçu | #salon | Titre | Texte avec [lien](https://url.com) | couleur`',
         '',
         '**Avec boutons cliquables :**',
         '`!embedbutton #salon | Titre | Description | Texte >> https://... | couleur`',
-        '`!embedbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!embedbutton aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
         '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
       ].join('\n'));
     }
 
     const parts = rest.split('|').map(p => p.trim());
-    const isPreview = parts[0].toLowerCase() === 'preview';
+    const isPreview = parts[0].toLowerCase() === 'aperçu';
     const channelArg = isPreview ? parts[1] : parts[0];
     const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
     const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
@@ -204,7 +204,7 @@ module.exports = (client) => {
       return message.reply([
         '**Usage `!embedbutton` :**',
         '`!embedbutton #salon | Titre | Description | Texte >> https://... | couleur`',
-        '`!embedbutton preview | #salon | Titre | Description | Texte >> https://... | couleur`',
+        '`!embedbutton aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
         '',
         '**Exemple :**',
         '`!embedbutton #annonces | 📋 Inscription | Clique pour t\'inscrire. | S\'inscrire >> https://supremyx.xyz | or`',
@@ -214,7 +214,7 @@ module.exports = (client) => {
     }
 
     const parts = rest.split('|').map(p => p.trim());
-    const isPreview  = parts[0].toLowerCase() === 'preview';
+    const isPreview  = parts[0].toLowerCase() === 'aperçu';
     const channelArg = isPreview ? parts[1] : parts[0];
     const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
     const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');

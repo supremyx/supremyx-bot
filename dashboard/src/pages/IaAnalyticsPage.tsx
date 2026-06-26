@@ -241,7 +241,7 @@ export default function IaAnalyticsPage() {
               color:      tab === t ? "var(--foreground)" : "var(--muted-foreground)",
               boxShadow:  tab === t ? "0 1px 4px rgba(0,0,0,0.3)" : "none",
             }}>
-            {{ overview: "📊 Vue d'ensemble", history: "📋 Historique", fallbacks: "⚡ Fallbacks", config: "⚙️ Configuration" }[t]}
+            {{ overview: "📊 Vue d'ensemble", history: "📋 Historique", fallbacks: "⚡ Basculements", config: "⚙️ Configuration" }[t]}
           </button>
         ))}
       </div>
@@ -457,7 +457,7 @@ export default function IaAnalyticsPage() {
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
             <div>
-              <h2 className="font-bold">⚡ Historique des fallbacks IA</h2>
+              <h2 className="font-bold">⚡ Historique des basculements IA</h2>
               <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                 Déclenchés quand le modèle principal est indisponible (429, 500…)
               </p>
@@ -475,7 +475,7 @@ export default function IaAnalyticsPage() {
           {!loadingF && fallbacks.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: "var(--muted-foreground)" }}>
               <span className="text-4xl">✅</span>
-              <p className="text-sm text-center">Aucun fallback enregistré.<br />Tous les appels IA ont abouti sur le modèle principal.</p>
+              <p className="text-sm text-center">Aucun basculement enregistré.<br />Tous les appels IA ont abouti sur le modèle principal.</p>
             </div>
           )}
 

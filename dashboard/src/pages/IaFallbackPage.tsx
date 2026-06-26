@@ -161,7 +161,7 @@ export default function IaFallbackPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black flex items-center gap-2">
-            <span>⚡</span> Disponibilité IA &amp; Fallback
+            <span>⚡</span> Disponibilité IA &amp; Basculement
           </h1>
           <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
             Monitoring en temps réel des modèles OpenRouter et historique des latences
@@ -229,8 +229,8 @@ export default function IaFallbackPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: "Appels totaux",    value: data.totalCalls.toLocaleString("fr-FR"), color: "var(--primary)", icon: "🔗" },
-              { label: "Fallbacks",        value: data.totalFallbacks.toLocaleString("fr-FR"), color: "#f97316", icon: "⚡" },
-              { label: "Taux fallback",    value: `${fallbackRate}%`, color: data.totalFallbacks > 0 ? "#f97316" : "#22c55e", icon: "📉" },
+              { label: "Basculements",        value: data.totalFallbacks.toLocaleString("fr-FR"), color: "#f97316", icon: "⚡" },
+              { label: "Taux basculement",    value: `${fallbackRate}%`, color: data.totalFallbacks > 0 ? "#f97316" : "#22c55e", icon: "📉" },
               { label: "Latence moy.",     value: fmtMs(avgGlobalLatency), color: "#3b82f6", icon: "⏱️" },
             ].map(({ label, value, color, icon }) => (
               <div key={label} className="rounded-xl p-4 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
@@ -392,7 +392,7 @@ export default function IaFallbackPage() {
           <div className="rounded-xl p-4" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
             <h2 className="font-bold text-sm mb-1">Activité horaire</h2>
             <p className="text-xs mb-4" style={{ color: "var(--muted-foreground)" }}>
-              Appels normaux vs fallbacks par heure
+              Appels normaux vs basculements par heure
             </p>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={data.hourlyActivity} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -404,7 +404,7 @@ export default function IaFallbackPage() {
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="calls" name="Appels" fill="var(--primary)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="fallbacks" name="Fallbacks" fill="#f97316" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="fallbacks" name="Basculements" fill="#f97316" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

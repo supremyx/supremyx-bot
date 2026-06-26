@@ -168,7 +168,7 @@ const CATEGORIES = [
       { label: '!ia modele <alias>',     description: 'Changer de modèle IA',                     subs: [] },
       { label: '!ia statistiques',       description: 'Statistiques d\'utilisation de l\'IA',      subs: [] },
       { label: '!ia quota',              description: 'Consulter le quota IA journalier restant',   subs: [] },
-      { label: '!ia fallback',           description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
+      { label: '!ia basculement',         description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
     ],
   },
   {
