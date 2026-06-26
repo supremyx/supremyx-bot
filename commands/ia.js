@@ -974,6 +974,85 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
+    // ── !ia fallback ───────────────────────────────────────────────────────────
+    if (sub === 'fallback') {
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      if (!apiKey) return message.reply('❌ Clé OpenRouter manquante.');
+
+      const { FALLBACK_MODELS } = require('../utils/openrouterClient');
+      const TEST_TIMEOUT_MS = 8000;
+      const TEST_PROMPT = [{ role: 'user', content: 'Réponds uniquement par "OK".' }];
+
+      const thinking = await message.channel.send(
+        `⏱️ Test de **${Object.keys(MODELS).length}** modèles en cours…`
+      );
+
+      async function testModel(modelId) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), TEST_TIMEOUT_MS);
+        const start = Date.now();
+        try {
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://discord.com',
+              'X-Title': 'SUPREMYX Bot',
+            },
+            body: JSON.stringify({ model: modelId, messages: TEST_PROMPT, max_tokens: 5 }),
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          const latency = Date.now() - start;
+          if (res.ok) return { ok: true, latency };
+          return { ok: false, status: res.status };
+        } catch (err) {
+          clearTimeout(timer);
+          if (err.name === 'AbortError') return { ok: false, status: 'timeout' };
+          return { ok: false, status: err.status ?? '?' };
+        }
+      }
+
+      const modelEntries = Object.entries(MODELS);
+      const results = await Promise.allSettled(modelEntries.map(([, m]) => testModel(m.id)));
+
+      const { alias: current } = await getGuildModel(message.guild.id);
+      const currentModel = MODELS[current] ?? MODELS[DEFAULT_MODEL];
+
+      const lines = modelEntries.map(([alias, m], i) => {
+        const r = results[i].status === 'fulfilled' ? results[i].value : { ok: false, status: '?' };
+        const isPrimary  = alias === current ? ' ← **principal**' : '';
+        const isFallback = FALLBACK_MODELS.includes(m.id) ? ' *(fallback)*' : '';
+
+        if (r.ok) {
+          const dot = r.latency < 1500 ? '🟢' : r.latency < 3500 ? '🟡' : '🟠';
+          return `${dot} **${m.label}**${isPrimary}${isFallback} — \`${r.latency} ms\``;
+        } else {
+          const reason = r.status === 'timeout'
+            ? `⏱️ timeout (>${TEST_TIMEOUT_MS / 1000}s)`
+            : `code **${r.status}**`;
+          return `🔴 **${m.label}**${isPrimary}${isFallback} — indisponible (${reason})`;
+        }
+      });
+
+      const available = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
+
+      const embed = new EmbedBuilder()
+        .setColor(available >= Object.keys(MODELS).length / 2 ? 0x57F287 : available > 0 ? 0xFEE75C : 0xED4245)
+        .setAuthor({ name: 'SUPREMYX IA · Statut des modèles en temps réel', iconURL: client.user.displayAvatarURL() })
+        .setDescription(lines.join('\n'))
+        .addFields(
+          { name: '🎯 Modèle principal', value: `${currentModel.emoji} **${currentModel.label}**`, inline: true },
+          { name: '✅ Disponibles',      value: `**${available}** / ${modelEntries.length}`,       inline: true },
+          { name: '🔄 Fallbacks config', value: `**${FALLBACK_MODELS.length}** modèle(s)`,         inline: true },
+        )
+        .setFooter({ text: `Testé par ${message.author.username} · Timeout : ${TEST_TIMEOUT_MS / 1000}s/modèle · 🟢<1.5s 🟡<3.5s 🟠>3.5s` })
+        .setTimestamp();
+
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 
@@ -984,6 +1063,7 @@ module.exports = (client) => {
         '❓ Utilisation : `!ia <ta question>`\n' +
         'Exemple : `!ia Qui est le meilleur joueur de l\'équipe ?`\n\n' +
         `🤖 Modèles : \`!ia modeles\` · Stats : \`!ia statistiques\` · Changer (admin) : \`!ia modele <nom>\`\n` +
+        `🔎 Disponibilité en temps réel : \`!ia fallback\`\n` +
         `Modèles disponibles : ${list}`
       );
     }
