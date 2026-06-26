@@ -28,6 +28,7 @@ const { startRapportHebdo } = require('./utils/rapportHebdo');
 const { startIaBilanManager } = require('./utils/iaBilanManager');
 const { startAutoBackup } = require('./utils/autoBackup');
 const { startBotMonitor } = require('./utils/botMonitor');
+const { startIaMonitor }  = require('./utils/iaMonitor');
 const { setupAntiCrash } = require('./utils/antiCrash');
 require('dotenv').config();
 
@@ -107,6 +108,7 @@ client.once('clientReady', async () => {
   startIaBilanManager(client);
   console.log('📋 Bilan IA hebdomadaire activé (dimanche 20h30)');
   startBotMonitor(client, 5 * 60 * 1000);
+  startIaMonitor(client, 5 * 60 * 1000);
   startAutoBackup(client, 24);
 });
 

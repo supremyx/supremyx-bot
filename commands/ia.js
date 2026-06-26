@@ -1053,6 +1053,77 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
+    // ── !ia alerte ─────────────────────────────────────────────────────────────
+    if (sub === 'alerte' || sub === 'alerte-perf') {
+      if (!message.member.permissions.has('Administrator')) {
+        return message.reply('❌ Seuls les administrateurs peuvent configurer les alertes de performance.');
+      }
+
+      const args = content.split(' ').slice(2);
+      const action = args[0]?.toLowerCase();
+
+      const config = await IaConfig.findOneAndUpdate(
+        { guildId },
+        {},
+        { upsert: true, new: true }
+      );
+
+      // !ia alerte status
+      if (!action || action === 'status') {
+        const ch = config.perfAlertChannelId ? `<#${config.perfAlertChannelId}>` : '❌ Non configuré';
+        const embed = new EmbedBuilder()
+          .setTitle('📡 Alertes performance IA')
+          .setColor(0xFF8C00)
+          .addFields(
+            { name: '📢 Salon d\'alerte',     value: ch,                                           inline: false },
+            { name: '⏱️ Seuil latence',        value: `${config.latencyThresholdMs ?? 5000} ms`,   inline: true },
+            { name: '❌ Seuil taux d\'échec',  value: `${config.failureRateThreshold ?? 50}%`,     inline: true },
+          )
+          .setDescription('Alertes envoyées automatiquement toutes les **5 minutes** si un modèle dépasse les seuils.')
+          .setFooter({ text: '!ia alerte salon #salon · !ia alerte latence <ms> · !ia alerte echec <pct>' });
+        return message.reply({ embeds: [embed] });
+      }
+
+      // !ia alerte salon #channel
+      if (action === 'salon') {
+        const mentioned = message.mentions.channels.first();
+        if (!mentioned) return message.reply('❌ Mentionne un salon. Ex : `!ia alerte salon #logs-admin`');
+        await IaConfig.findOneAndUpdate({ guildId }, { perfAlertChannelId: mentioned.id }, { upsert: true });
+        return message.reply(`✅ Salon d'alerte IA défini sur ${mentioned}.`);
+      }
+
+      // !ia alerte désactiver
+      if (action === 'désactiver' || action === 'desactiver') {
+        await IaConfig.findOneAndUpdate({ guildId }, { perfAlertChannelId: null }, { upsert: true });
+        return message.reply('✅ Alertes de performance désactivées.');
+      }
+
+      // !ia alerte latence <ms>
+      if (action === 'latence') {
+        const val = parseInt(args[1]);
+        if (isNaN(val) || val < 500) return message.reply('❌ Seuil invalide. Min : 500 ms. Ex : `!ia alerte latence 4000`');
+        await IaConfig.findOneAndUpdate({ guildId }, { latencyThresholdMs: val }, { upsert: true });
+        return message.reply(`✅ Seuil de latence défini à **${val} ms**.`);
+      }
+
+      // !ia alerte echec <pct>
+      if (action === 'echec' || action === 'échec') {
+        const val = parseInt(args[1]);
+        if (isNaN(val) || val < 1 || val > 100) return message.reply('❌ Pourcentage invalide (1-100). Ex : `!ia alerte echec 30`');
+        await IaConfig.findOneAndUpdate({ guildId }, { failureRateThreshold: val }, { upsert: true });
+        return message.reply(`✅ Seuil de taux d'échec défini à **${val}%**.`);
+      }
+
+      return message.reply(
+        '❓ Sous-commandes disponibles :\n' +
+        '`!ia alerte status` — voir la config actuelle\n' +
+        '`!ia alerte salon #salon` — définir le salon d\'alerte\n' +
+        '`!ia alerte latence <ms>` — seuil latence (ex : 4000)\n' +
+        '`!ia alerte echec <pct>` — seuil taux échec (ex : 30)\n' +
+        '`!ia alerte désactiver` — désactiver les alertes'
+      );
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 

@@ -7,7 +7,10 @@ const iaConfigSchema = new mongoose.Schema({
   quotaAlertChannelId: { type: String, default: null },
   debriefChannelId:    { type: String, default: null },
   bilanChannelId:      { type: String, default: null },
-  bilanLastSentAt:     { type: Date,   default: null },
+  bilanLastSentAt:      { type: Date,   default: null },
+  perfAlertChannelId:   { type: String, default: null },
+  latencyThresholdMs:   { type: Number, default: 5000 },
+  failureRateThreshold: { type: Number, default: 50 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('IaConfig', iaConfigSchema);
