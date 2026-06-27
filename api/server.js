@@ -1452,6 +1452,106 @@ router.get('/ia-fallback', publicLimiter, async (req, res) => {
   }
 });
 
+// ─── Inscriptions & Waitlist ──────────────────────────────────────────────────
+const TournamentRegistration = require('../database/models/TournamentRegistration');
+const Registration           = require('../database/models/Registration');
+const InscriptionConfig      = require('../database/models/InscriptionConfig');
+
+// GET /api/inscriptions — liste inscriptions tournoi + waitlist
+router.get('/inscriptions', async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    const filter  = guildId ? { guildId } : {};
+    const [tournoi, waitlist, config] = await Promise.all([
+      TournamentRegistration.find(filter).sort({ registeredAt: -1 }).lean(),
+      Registration.find(filter).sort({ position: 1 }).lean(),
+      guildId ? InscriptionConfig.findOne({ guildId }).lean() : InscriptionConfig.findOne().lean(),
+    ]);
+    res.json({ tournoi, waitlist, config });
+  } catch (err) {
+    console.error('[API /inscriptions]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// PATCH /api/inscriptions/tournoi/:id — mettre à jour le statut d'une inscription tournoi
+router.patch('/inscriptions/tournoi/:id', requireApiKey, async (req, res) => {
+  try {
+    const { status, refuseReason } = req.body;
+    const doc = await TournamentRegistration.findByIdAndUpdate(
+      req.params.id,
+      { status, refuseReason: refuseReason || null, reviewedAt: new Date() },
+      { new: true }
+    ).lean();
+    if (!doc) return res.status(404).json({ error: 'Introuvable' });
+    res.json(doc);
+  } catch (err) {
+    console.error('[API PATCH /inscriptions/tournoi]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// DELETE /api/inscriptions/tournoi/:id — supprimer une inscription tournoi
+router.delete('/inscriptions/tournoi/:id', requireApiKey, async (req, res) => {
+  try {
+    await TournamentRegistration.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// PATCH /api/inscriptions/waitlist/:id — confirmer ou retirer de la waitlist
+router.patch('/inscriptions/waitlist/:id', requireApiKey, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const doc = await Registration.findByIdAndUpdate(req.params.id, { status }, { new: true }).lean();
+    if (!doc) return res.status(404).json({ error: 'Introuvable' });
+    res.json(doc);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// DELETE /api/inscriptions/waitlist/:id — retirer de la waitlist
+router.delete('/inscriptions/waitlist/:id', requireApiKey, async (req, res) => {
+  try {
+    await Registration.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// GET /api/inscriptions/config — config du système d'inscription
+router.get('/inscriptions/config', async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    const config = guildId
+      ? await InscriptionConfig.findOne({ guildId }).lean()
+      : await InscriptionConfig.findOne().lean();
+    res.json(config || {});
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// PUT /api/inscriptions/config — modifier la configuration
+router.put('/inscriptions/config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, maxSlots, tournamentTitle, active } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const config = await InscriptionConfig.findOneAndUpdate(
+      { guildId },
+      { maxSlots, tournamentTitle, active },
+      { new: true, upsert: true }
+    ).lean();
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
