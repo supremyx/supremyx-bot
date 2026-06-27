@@ -209,7 +209,7 @@ const STAFF_CATEGORIES = [
       { label: '!ia quota',                       description: 'Consulter le quota IA journalier restant',                    subs: [] },
       { label: '!ia modele <alias>',              description: 'Changer le modèle IA actif (Staff)',                          subs: ['modele <alias> — Changer de modèle', 'modeles — Voir tous les modèles disponibles'] },
       { label: '!ia quota <valeur>',              description: 'Gérer le quota d\'utilisations IA journalier (Staff)',        subs: ['quota <nombre> — Fixer la limite', 'quota off — Désactiver (illimité)', 'quota reset — Remettre le compteur à zéro', 'quota salon #salon — Salon d\'alerte'] },
-      { label: '!ia fallback',                    description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
+      { label: '!ia basculement',                 description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
     ],
   },
   {

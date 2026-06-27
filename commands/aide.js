@@ -121,6 +121,7 @@ const CATEGORIES = [
       { label: '!pronostic <T1> vs <T2>',              description: 'Faire un pronostic sur un match à venir',               subs: ['<T1> vs <T2> — Faire un pronostic', 'resultats — Voir ses pronostics', 'classement — Top pronostiqueurs'] },
       { label: '!dispo oui|non|incertain',             description: 'Déclarer sa disponibilité pour le prochain match',      subs: ['oui|non|incertain [raison] — Déclaration générale', 'match <id> <statut> — Pour un match précis', 'voir — Voir sa dispo actuelle'] },
       { label: '!listedattente',                       description: 'Voir la liste d\'attente du tournoi actif (places limitées)', subs: [] },
+      { label: '%inscrire <équipe>',                   description: 'S\'inscrire sur la liste d\'attente dans le salon dédié', subs: [] },
       { label: '!recompenses',                         description: 'Voir les récompenses de rang configurées (rôles Discord par classement)', subs: [] },
     ],
   },
