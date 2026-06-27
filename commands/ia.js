@@ -1134,7 +1134,7 @@ module.exports = (client) => {
         '❓ Utilisation : `!ia <ta question>`\n' +
         'Exemple : `!ia Qui est le meilleur joueur de l\'équipe ?`\n\n' +
         `🤖 Modèles : \`!ia modeles\` · Stats : \`!ia statistiques\` · Changer (admin) : \`!ia modele <nom>\`\n` +
-        `🔎 Disponibilité en temps réel : \`!ia fallback\`\n` +
+        `🔎 Disponibilité en temps réel : \`!ia basculement\`\n` +
         `Modèles disponibles : ${list}`
       );
     }
