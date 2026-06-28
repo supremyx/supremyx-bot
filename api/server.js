@@ -1552,6 +1552,57 @@ router.put('/inscriptions/config', requireApiKey, async (req, res) => {
   }
 });
 
+// ─── Bot Config (GET + PUT) ───────────────────────────────────────────────────
+const Config = require('../database/models/Config');
+
+router.get('/bot/config', requireApiKey, async (_req, res) => {
+  try {
+    let cfg = await Config.findOne().lean();
+    if (!cfg) cfg = {};
+    const pointSystem = cfg.pointSystem
+      ? Object.fromEntries(Object.entries(cfg.pointSystem))
+      : { '1':10,'2':6,'3':5,'4':4,'5':3,'6':2,'7':1,'8':1 };
+    res.json({
+      pointSystem,
+      killBonus:            cfg.killBonus            ?? 1,
+      motd:                 cfg.motd                 ?? '',
+      announceChannelId:    cfg.announceChannelId    ?? '',
+      logChannelId:         cfg.logChannelId         ?? '',
+      logoSubmitChannelId:  cfg.logoSubmitChannelId  ?? '',
+      logoListChannelId:    cfg.logoListChannelId    ?? '',
+      rankFrozen:           cfg.rankFrozen           ?? false,
+      rankFrozenBy:         cfg.rankFrozenBy         ?? '',
+    });
+  } catch (err) {
+    console.error('[API GET /bot/config]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+router.put('/bot/config', requireApiKey, async (req, res) => {
+  try {
+    const { pointSystem, killBonus, motd, announceChannelId, logChannelId,
+            logoSubmitChannelId, logoListChannelId, rankFrozen } = req.body;
+    const update = {};
+    if (pointSystem          !== undefined) update.pointSystem          = pointSystem;
+    if (killBonus            !== undefined) update.killBonus            = Number(killBonus);
+    if (motd                 !== undefined) update.motd                 = motd;
+    if (announceChannelId    !== undefined) update.announceChannelId    = announceChannelId;
+    if (logChannelId         !== undefined) update.logChannelId         = logChannelId;
+    if (logoSubmitChannelId  !== undefined) update.logoSubmitChannelId  = logoSubmitChannelId;
+    if (logoListChannelId    !== undefined) update.logoListChannelId    = logoListChannelId;
+    if (rankFrozen           !== undefined) update.rankFrozen           = Boolean(rankFrozen);
+    const cfg = await Config.findOneAndUpdate({}, { $set: update }, { upsert: true, new: true }).lean();
+    const pointSystemOut = cfg.pointSystem
+      ? Object.fromEntries(Object.entries(cfg.pointSystem))
+      : {};
+    res.json({ success: true, config: { ...cfg, pointSystem: pointSystemOut } });
+  } catch (err) {
+    console.error('[API PUT /bot/config]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
