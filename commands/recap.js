@@ -116,7 +116,7 @@ async function recapPeriode(message, period) {
         inline: true,
       },
     )
-    .setFooter({ text: `SUPREMYX CI · !recap [24h|7|30|saison] ou !recap <tournoi>`, iconURL: message.guild.iconURL({ dynamic: true }) ?? undefined })
+    .setFooter({ text: `SUPREMYX CI · !recapitulatif [24h|7|30|saison] ou !recapitulatif <tournoi>`, iconURL: message.guild.iconURL({ dynamic: true }) ?? undefined })
     .setTimestamp();
 
   await message.channel.send({ embeds: [embed] });
@@ -198,10 +198,10 @@ module.exports = (client) => {
       if (!message.guild)     return;
       if (message.author.bot) return;
       if (!message.member)    return;
-      if (!message.content.startsWith('!recap')) return;
+      if (!message.content.startsWith('!recapitulatif') && !message.content.startsWith('!recap')) return;
 
-      const cd = checkCooldown(message.author.id, 'recap', 20);
-      if (cd) return replyCooldown(message, cd, 'recap');
+      const cd = checkCooldown(message.author.id, 'recapitulatif', 20);
+      if (cd) return replyCooldown(message, cd, 'recapitulatif');
 
       const arg = message.content.trim().split(/\s+/).slice(1).join(' ').trim().toLowerCase();
 

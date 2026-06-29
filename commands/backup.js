@@ -15,7 +15,7 @@ module.exports = (client) => {
     const args = message.content.trim().split(/\s+/).slice(1);
     const sub  = args[0]?.toLowerCase();
 
-    if (sub === 'auto') {
+    if (sub === 'automatique' || sub === 'auto') {
       const action = args[1]?.toLowerCase();
       const hours  = parseInt(args[2]) || 24;
       if (action === 'désactiver' || action === 'desactiver' || action === 'arreter' || action === 'arrêter') {
@@ -25,7 +25,7 @@ module.exports = (client) => {
       }
       startAutoBackup(client, hours);
       await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: `Sauvegarde automatique activée (${hours}h)`, category: 'données', severity: 'info' });
-      return message.reply(`✅ Sauvegarde automatique **activée** toutes les **${hours}h**.\nFichiers envoyés dans le canal configuré.`);
+      return message.reply(`✅ Sauvegarde automatique **activée** toutes les **${hours}h**.\nFichiers envoyés dans le canal configuré.\n*(Utilise \`!sauvegarde automatique désactiver\` pour arrêter.)*`);
     }
 
     if (sub === 'canal') {

@@ -180,11 +180,11 @@ module.exports = (client) => {
         return message.reply(`✅ Tableau de bord automatique configuré dans <#${channel.id}>.`);
       }
 
-      // --- !tableaudebord auto on/off ---
-      if (sub === 'auto') {
+      // --- !tableaudebord automatique on/off ---
+      if (sub === 'automatique' || sub === 'auto') {
         const state = args[2]?.toLowerCase();
         if (!state || !['activer', 'désactiver', 'desactiver'].includes(state))
-          return message.reply('Usage : `!tableaudebord auto activer` ou `!tableaudebord auto désactiver`');
+          return message.reply('Usage : `!tableaudebord automatique activer` ou `!tableaudebord automatique désactiver`');
 
         const cfg = await DashboardConfig.findOne({ guildId: message.guild.id });
         if (!cfg || !cfg.channelId)

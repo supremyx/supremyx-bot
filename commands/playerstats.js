@@ -19,7 +19,6 @@ module.exports = (client) => {
       !content.startsWith('!matchjoueur') &&
       !content.startsWith('!statsjoueur') &&
       !content.startsWith('!classjoueurs') &&
-      !content.startsWith('!resetjoueur') &&
       !content.startsWith('!reinitjoueur')
     ) return;
     if (!message.guild) return;
@@ -183,7 +182,7 @@ module.exports = (client) => {
     }
 
     // ─── !playerreset <équipe> <joueur> ──────────────────────────
-    if (cmd === '!reinitjoueur' || cmd === '!resetjoueur') {
+    if (cmd === '!reinitjoueur') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
       const teamName   = args[0];
