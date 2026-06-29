@@ -70,7 +70,7 @@ module.exports = {
   'objectif.js':       { commands: ['!objectif voir|progression|definir|supprimer|liste'],                                                   staff: 'mixed' },
   'ping.js':           { commands: ['!ping'],                                                                                                  staff: false },
   'planifier.js':      { commands: ['!planifier creer|liste|voir|modifier|supprimer|pause|dupliquer|tester'],                                staff: true },
-  'playerstats.js':    { commands: ['!statsjoueur <nom>', '!matchjoueur <nom>', '!classjoueurs'],                                            staff: false },
+  'playerstats.js':    { commands: ['!statsjoueur <nom>', '!classjoueurs', '!matchjoueur <équipe> <joueur> <kills>', '!reinitjoueur <équipe> <nom>'], staff: 'mixed' },
   'poll.js':           { commands: ['!vote <question>', '!sondage <durée> <question> | <opt…>', '!sondage programmer|planifie'],             staff: 'mixed' },
   'poule.js':          { commands: ['!poule creer|classement|resultat|liste|supprimer'],                                                      staff: 'mixed' },
   'profil.js':         { commands: ['!profil [@membre]'],                                                                                     staff: false },

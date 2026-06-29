@@ -88,7 +88,6 @@ const CATEGORIES = [
       { label: '!profil [@membre]',          description: 'Fiche complète : XP, équipe, stats, warns',            subs: [] },
       { label: '!statsjoueur <nom>',         description: 'Stats détaillées d\'un joueur (kills, matchs, ratio)', subs: [] },
       { label: '!classjoueurs',              description: 'Classement de tous les joueurs par kills',             subs: [] },
-      { label: '!matchjoueur <nom>',         description: 'Détail de tous les matchs d\'un joueur',              subs: [] },
       { label: '!liste <équipe>',            description: 'Afficher le roster complet d\'une équipe',             subs: [] },
       { label: '!composition <équipe>',      description: 'Voir la composition de match d\'une équipe',           subs: [] },
       { label: '!absence declarer [raison]', description: 'Déclarer son absence au prochain match',              subs: ['declarer [raison] — Déclarer son absence', 'annuler — Annuler son absence', 'liste <équipe> — Absences d\'une équipe'] },
