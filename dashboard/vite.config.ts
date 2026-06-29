@@ -42,7 +42,7 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     hmr: process.env.REPL_ID
-      ? { clientPort: 443, protocol: "wss" }
+      ? { clientPort: 443, protocol: "wss", host: process.env.REPLIT_DEV_DOMAIN }
       : true,
     fs: {
       strict: true,
