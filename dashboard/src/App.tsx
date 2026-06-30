@@ -674,7 +674,7 @@ export default function App() {
                 )}
               </div>
               <span className="text-lg font-bold tracking-tight hidden sm:block">
-                SUPREMYX <span style={{ color: "var(--primary)" }}>CI</span>
+                SUPREMYX <span style={{ color: "var(--primary)" }}>BOT</span>
               </span>
             </button>
 
