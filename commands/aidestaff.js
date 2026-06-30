@@ -594,6 +594,8 @@ module.exports = (client) => {
           });
         } catch (_) {}
       }, 5 * 60 * 1000);
+
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aidestaff messageCreate]', err);
     }
@@ -633,7 +635,8 @@ module.exports = (client) => {
         });
       }
 
-      return message.channel.send({ embeds: [embed] });
+      const sent = await message.channel.send({ embeds: [embed] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aidestaff historique]', err);
     }
@@ -653,7 +656,8 @@ module.exports = (client) => {
       const cd = checkCooldown(message.author.id, 'aidestaff_nouveautes', 15);
       if (cd) return replyCooldown(message, cd, 'aidestaff nouveautes');
 
-      return message.channel.send({ embeds: [buildNouveautesStaffEmbed(client)] });
+      const sent = await message.channel.send({ embeds: [buildNouveautesStaffEmbed(client)] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aidestaff nouveautes]', err);
     }
@@ -722,7 +726,8 @@ module.exports = (client) => {
         });
       }
 
-      return message.channel.send({ embeds: [embed] });
+      const sent = await message.channel.send({ embeds: [embed] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[chercher staff]', err);
     }

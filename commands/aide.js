@@ -444,6 +444,8 @@ module.exports = (client) => {
           });
         } catch (_) {}
       }, 5 * 60 * 1000);
+
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aide messageCreate]', err);
     }
@@ -459,7 +461,8 @@ module.exports = (client) => {
       const cd = checkCooldown(message.author.id, 'aide_nouveautes', 15);
       if (cd) return replyCooldown(message, cd, 'aide nouveautes');
 
-      return message.channel.send({ embeds: [buildNouveautesEmbed(client)] });
+      const sent = await message.channel.send({ embeds: [buildNouveautesEmbed(client)] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aide nouveautes]', err);
     }
@@ -495,7 +498,8 @@ module.exports = (client) => {
         });
       }
 
-      return message.channel.send({ embeds: [embed] });
+      const sent = await message.channel.send({ embeds: [embed] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[aide historique]', err);
     }
@@ -561,7 +565,8 @@ module.exports = (client) => {
         });
       }
 
-      return message.channel.send({ embeds: [embed] });
+      const sent = await message.channel.send({ embeds: [embed] });
+      setTimeout(() => sent.delete().catch(() => {}), 30 * 60 * 1000);
     } catch (err) {
       console.error('[chercher]', err);
     }
