@@ -367,4 +367,17 @@ require('./commands/waitlist')(client);
 // --- Rapport hebdomadaire automatique ---
 require('./commands/rapportHebdo')(client);
 
+// --- Nouvelles commandes v2 ---
+require('./commands/elo')(client);
+require('./commands/statsserveur')(client);
+require('./commands/draft')(client);
+require('./commands/badge')(client);
+require('./commands/record')(client);
+require('./commands/rivaux')(client);
+require('./commands/teamvoice')(client);
+require('./commands/auditactivite')(client);
+require('./commands/mvpmatch')(client);
+require('./commands/capitaines')(client);
+require('./commands/matchplan')(client);
+
 client.login(process.env.TOKEN);

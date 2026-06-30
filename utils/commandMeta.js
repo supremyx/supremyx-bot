@@ -124,4 +124,16 @@ module.exports = {
   'welcome.js':        { commands: ['!bienvenue definir|salon|tester|activer|desactiver'],                                                    staff: true },
   'xpmanage.js':       { commands: ['!progression [@membre]', '!donnerxp @membre <qté>', '!retirerxp @membre <qté>', '!niveau reinitialiser @membre'], staff: 'mixed' },
   'xpmulti.js':        { commands: ['!xp multiplicateur #salon <val>', '!xp multiplicateurs'],                                               staff: true },
+  // --- Nouvelles commandes v2 ---
+  'elo.js':            { commands: ['!elo <équipe>', '!classementelo'],                                                                       staff: false },
+  'statsserveur.js':   { commands: ['!statsserveur'],                                                                                         staff: false },
+  'draft.js':          { commands: ['!draftequipe [N]'],                                                                                      staff: true },
+  'badge.js':          { commands: ['!badge donner|retirer|liste', '!badges'],                                                                staff: 'mixed' },
+  'record.js':         { commands: ['!record <équipe>', '!record joueur <nom>'],                                                              staff: false },
+  'rivaux.js':         { commands: ['!rivaux <équipe>'],                                                                                      staff: false },
+  'teamvoice.js':      { commands: ['!teamvoice <équipe>', '!teamvoice supprimer <équipe>'],                                                  staff: true },
+  'auditactivite.js':  { commands: ['!auditactivite [N]'],                                                                                    staff: true },
+  'mvpmatch.js':       { commands: ['!mvpmatch <id> <joueur>', '!mvpmatch liste', '!mvpmatch joueur <nom>'],                                  staff: 'mixed' },
+  'capitaines.js':     { commands: ['!capitaines'],                                                                                           staff: false },
+  'matchplan.js':      { commands: ['!planifiermatch', '!rappelsmatch'],                                                                      staff: 'mixed' },
 };
