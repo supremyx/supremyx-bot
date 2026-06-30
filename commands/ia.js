@@ -1124,6 +1124,92 @@ module.exports = (client) => {
       );
     }
 
+    // ── !ia coach <équipe> ───────────────────────────────────────────────────
+    if (sub === 'coach') {
+      const teamName = args.slice(1).join(' ').trim();
+      if (!teamName) return message.reply('Usage : `!ia coach <équipe>`');
+      const thinking = await message.channel.send('🤖 Analyse tactique en cours...');
+      const team = await Team.findOne({ name: new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (!team) return thinking.edit(`❌ Équipe **${teamName}** introuvable.`);
+      const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 }).limit(8).lean();
+      const n = matches.length || 1;
+      const placements = matches.map(m => m.placement);
+      const avgPlacement = placements.length ? (placements.reduce((a, b) => a + b, 0) / placements.length).toFixed(1) : '—';
+      const wins = matches.filter(m => m.placement === 1).length;
+      const ctx = `Équipe : ${team.name}\nTotal kills : ${team.kills} | Total points : ${team.points}\nV/D : ${team.wins}/${team.losses}\nMoy. kills/match : ${(team.kills/n).toFixed(1)} | Moy. placement : ${avgPlacement}\nDerniers matchs : ${matches.slice(0, 5).map(m => `#${m.placement} (${m.kills}k)`).join(', ')}\nVictoires récentes : ${wins}/${matches.length}`;
+      const answer = await iaCall(
+        'Tu es un coach esport tactique spécialisé Battle Royale. Tu analyses les données statistiques pour donner des recommandations tactiques précises sur le positionnement, la rotation en zone, la gestion des ressources et les décisions d\'engagement. Réponds en français de façon structurée.',
+        `Analyse ces stats et donne un plan tactique complet :\n${ctx}\n\nFournis : 1) Analyse du style de jeu actuel, 2) Points faibles identifiés, 3) Plan tactique concret (rotations, engagements, objectifs), 4) Objectif chiffré à atteindre.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0xED4245)
+        .setAuthor({ name: `🎯 Plan Tactique IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Coach IA · Demandé par ${message.author.username}${fbNote()}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia rotation <équipe> ─────────────────────────────────────────────────
+    if (sub === 'rotation') {
+      const teamName = args.slice(1).join(' ').trim();
+      if (!teamName) return message.reply('Usage : `!ia rotation <équipe>`');
+      const thinking = await message.channel.send('🤖 Génération du plan de rotation...');
+      const team = await Team.findOne({ name: new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (!team) return thinking.edit(`❌ Équipe **${teamName}** introuvable.`);
+      const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 }).limit(10).lean();
+      const n = matches.length || 1;
+      const avgPlacement = matches.length ? (matches.reduce((a, b) => a + b.placement, 0) / matches.length).toFixed(1) : '—';
+      const avgKills     = (team.kills / n).toFixed(1);
+      const ctx = `Équipe : ${team.name} | Moy. placement : ${avgPlacement} | Moy. kills : ${avgKills} | V : ${team.wins} | D : ${team.losses}`;
+      const answer = await iaCall(
+        'Tu es un expert en stratégie Battle Royale (rotations de zone, gestion du cercle, positionnement). Tu crées des plans de rotation précis pour maximiser les placements et les éliminations. Réponds en français de façon structurée et pratique.',
+        `Crée un plan de rotation optimal pour cette équipe :\n${ctx}\n\nFournis : 1) Stratégie de drop (zone d'atterrissage recommandée), 2) Plan de rotation précoce (early game), 3) Gestion du mid-game et des cercles, 4) Stratégie final circle, 5) Conseils spécifiques selon le profil de l'équipe.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0x57F287)
+        .setAuthor({ name: `🗺️ Plan de Rotation IA — ${team.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Rotation Strategy · Demandé par ${message.author.username}${fbNote()}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
+    // ── !ia riposte <mon équipe> vs <adversaire> ──────────────────────────────
+    if (sub === 'riposte') {
+      const rest = args.slice(1).join(' ');
+      const vsIdx = rest.toLowerCase().indexOf(' vs ');
+      if (vsIdx === -1) return message.reply('Usage : `!ia riposte <mon équipe> vs <adversaire>`');
+      const myTeamName  = rest.slice(0, vsIdx).trim();
+      const rivalName   = rest.slice(vsIdx + 4).trim();
+      if (!myTeamName || !rivalName) return message.reply('Usage : `!ia riposte <mon équipe> vs <adversaire>`');
+      const thinking = await message.channel.send('🤖 Analyse de contre-stratégie en cours...');
+      const [myTeam, rival] = await Promise.all([
+        Team.findOne({ name: new RegExp(`^${myTeamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }),
+        Team.findOne({ name: new RegExp(`^${rivalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }),
+      ]);
+      if (!myTeam)  return thinking.edit(`❌ Équipe **${myTeamName}** introuvable.`);
+      if (!rival)   return thinking.edit(`❌ Adversaire **${rivalName}** introuvable.`);
+      const [myMatches, rivalMatches] = await Promise.all([
+        Match.find({ team: myTeam.name }).sort({ createdAt: -1 }).limit(8).lean(),
+        Match.find({ team: rival.name }).sort({ createdAt: -1 }).limit(8).lean(),
+      ]);
+      const myAvgKills    = myMatches.length    ? (myMatches.reduce((a, b)    => a + b.kills, 0) / myMatches.length).toFixed(1)    : '0';
+      const rivalAvgKills = rivalMatches.length ? (rivalMatches.reduce((a, b) => a + b.kills, 0) / rivalMatches.length).toFixed(1) : '0';
+      const ctx = `Mon équipe : ${myTeam.name} — ${myTeam.points}pts, ${myTeam.kills}k, ${myTeam.wins}V/${myTeam.losses}D, ${myAvgKills} kills/match\nAdversaire : ${rival.name} — ${rival.points}pts, ${rival.kills}k, ${rival.wins}V/${rival.losses}D, ${rivalAvgKills} kills/match`;
+      const answer = await iaCall(
+        'Tu es un stratège esport expert en contre-stratégies Battle Royale. Tu analyses les stats des deux équipes pour créer un plan de riposte précis visant à contrer les forces de l\'adversaire. Réponds en français.',
+        `Crée une contre-stratégie pour mon équipe face à cet adversaire :\n${ctx}\n\nFournis : 1) Analyse des forces/faiblesses de l'adversaire, 2) Avantages et faiblesses de mon équipe, 3) Plan de riposte concret (engagement/évitement/positionnement), 4) Points clés à surveiller, 5) Prédiction du résultat avec ce plan.`,
+        thinking
+      );
+      if (!answer) return;
+      const embed = new EmbedBuilder().setColor(0xFEE75C)
+        .setAuthor({ name: `⚔️ Contre-Stratégie IA — ${myTeam.name} vs ${rival.name}`, iconURL: client.user.displayAvatarURL() })
+        .setDescription(answer).setTimestamp()
+        .setFooter({ text: `Riposte Strategy · Demandé par ${message.author.username}${fbNote()}` });
+      return thinking.edit({ content: '', embeds: [embed] });
+    }
+
     // ── !ia <question> ─────────────────────────────────────────────────────────
     if (!content.startsWith('!ia ') && content !== '!ia') return;
 

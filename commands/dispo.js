@@ -108,7 +108,29 @@ module.exports = (client) => {
         return message.reply(`✅ Disponibilités de **${mentioned.username}** effacées.`);
       }
 
-      return message.reply('**Sous-commandes :** `oui` · `non` · `incertain [raison]` · `match <id> <oui|non|incertain>` · `liste <équipe>` *(staff)* · `voir`');
+      // ── !dispo résumé — vue globale serveur ───────────────────────────────
+      if (sub === 'résumé' || sub === 'resume' || sub === 'résume') {
+        if (!isStaff) return message.reply('⛔ Staff uniquement.');
+        const allDispos = await Disponibilite.find({ guildId, scheduleId: null }).lean();
+        if (!allDispos.length) return message.reply('📭 Aucune disponibilité déclarée pour le prochain match.');
+        const groups = { oui: [], non: [], incertain: [] };
+        for (const d of allDispos) {
+          if (groups[d.status]) groups[d.status].push(`${d.username}${d.raison ? ` _(${d.raison})_` : ''}`);
+        }
+        const embed = new EmbedBuilder()
+          .setTitle('📋 Résumé des disponibilités (prochain match)')
+          .setColor(0x57F287)
+          .addFields(
+            { name: `✅ Disponibles (${groups.oui.length})`,      value: groups.oui.join('\n')       || '—', inline: false },
+            { name: `❌ Indisponibles (${groups.non.length})`,     value: groups.non.join('\n')       || '—', inline: false },
+            { name: `❓ Incertains (${groups.incertain.length})`,  value: groups.incertain.join('\n') || '—', inline: false },
+          )
+          .setFooter({ text: `${allDispos.length} déclaration(s) · Serveur complet` })
+          .setTimestamp();
+        return message.channel.send({ embeds: [embed] });
+      }
+
+      return message.reply('**Sous-commandes :** `oui` · `non` · `incertain [raison]` · `match <id> <oui|non|incertain>` · `liste <équipe>` *(staff)* · `résumé` *(staff)* · `voir`');
     } catch (err) {
       console.error('[dispo]', err);
     }

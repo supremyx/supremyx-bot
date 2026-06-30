@@ -3,10 +3,11 @@
  * Fiche complète d'un joueur : infos Discord, équipe, stats K/D, XP, warns.
  */
 const { EmbedBuilder } = require('discord.js');
-const XpEntry    = require('../database/models/XpEntry');
-const Warning    = require('../database/models/Warning');
-const Roster     = require('../database/models/Roster');
-const PlayerStat = require('../database/models/PlayerStat');
+const XpEntry     = require('../database/models/XpEntry');
+const Warning     = require('../database/models/Warning');
+const Roster      = require('../database/models/Roster');
+const PlayerStat  = require('../database/models/PlayerStat');
+const PlayerBadge = require('../database/models/PlayerBadge');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 function xpToLevel(xp)         { return Math.floor(Math.sqrt(xp / 50)); }
@@ -26,11 +27,13 @@ module.exports = (client) => {
       const user   = target.user;
 
       // ── Requêtes en parallèle ──────────────────────────────────────────────
-      const [xpEntry, warns, rosters, playerStat] = await Promise.all([
+      const displayName = target.displayName || user.username;
+      const [xpEntry, warns, rosters, playerStat, badges] = await Promise.all([
         XpEntry.findOne({ guildId: message.guild.id, userId: user.id }),
         Warning.find({ guildId: message.guild.id, userId: user.id }),
         Roster.find({ guildId: message.guild.id }),
         PlayerStat.findOne({ guildId: message.guild.id, tag: user.tag }),
+        PlayerBadge.find({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${displayName}$`, 'i') } }).lean(),
       ]);
 
       // ── Équipe via Roster ──────────────────────────────────────────────────
@@ -106,7 +109,12 @@ module.exports = (client) => {
               ? '> ✅ Aucun avertissement'
               : `> 🔴 **${warnCount}** avertissement(s)`,
             inline: false
-          }
+          },
+          ...(badges.length ? [{
+            name: `🎖️ Badges (${badges.length})`,
+            value: badges.map(b => `${b.emoji} **${b.badgeName}**${b.description ? ` — _${b.description}_` : ''}`).join('\n'),
+            inline: false,
+          }] : [])
         )
         .setFooter({ text: `SUPREMYX CI • ID : ${user.id}` })
         .setTimestamp();

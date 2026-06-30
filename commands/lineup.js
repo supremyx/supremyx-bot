@@ -6,9 +6,10 @@
  *   !composition liste                         — toutes les compositions enregistrées (staff)
  */
 const { EmbedBuilder } = require('discord.js');
-const Lineup = require('../database/models/Lineup');
-const Roster = require('../database/models/Roster');
-const Team   = require('../database/models/Team');
+const Lineup        = require('../database/models/Lineup');
+const LineupHistory = require('../database/models/LineupHistory');
+const Roster        = require('../database/models/Roster');
+const Team          = require('../database/models/Team');
 const { logStaffAction } = require('../utils/staffLog');
 const { escapeRegex }    = require('../utils/lib');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
@@ -98,6 +99,31 @@ module.exports = (client) => {
           .setFooter({ text: `Défini par ${message.author.tag}` })
           .setTimestamp();
 
+        return message.channel.send({ embeds: [embed] });
+      }
+
+      // ── !lineup historique <équipe> ───────────────────────────────────────
+      if (sub === 'historique') {
+        const teamName = args.slice(1).join(' ').trim();
+        if (!teamName) return message.reply('Usage : `!composition historique <équipe>`');
+        const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
+        if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
+        const history = await LineupHistory.find({ teamName: team.name }).sort({ setAt: -1 }).limit(8).lean();
+        if (!history.length) return message.reply(`📭 Aucun historique de composition enregistré pour **${team.name}**.`);
+        const fields = history.map((h, i) => {
+          const date = new Date(h.setAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+          return {
+            name: `#${i + 1} · ${date}${h.matchNote ? ` — ${h.matchNote}` : ''}`,
+            value: h.players.map((p, j) => `${j + 1}. ${p}`).join('\n') || '—',
+            inline: true,
+          };
+        });
+        const embed = new EmbedBuilder()
+          .setTitle(`📋 Historique compositions — ${team.name}`)
+          .setColor(0x5865F2)
+          .addFields(fields)
+          .setFooter({ text: `${history.length} dernière(s) composition(s)` })
+          .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
 

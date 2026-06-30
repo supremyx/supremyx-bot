@@ -1552,6 +1552,135 @@ router.put('/inscriptions/config', requireApiKey, async (req, res) => {
   }
 });
 
+// ─── ELO Classement ──────────────────────────────────────────────────────────
+const Team_elo   = require('../database/models/Team');
+const Match_elo  = require('../database/models/Match');
+router.get('/api/elo', async (req, res) => {
+  try {
+    const teams = await Team_elo.find().lean();
+    const K = 32;
+    const results = await Promise.all(teams.map(async t => {
+      const tMatches = await Match_elo.find({ team: t.name }).sort({ createdAt: 1 }).lean();
+      if (!tMatches.length) return { name: t.name, elo: 1000, matches: 0, trend: 0 };
+      let elo = 1000;
+      for (const m of tMatches) {
+        let actual = m.placement === 1 ? 1.0 : m.placement <= 3 ? 0.75 : m.placement <= 5 ? 0.5 : m.placement <= 7 ? 0.25 : 0.1;
+        actual = Math.min(actual + Math.min((m.kills || 0) / 20, 1) * 0.15, 1.0);
+        const expected = 1 / (1 + Math.pow(10, (1000 - elo) / 400));
+        elo = Math.round(elo + K * (actual - expected));
+      }
+      // trend: elo change over last 5 matches
+      let eloTrend = elo;
+      const last5 = tMatches.slice(-5);
+      if (last5.length >= 2) {
+        let tmpElo = elo;
+        for (let i = last5.length - 1; i >= 0; i--) {
+          const m = last5[i];
+          let actual = m.placement === 1 ? 1.0 : m.placement <= 3 ? 0.75 : m.placement <= 5 ? 0.5 : m.placement <= 7 ? 0.25 : 0.1;
+          actual = Math.min(actual + Math.min((m.kills || 0) / 20, 1) * 0.15, 1.0);
+          const expected = 1 / (1 + Math.pow(10, (1000 - tmpElo) / 400));
+          tmpElo = Math.round(tmpElo - K * (actual - expected));
+        }
+        eloTrend = elo - tmpElo;
+      }
+      return { name: t.name, elo, matches: tMatches.length, trend: eloTrend };
+    }));
+    results.sort((a, b) => b.elo - a.elo);
+    res.json(results);
+  } catch (err) {
+    console.error('[/api/elo]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+const PlayerBadge_api = require('../database/models/PlayerBadge');
+router.get('/api/badges', async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const badges = await PlayerBadge_api.find({ guildId }).sort({ awardedAt: -1 }).lean();
+    res.json(badges);
+  } catch (err) {
+    console.error('[/api/badges]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ─── Stats Serveur ────────────────────────────────────────────────────────────
+const PlayerStat_api = require('../database/models/PlayerStat');
+const Warning_api    = require('../database/models/Warning');
+router.get('/api/statsserveur', async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const [matches, teams, players, tournois, warns] = await Promise.all([
+      Match_elo.find().lean(),
+      Team_elo.find().lean(),
+      PlayerStat_api.find({ guildId }).lean(),
+      require('../database/models/Tournament').find().lean(),
+      Warning_api.find({ guildId }).lean(),
+    ]);
+    const totalMatches  = matches.length;
+    const totalKills    = matches.reduce((a, m) => a + (m.kills || 0), 0);
+    const totalPoints   = matches.reduce((a, m) => a + (m.points || 0), 0);
+    const avgKills      = totalMatches > 0 ? (totalKills  / totalMatches).toFixed(1) : '0';
+    const avgPoints     = totalMatches > 0 ? (totalPoints / totalMatches).toFixed(1) : '0';
+    const recordMatch   = matches.length ? matches.reduce((best, m) => (m.kills || 0) > (best.kills || 0) ? m : best) : null;
+    const matchCounts   = {};
+    for (const m of matches) matchCounts[m.team] = (matchCounts[m.team] || 0) + 1;
+    const mostActive    = Object.entries(matchCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+    const topKiller     = [...teams].sort((a, b) => b.kills - a.kills)[0]?.name ?? '—';
+    const topWinner     = [...teams].sort((a, b) => b.wins  - a.wins) [0]?.name ?? '—';
+    res.json({
+      totalMatches,
+      totalTeams:    teams.length,
+      totalPlayers:  players.length,
+      totalTournois: tournois.length,
+      totalKills,
+      totalPoints,
+      avgKills,
+      avgPoints,
+      recordMatch:   recordMatch ? { team: recordMatch.team, kills: recordMatch.kills } : null,
+      mostActive,
+      topKiller,
+      topWinner,
+      totalWarnings: warns.length,
+    });
+  } catch (err) {
+    console.error('[/api/statsserveur]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ─── Match Plans ──────────────────────────────────────────────────────────────
+const MatchPlan_api = require('../database/models/MatchPlan');
+router.get('/api/matchplans', async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const plans = await MatchPlan_api.find({ guildId }).sort({ scheduledAt: 1 }).lean();
+    res.json(plans);
+  } catch (err) {
+    console.error('[/api/matchplans]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ─── MVPs ─────────────────────────────────────────────────────────────────────
+const MatchMVP_api = require('../database/models/MatchMVP');
+router.get('/api/mvps', async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const mvps = await MatchMVP_api.find({ guildId }).sort({ createdAt: -1 }).limit(50).lean();
+    res.json(mvps);
+  } catch (err) {
+    console.error('[/api/mvps]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
 // ─── Bot Config (GET + PUT) ───────────────────────────────────────────────────
 const Config = require('../database/models/Config');
 

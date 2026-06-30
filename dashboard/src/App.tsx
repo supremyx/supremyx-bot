@@ -30,13 +30,16 @@ import PronosticsPage from "./pages/PronosticsPage";
 import PoulesPage from "./pages/PoulesPage";
 import DisponibilitesPage from "./pages/DisponibilitesPage";
 import InscriptionsPage from "./pages/InscriptionsPage";
+import EloPage from "./pages/EloPage";
+import BadgesPage from "./pages/BadgesPage";
+import StatsServeurPage from "./pages/StatsServeurPage";
 import GlobalSearch from "./components/GlobalSearch";
 import NotificationBanner from "./components/NotificationBanner";
 import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur";
 
 interface Team {
   rank: number;
@@ -72,6 +75,9 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "disponibilites",    label: "Disponibilités", icon: "📋" },
   { key: "inscriptions",      label: "Inscriptions",   icon: "🎟️" },
   { key: "embeds-programmes", label: "Embeds prog.", icon: "📨" },
+  { key: "elo",               label: "Classement ELO", icon: "📈" },
+  { key: "badges",            label: "Badges",         icon: "🎖️" },
+  { key: "statsserveur",      label: "Stats Serveur",  icon: "📊" },
   { key: "logs",              label: "Journaux",    icon: "📋" },
   { key: "live-activity",     label: "Activité live", icon: "📡" },
   { key: "parametres",        label: "Paramètres",  icon: "⚙️" },
@@ -810,6 +816,9 @@ export default function App() {
       {page === "embeds-programmes" && <EmbedsProgrammesPage />}
       {page === "parametres"        && <ParametresPage />}
       {page === "live-activity"     && <LiveActivityPage liveNotifications={notifications} />}
+      {page === "elo"               && <EloPage />}
+      {page === "badges"            && <BadgesPage />}
+      {page === "statsserveur"      && <StatsServeurPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>

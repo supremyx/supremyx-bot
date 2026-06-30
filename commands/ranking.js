@@ -59,6 +59,64 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
+    // --- !classement semaine ---
+    if (lcTournament === 'semaine') {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentMatches = await Match.find({ createdAt: { $gte: since } }).lean();
+      if (!recentMatches.length) return message.channel.send('Aucun match enregistré cette semaine.');
+
+      const statsMap = {};
+      for (const m of recentMatches) {
+        if (!statsMap[m.team]) statsMap[m.team] = { points: 0, kills: 0, matches: 0 };
+        statsMap[m.team].points  += m.points;
+        statsMap[m.team].kills   += m.kills;
+        statsMap[m.team].matches++;
+      }
+      const sorted = Object.entries(statsMap).sort((a, b) => b[1].points - a[1].points);
+      const rows = sorted.map(([name, s], i) => {
+        const medal = medals[i] || `**#${i + 1}**`;
+        return `${medal} **${name}** — ${s.points} pts · ${s.kills} kills · ${s.matches} match(s)`;
+      }).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('📅 Classement de la semaine')
+        .setDescription(rows)
+        .setColor(0x57F287)
+        .setFooter({ text: `7 derniers jours · ${recentMatches.length} match(s)` })
+        .setTimestamp();
+      return message.channel.send({ embeds: [embed] });
+    }
+
+    // --- !classement elo ---
+    if (lcTournament === 'elo') {
+      const teams = await Team.find().lean();
+      if (!teams.length) return message.channel.send('Aucune équipe enregistrée.');
+      const K = 32;
+      const results = await Promise.all(teams.map(async t => {
+        const tMatches = await Match.find({ team: t.name }).sort({ createdAt: 1 }).lean();
+        if (!tMatches.length) return { name: t.name, elo: 1000, count: 0 };
+        let elo = 1000;
+        for (const m of tMatches) {
+          let actual = m.placement === 1 ? 1.0 : m.placement <= 3 ? 0.75 : m.placement <= 5 ? 0.5 : m.placement <= 7 ? 0.25 : 0.1;
+          actual = Math.min(actual + Math.min((m.kills || 0) / 20, 1) * 0.15, 1.0);
+          const expected = 1 / (1 + Math.pow(10, (1000 - elo) / 400));
+          elo = Math.round(elo + K * (actual - expected));
+        }
+        return { name: t.name, elo, count: tMatches.length };
+      }));
+      results.sort((a, b) => b.elo - a.elo);
+      const rows = results.map((r, i) => {
+        const medal = medals[i] || `**#${i + 1}**`;
+        return `${medal} **${r.name}** — \`${r.elo}\` ELO _(${r.count} matchs)_`;
+      }).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('📊 Classement ELO')
+        .setDescription(rows)
+        .setColor(0x5865F2)
+        .setFooter({ text: 'ELO Battle Royale — placement + kills pondérés · Base 1000' })
+        .setTimestamp();
+      return message.channel.send({ embeds: [embed] });
+    }
+
     // --- Classement global ---
     if (!tournamentName) {
       const teams = await Team.find().sort({ points: -1 });
