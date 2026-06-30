@@ -674,7 +674,7 @@ export default function App() {
                 )}
               </div>
               <span className="text-lg font-bold tracking-tight hidden sm:block">
-                SUPREMYX <span style={{ color: "var(--primary)" }}>BOT</span>
+                SUPREMYX <span style={{ color: "var(--primary)" }}>Bot</span>
               </span>
             </button>
 
@@ -1030,7 +1030,7 @@ export default function App() {
         {/* Footer */}
         <div className="mt-10 pt-8" style={{ borderTop: "1px solid var(--border)" }}>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm font-bold">SUPREMYX <span style={{ color: "var(--primary)" }}>BOT</span></p>
+            <p className="text-sm font-bold">SUPREMYX <span style={{ color: "var(--primary)" }}>Bot</span></p>
             <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
               Dashboard · Actualisation automatique toutes les 30 secondes
             </p>
