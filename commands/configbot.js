@@ -35,7 +35,7 @@ module.exports = (client) => {
         .setColor(0x5865F2)
         .addFields(
           { name: '🏆 Système de points', value: `\`\`\`${ptRows}\`\`\`` },
-          { name: '💀 Bonus kill', value: `${config.killBonus} pt(s) par kill`, inline: true }
+          { name: '💀 Bonus élimination', value: `${config.killBonus} pt(s) par élimination`, inline: true }
         )
         .setFooter({ text: 'Modifie avec !definitpoints' })
         .setTimestamp();
@@ -50,8 +50,8 @@ module.exports = (client) => {
       const pairs = args.slice(1);
       if (!pairs.length)
         return message.reply(
-          'Usage : `!definitpoints <place:pts> ... [kill:<pts>]`\n' +
-          'Exemple : `!definitpoints 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 kill:1`'
+          'Usage : `!definitpoints <place:pts> ... [élimination:<pts>]`\n' +
+          'Exemple : `!definitpoints 1:10 2:6 3:5 4:4 5:3 6:2 7:1 8:1 élimination:1`'
         );
 
       const config = await getOrCreateConfig();
@@ -61,7 +61,7 @@ module.exports = (client) => {
       for (const pair of pairs) {
         const [key, val] = pair.split(':');
         if (!key || val === undefined || isNaN(parseInt(val))) continue;
-        if (key.toLowerCase() === 'kill' || key.toLowerCase() === 'élimination') {
+        if (key.toLowerCase() === 'kill' || key.toLowerCase() === 'élimination' || key.toLowerCase() === 'elimination') {
           killBonus = parseInt(val);
         } else {
           newMap.set(String(parseInt(key)), parseInt(val));
@@ -77,8 +77,8 @@ module.exports = (client) => {
         .map(([place, pts]) => `#${place} → ${pts} pts`)
         .join(' | ');
 
-      logStaffAction(client, `⚙️ **Config mise à jour** — ${ptRows} | Kill: ${killBonus}pt | Par : ${message.author.tag}`);
-      message.reply(`✅ Système de points mis à jour : ${ptRows}\n💀 Bonus kill : **${killBonus}** pt(s)`);
+      logStaffAction(client, `⚙️ **Config mise à jour** — ${ptRows} | Élimination: ${killBonus}pt | Par : ${message.author.tag}`);
+      message.reply(`✅ Système de points mis à jour : ${ptRows}\n💀 Bonus élimination : **${killBonus}** pt(s)`);
     }
     } catch (err) {
       console.error('[configbot] Erreur:', err);

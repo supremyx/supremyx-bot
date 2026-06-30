@@ -290,7 +290,7 @@ module.exports = (client) => {
           .setColor(0x5865F2)
           .setTitle(`📋 Inscriptions — ${config.tournamentTitle}`)
           .setDescription(lines.join('\n'))
-          .setFooter({ text: `${regs.length}/${config.maxSlots} • ✅ confirmé • ⏳ en attente • ⭐ VIP` })
+          .setFooter({ text: `${regs.length}/${config.maxSlots} • ✅ confirmée • ⏳ en attente • ⭐ VIP` })
           .setTimestamp();
         return message.reply({ embeds: [embed] });
       }

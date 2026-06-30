@@ -27,7 +27,8 @@ module.exports = (client) => {
         AdminLog.aggregate([{ $match: { guildId: message.guild.id } }, { $group: { _id: '$category', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
       ]);
 
-      const sevLines = bySev.map(s => `${s._id === 'critical' ? '🔴' : s._id === 'warn' ? '⚠️' : 'ℹ️'} \`${s._id}\` — ${s.count}`).join('\n') || '—';
+      const SEV_LABELS_FR = { critical: 'critique', warn: 'avertissement', info: 'info' };
+      const sevLines = bySev.map(s => `${s._id === 'critical' ? '🔴' : s._id === 'warn' ? '⚠️' : 'ℹ️'} \`${SEV_LABELS_FR[s._id] ?? s._id}\` — ${s.count}`).join('\n') || '—';
       const catLines = byCat.map(c => `${CAT_EMOJI[c._id] ?? '📋'} \`${c._id}\` — ${c.count}`).join('\n') || '—';
 
       const embed = new EmbedBuilder()
@@ -105,7 +106,7 @@ module.exports = (client) => {
       .setTitle(category ? `📋 Logs admin — ${category}` : '📋 Logs d\'administration')
       .setColor(color)
       .setDescription(lines)
-      .setFooter({ text: `Page ${page}/${pages} • ${total} entrée(s) — !journauxadmin statistiques | critique | utilisateur <id> | vider` })
+      .setFooter({ text: `Page ${page}/${pages} • ${total} entrée(s) — !jadmin statistiques | critique | utilisateur <id> | vider` })
       .setTimestamp();
 
     return message.channel.send({ embeds: [embed] });

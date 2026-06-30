@@ -284,7 +284,8 @@ module.exports = (client) => {
 
       const reg = await TournamentRegistration.findById(regId);
       if (!reg) return interaction.reply({ content: '❌ Inscription introuvable.', ephemeral: true });
-      if (reg.status !== 'pending') return interaction.reply({ content: `⚠️ Déjà traitée (${reg.status}).`, ephemeral: true });
+      const STATUS_FR = { pending: 'en attente', accepted: 'acceptée', refused: 'refusée' };
+      if (reg.status !== 'pending') return interaction.reply({ content: `⚠️ Déjà traitée (${STATUS_FR[reg.status] ?? reg.status}).`, ephemeral: true });
 
       const config = await TournRegConfig.findOne({ guildId: interaction.guild.id });
 
