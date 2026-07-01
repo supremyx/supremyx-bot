@@ -30,7 +30,20 @@ function parseButtons(raw = '') {
     const url   = part.slice(sep + 2).trim();
     if (!label || !url.startsWith('http')) return null;
     return { label, url };
-  }).filter(Boolean).slice(0, 5);
+  }).filter(Boolean).slice(0, 25);
+}
+
+// Répartit jusqu'à 25 boutons sur plusieurs ActionRows (5 par rangée max)
+function buildButtonRows(buttons) {
+  const rows = [];
+  for (let i = 0; i < buttons.length; i += 5) {
+    rows.push(new ActionRowBuilder().addComponents(
+      buttons.slice(i, i + 5).map(b =>
+        new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link)
+      )
+    ));
+  }
+  return rows;
 }
 
 function resolveTarget(message, channelArg) {
@@ -68,8 +81,8 @@ const HELP_TEXT = [
   '`!embed simple ici | Titre | Description | couleur`',
   '`!embed simple aperçu | #salon | Titre | Description | couleur` — prévisualiser avant publication',
   '',
-  '**🔘 Embed avec boutons URL :**',
-  '`!embed boutons #salon | Titre | Description | Texte >> https://... | couleur`',
+  '**🔘 Embed avec boutons URL (jusqu\'à 25 boutons) :**',
+  '`!embed boutons #salon | Titre | Description | Texte >> https://... | Texte2 >> https://... | couleur`',
   '`!embed boutons aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
   '',
   '**⚙️ Embed riche (image + footer, choix du salon) :**',
@@ -176,7 +189,7 @@ module.exports = (client) => {
       if (sub === 'boutons') {
         if (!args) return message.reply(
           '**Usage :** `!embed boutons [aperçu] #salon | Titre | Description | Texte >> https://... | couleur`\n' +
-          'Maximum **5 boutons**. URLs commençant par `https://`.'
+          'Maximum **25 boutons** (5 par rangée, 5 rangées). URLs commençant par `https://`.'
         );
 
         const parts = args.split('|').map(p => p.trim());
@@ -206,23 +219,21 @@ module.exports = (client) => {
           .setTimestamp();
         if (title) embed.setTitle(title);
 
-        const row = new ActionRowBuilder().addComponents(
-          buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
-        );
+        const rows = buildButtonRows(buttons);
 
         if (isPreview) {
-          const confirmed = await awaitConfirmation(message, embed, [row]);
+          const confirmed = await awaitConfirmation(message, embed, rows);
           if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
         }
 
-        await target.send({ embeds: [embed], components: [row] });
+        await target.send({ embeds: [embed], components: rows });
         await message.delete().catch(() => {});
         if (target.id !== message.channel.id)
-          message.channel.send(`✅ Embed avec boutons publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+          message.channel.send(`✅ Embed avec ${buttons.length} bouton(s) publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
 
         await staffLog(client, {
           action: 'embed boutons',
-          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}${isPreview ? '\n*(prévisualisé)*' : ''}`,
+          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Boutons (${buttons.length}) :** ${buttons.map(b => `[${b.label}](${b.url})`).join(', ')}${isPreview ? '\n*(prévisualisé)*' : ''}`,
           author: message.author.tag,
         });
         return;
@@ -663,7 +674,7 @@ module.exports = (client) => {
           '• `auteur` / `auteur_icon_url` — nom et icône au-dessus du titre',
           '• `pied de page` — texte en bas de l\'embed',
           '• `url_titre` — rend le titre cliquable (lien hypertexte)',
-          '• `boutons` — jusqu\'à 5 boutons URL séparés par `;` : `Texte>>https://... ; Texte2>>https://...`',
+          '• `boutons` — jusqu\'à **25 boutons** URL séparés par `;` : `Texte>>https://... ; Texte2>>https://...` (5 par rangée, jusqu\'à 5 rangées)',
           '• `champs` — jusqu\'à 25 champs séparés par `;` : `Nom::Valeur::oui` (oui/non = inline)',
           '',
           '**👁️ Prévisualisation :**',
@@ -707,7 +718,7 @@ module.exports = (client) => {
           const url   = part.slice(sep + 2).trim();
           if (!label || !url.startsWith('http')) return null;
           return { label, url };
-        }).filter(Boolean).slice(0, 5);
+        }).filter(Boolean).slice(0, 25);
 
         // Helper : champs séparés par `;`, colonnes par `::`
         const parseFieldsComp = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(part => {
@@ -803,9 +814,7 @@ module.exports = (client) => {
           let newComponents = mMsg.components;
           if (!keep(mBoutonsRaw)) {
             const buttons = parseButtonsComp(mBoutonsRaw);
-            newComponents = buttons.length ? [new ActionRowBuilder().addComponents(
-              buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
-            )] : [];
+            newComponents = buttons.length ? buildButtonRows(buttons) : [];
           }
 
           await mMsg.edit({ embeds: [updated], components: newComponents });
@@ -855,9 +864,7 @@ module.exports = (client) => {
 
           const previewEmbed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
           if (fields.length) previewEmbed.addFields(fields);
-          const previewComponents = buttons.length ? [new ActionRowBuilder().addComponents(
-            buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
-          )] : null;
+          const previewComponents = buttons.length ? buildButtonRows(buttons) : null;
 
           const confirmed = await awaitConfirmation(message, previewEmbed, previewComponents);
           if (!confirmed) return message.reply('❌ Planification annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
@@ -922,9 +929,7 @@ module.exports = (client) => {
         const embed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
         if (fields.length) embed.addFields(fields);
 
-        const components = buttons.length ? [new ActionRowBuilder().addComponents(
-          buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
-        )] : [];
+        const components = buildButtonRows(buttons);
 
         if (isPreview) {
           const confirmed = await awaitConfirmation(message, embed, components.length ? components : null);
@@ -981,9 +986,7 @@ module.exports = (client) => {
         // Helper : reconstruit boutons/champs depuis le doc BDD
         function docButtons(doc) {
           if (!doc.buttons?.length) return [];
-          return [new ActionRowBuilder().addComponents(
-            doc.buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
-          )];
+          return buildButtonRows(doc.buttons);
         }
         function buildFromDoc(doc) {
           const emb = new EmbedBuilder().setColor(doc.color || 0x5865F2).setTimestamp();
@@ -1025,7 +1028,7 @@ module.exports = (client) => {
             const label = p.slice(0, sep).trim();
             const url   = p.slice(sep + 2).trim();
             return (label && url.startsWith('http')) ? { label, url } : null;
-          }).filter(Boolean).slice(0, 5);
+          }).filter(Boolean).slice(0, 25);
 
           const parseFieldsT = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(p => {
             const cols = p.split('::').map(c => c.trim());
