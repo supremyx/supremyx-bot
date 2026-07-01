@@ -135,7 +135,7 @@ require('./commands/status')(client);
 require('./commands/gitpush')(client);
 require('./commands/gitstatus')(client);
 const { startApiServer } = require('./api/server');
-startApiServer();
+startApiServer(client);
 require('./commands/changelog')(client);
 require('./commands/botstats')(client);
 require('./utils/commandTracker')(client);

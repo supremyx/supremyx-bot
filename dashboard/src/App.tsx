@@ -33,13 +33,14 @@ import InscriptionsPage from "./pages/InscriptionsPage";
 import EloPage from "./pages/EloPage";
 import BadgesPage from "./pages/BadgesPage";
 import StatsServeurPage from "./pages/StatsServeurPage";
+import CommandCenterPage from "./pages/CommandCenterPage";
 import GlobalSearch from "./components/GlobalSearch";
 import NotificationBanner from "./components/NotificationBanner";
 import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter";
 
 interface Team {
   rank: number;
@@ -80,6 +81,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "statsserveur",      label: "Stats Serveur",  icon: "📊" },
   { key: "logs",              label: "Journaux",    icon: "📋" },
   { key: "live-activity",     label: "Activité live", icon: "📡" },
+  { key: "commandcenter",     label: "Commandes",   icon: "🎛️" },
   { key: "parametres",        label: "Paramètres",  icon: "⚙️" },
 ];
 
@@ -819,6 +821,7 @@ export default function App() {
       {page === "elo"               && <EloPage />}
       {page === "badges"            && <BadgesPage />}
       {page === "statsserveur"      && <StatsServeurPage />}
+      {page === "commandcenter"     && <CommandCenterPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>

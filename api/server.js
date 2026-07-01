@@ -17,6 +17,10 @@ const CommandStat   = require('../database/models/CommandStat');
 const IaConfig      = require('../database/models/IaConfig');
 const IaUsage       = require('../database/models/IaUsage');
 const BilanHebdo    = require('../database/models/BilanHebdo');
+const Note          = require('../database/models/Note');
+const WelcomeConfig = require('../database/models/WelcomeConfig');
+const AutoroleConfig= require('../database/models/AutoroleConfig');
+const XpEntry       = require('../database/models/XpEntry');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -75,10 +79,23 @@ app.use(cors({
     );
     cb(ok ? null : new Error('CORS: origine non autorisée'), ok);
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-api-key'],
   credentials: true,
 }));
+
+// ─── Discord client (injected by index.js) ────────────────────────────────────
+let _discordClient = null;
+
+async function resolveGuild(guildId) {
+  if (!_discordClient) throw new Error('Client Discord non disponible');
+  if (guildId) {
+    const cached = _discordClient.guilds.cache.get(guildId);
+    if (cached) return cached;
+    try { return await _discordClient.guilds.fetch(guildId); } catch {}
+  }
+  return _discordClient.guilds.cache.first() ?? null;
+}
 app.use(express.json());
 
 // ─── Auth middleware (lecture publique, écriture protégée) ───────────────────
@@ -1732,6 +1749,476 @@ router.put('/bot/config', requireApiKey, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Dashboard Command Center — Action Endpoints ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── GET /actions/guild/info — channels + roles list ───────────────────────────
+router.get('/actions/guild/info', requireApiKey, async (req, res) => {
+  try {
+    const guild = await resolveGuild(req.query.guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    await guild.members.fetch().catch(() => {});
+    const channels = guild.channels.cache
+      .filter(c => c.isTextBased && c.isTextBased())
+      .map(c => ({ id: c.id, name: c.name, type: c.type }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const roles = guild.roles.cache
+      .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+      .filter(r => r.name !== '@everyone')
+      .sort((a, b) => b.name.localeCompare(a.name));
+    const members = guild.members.cache
+      .filter(m => !m.user.bot)
+      .map(m => ({ id: m.id, tag: m.user.tag, username: m.user.username, displayName: m.displayName }))
+      .slice(0, 200);
+    res.json({ id: guild.id, name: guild.name, channels, roles, members });
+  } catch (err) {
+    console.error('[GET /actions/guild/info]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Tournois ─────────────────────────────────────────────────────────────────
+
+router.post('/actions/tournoi/create', requireApiKey, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'Nom du tournoi requis' });
+    const existing = await Tournament.findOne({ active: true });
+    if (existing) return res.status(409).json({ error: `Tournoi actif déjà en cours : "${existing.name}"` });
+    const t = await Tournament.create({ name: name.trim(), startedBy: 'Dashboard', active: true });
+    eventBus.emit('tournoi_start', { name: t.name, startedBy: 'Dashboard' });
+    res.json({ success: true, tournament: t });
+  } catch (err) {
+    console.error('[POST /actions/tournoi/create]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/tournoi/finish', requireApiKey, async (req, res) => {
+  try {
+    const { tournamentId, winner } = req.body;
+    const filter = tournamentId ? { _id: tournamentId } : { active: true };
+    const t = await Tournament.findOne(filter);
+    if (!t) return res.status(404).json({ error: 'Aucun tournoi actif trouvé' });
+    t.active = false;
+    t.winner = winner?.trim() || null;
+    t.endedAt = new Date();
+    t.endedBy = 'Dashboard';
+    await t.save();
+    eventBus.emit('tournoi_end', { name: t.name, winner: t.winner });
+    res.json({ success: true, tournament: t });
+  } catch (err) {
+    console.error('[POST /actions/tournoi/finish]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/tournoi/:id', requireApiKey, async (req, res) => {
+  try {
+    const t = await Tournament.findByIdAndDelete(req.params.id);
+    if (!t) return res.status(404).json({ error: 'Tournoi introuvable' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/tournoi/:id]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Équipes ──────────────────────────────────────────────────────────────────
+
+router.post('/actions/team/create', requireApiKey, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'Nom d\'équipe requis' });
+    const exists = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name.trim())}$`, 'i') } });
+    if (exists) return res.status(409).json({ error: `L\'équipe "${name.trim()}" existe déjà` });
+    const team = await Team.create({ name: name.trim() });
+    res.json({ success: true, team });
+  } catch (err) {
+    console.error('[POST /actions/team/create]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/team', requireApiKey, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nom d\'équipe requis' });
+    const team = await Team.findOneAndDelete({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
+    if (!team) return res.status(404).json({ error: `Équipe "${name}" introuvable` });
+    await Promise.allSettled([
+      PlayerStat.deleteMany({ teamName: team.name }),
+      Roster.deleteMany({ teamName: team.name }),
+    ]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/team]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/actions/team/rename', requireApiKey, async (req, res) => {
+  try {
+    const { oldName, newName } = req.body;
+    if (!oldName || !newName?.trim()) return res.status(400).json({ error: 'oldName et newName requis' });
+    const team = await Team.findOneAndUpdate(
+      { name: { $regex: new RegExp(`^${escapeRegex(oldName)}$`, 'i') } },
+      { $set: { name: newName.trim() } },
+      { new: true }
+    );
+    if (!team) return res.status(404).json({ error: `Équipe "${oldName}" introuvable` });
+    await Promise.allSettled([
+      PlayerStat.updateMany({ teamName: oldName }, { $set: { teamName: newName.trim() } }),
+      Roster.updateMany({ teamName: oldName }, { $set: { teamName: newName.trim() } }),
+      Match.updateMany({ team: oldName }, { $set: { team: newName.trim() } }),
+    ]);
+    res.json({ success: true, team });
+  } catch (err) {
+    console.error('[PATCH /actions/team/rename]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Roster ───────────────────────────────────────────────────────────────────
+
+router.post('/actions/roster/member', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, teamName, displayName, role, userId } = req.body;
+    if (!teamName || !displayName) return res.status(400).json({ error: 'teamName et displayName requis' });
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    await Roster.findOneAndUpdate(
+      { guildId: gId, teamName },
+      { $push: { members: { displayName, role: role || 'Flex', userId: userId || '', joinedAt: new Date() } }, $set: { updatedAt: new Date() } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/roster/member]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/roster/member', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, teamName, displayName } = req.body;
+    if (!teamName || !displayName) return res.status(400).json({ error: 'teamName et displayName requis' });
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    await Roster.findOneAndUpdate(
+      { guildId: gId, teamName },
+      { $pull: { members: { displayName } }, $set: { updatedAt: new Date() } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/roster/member]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── XP & Niveaux ─────────────────────────────────────────────────────────────
+
+router.post('/actions/player/xp', requireApiKey, async (req, res) => {
+  try {
+    const { userId, username, guildId, amount } = req.body;
+    if (!userId || amount === undefined) return res.status(400).json({ error: 'userId et amount requis' });
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    const amt = Number(amount);
+    const entry = await XpEntry.findOneAndUpdate(
+      { guildId: gId, userId },
+      { $inc: { xp: amt }, ...(username ? { $set: { username } } : {}) },
+      { upsert: true, new: true }
+    );
+    const newLevel = Math.floor(Math.sqrt(Math.max(0, entry.xp) / 100));
+    if (newLevel !== entry.level) { entry.level = newLevel; await entry.save(); }
+    res.json({ success: true, xp: entry.xp, level: entry.level });
+  } catch (err) {
+    console.error('[POST /actions/player/xp]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Communication (via Discord) ──────────────────────────────────────────────
+
+router.post('/actions/announce', requireApiKey, async (req, res) => {
+  try {
+    const { channelId, message, guildId } = req.body;
+    if (!channelId || !message) return res.status(400).json({ error: 'channelId et message requis' });
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const ch = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+    if (!ch?.isTextBased()) return res.status(404).json({ error: 'Salon introuvable ou non textuel' });
+    await ch.send(message);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/announce]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/embed/send', requireApiKey, async (req, res) => {
+  try {
+    const { channelId, title, description, color, footer, image, guildId } = req.body;
+    if (!channelId || (!title && !description)) return res.status(400).json({ error: 'channelId + titre ou description requis' });
+    const { EmbedBuilder } = require('discord.js');
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const ch = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+    if (!ch?.isTextBased()) return res.status(404).json({ error: 'Salon introuvable' });
+    const embed = new EmbedBuilder().setTimestamp();
+    if (title)       embed.setTitle(title);
+    if (description) embed.setDescription(description);
+    if (color)       embed.setColor(color);
+    if (footer)      embed.setFooter({ text: footer });
+    if (image)       embed.setImage(image);
+    await ch.send({ embeds: [embed] });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/embed/send]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/poll', requireApiKey, async (req, res) => {
+  try {
+    const { channelId, question, guildId } = req.body;
+    if (!channelId || !question) return res.status(400).json({ error: 'channelId et question requis' });
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const ch = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+    if (!ch?.isTextBased()) return res.status(404).json({ error: 'Salon introuvable' });
+    const msg = await ch.send(`📊 **SONDAGE** — ${question}\n\n✅ Pour · ❌ Contre`);
+    await msg.react('✅');
+    await msg.react('❌');
+    res.json({ success: true, messageId: msg.id });
+  } catch (err) {
+    console.error('[POST /actions/poll]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/say', requireApiKey, async (req, res) => {
+  try {
+    const { channelId, message, guildId } = req.body;
+    if (!channelId || !message) return res.status(400).json({ error: 'channelId et message requis' });
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const ch = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+    if (!ch?.isTextBased()) return res.status(404).json({ error: 'Salon introuvable' });
+    await ch.send(message);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/say]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/effacer', requireApiKey, async (req, res) => {
+  try {
+    const { channelId, count, guildId } = req.body;
+    if (!channelId || !count) return res.status(400).json({ error: 'channelId et count requis' });
+    const n = Math.min(Math.max(1, Number(count)), 100);
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const ch = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+    if (!ch?.isTextBased()) return res.status(404).json({ error: 'Salon introuvable' });
+    const deleted = await ch.bulkDelete(n, true);
+    res.json({ success: true, deleted: deleted.size });
+  } catch (err) {
+    console.error('[POST /actions/effacer]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Modération ───────────────────────────────────────────────────────────────
+
+router.post('/actions/warn', requireApiKey, async (req, res) => {
+  try {
+    const { userId, userTag, reason, guildId } = req.body;
+    if (!userId || !reason) return res.status(400).json({ error: 'userId et reason requis' });
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    await Warning.create({ target: userTag || userId, targetId: userId, reason, warnedBy: 'Dashboard', warnedById: 'dashboard' });
+    await Sanction.create({ guildId: gId, userId, userTag: userTag || userId, type: 'warn', reason, moderatorTag: 'Dashboard' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/warn]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/warn', requireApiKey, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId requis' });
+    const last = await Warning.findOneAndDelete({ targetId: userId }, { sort: { createdAt: -1 } });
+    if (!last) return res.status(404).json({ error: 'Aucun avertissement trouvé pour cet utilisateur' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/warn]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/mute', requireApiKey, async (req, res) => {
+  try {
+    const { userId, durationMinutes, reason, guildId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId requis' });
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
+    if (!member) return res.status(404).json({ error: 'Membre introuvable dans ce serveur' });
+    const ms = Math.min((Number(durationMinutes) || 60) * 60 * 1000, 28 * 24 * 60 * 60 * 1000);
+    await member.timeout(ms, reason || 'Sourdine via dashboard');
+    await Sanction.create({ guildId: guild.id, userId, userTag: member.user.tag, type: 'mute', reason: reason || 'Via dashboard', duration: Number(durationMinutes) || 60, moderatorTag: 'Dashboard' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/mute]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/unmute', requireApiKey, async (req, res) => {
+  try {
+    const { userId, guildId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId requis' });
+    const guild = await resolveGuild(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
+    if (!member) return res.status(404).json({ error: 'Membre introuvable' });
+    await member.timeout(null);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[POST /actions/unmute]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Configuration ────────────────────────────────────────────────────────────
+
+router.get('/actions/config/welcome', requireApiKey, async (req, res) => {
+  try {
+    const guild = await resolveGuild(req.query.guildId).catch(() => null);
+    const gId = req.query.guildId || guild?.id;
+    const cfg = await WelcomeConfig.findOne(gId ? { guildId: gId } : {}).lean();
+    res.json(cfg || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/actions/config/welcome', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, channelId, message, enabled } = req.body;
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    const cfg = await WelcomeConfig.findOneAndUpdate(
+      { guildId: gId },
+      { $set: { channelId: channelId ?? '', message: message ?? '', enabled: enabled !== false } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, config: cfg });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/actions/config/autorole', requireApiKey, async (req, res) => {
+  try {
+    const guild = await resolveGuild(req.query.guildId).catch(() => null);
+    const gId = req.query.guildId || guild?.id;
+    const cfg = await AutoroleConfig.findOne(gId ? { guildId: gId } : {}).lean();
+    res.json(cfg || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/actions/config/autorole', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, roleId, enabled } = req.body;
+    if (!roleId) return res.status(400).json({ error: 'roleId requis' });
+    const guild = await resolveGuild(guildId).catch(() => null);
+    const gId = guildId || guild?.id || 'global';
+    const cfg = await AutoroleConfig.findOneAndUpdate(
+      { guildId: gId },
+      { $set: { roleId, enabled: enabled !== false } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, config: cfg });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Blacklist ────────────────────────────────────────────────────────────────
+
+router.post('/actions/blacklist', requireApiKey, async (req, res) => {
+  try {
+    const { target, reason } = req.body;
+    if (!target?.trim()) return res.status(400).json({ error: 'target (nom/pseudo) requis' });
+    const existing = await Blacklist.findOne({ target: { $regex: new RegExp(`^${escapeRegex(target.trim())}$`, 'i') } });
+    if (existing) return res.status(409).json({ error: `"${target}" est déjà blacklisté` });
+    const entry = await Blacklist.create({ target: target.trim(), reason: reason || 'Via dashboard', addedBy: 'Dashboard' });
+    res.json({ success: true, entry });
+  } catch (err) {
+    console.error('[POST /actions/blacklist]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/blacklist', requireApiKey, async (req, res) => {
+  try {
+    const { target } = req.body;
+    if (!target) return res.status(400).json({ error: 'target requis' });
+    const entry = await Blacklist.findOneAndDelete({ target: { $regex: new RegExp(`^${escapeRegex(target)}$`, 'i') } });
+    if (!entry) return res.status(404).json({ error: `"${target}" n'est pas blacklisté` });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/blacklist]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Notes ────────────────────────────────────────────────────────────────────
+
+router.get('/actions/notes', requireApiKey, async (req, res) => {
+  try {
+    const filter = req.query.target
+      ? { target: { $regex: new RegExp(escapeRegex(req.query.target), 'i') } }
+      : {};
+    const notes = await Note.find(filter).sort({ createdAt: -1 }).limit(50).lean();
+    res.json({ notes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/actions/notes', requireApiKey, async (req, res) => {
+  try {
+    const { target, content, author } = req.body;
+    if (!target?.trim() || !content?.trim()) return res.status(400).json({ error: 'target et content requis' });
+    const note = await Note.create({ target: target.trim(), content: content.trim(), author: author || 'Dashboard' });
+    res.json({ success: true, note });
+  } catch (err) {
+    console.error('[POST /actions/notes]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/actions/notes/:id', requireApiKey, async (req, res) => {
+  try {
+    const note = await Note.findByIdAndDelete(req.params.id);
+    if (!note) return res.status(404).json({ error: 'Note introuvable' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DELETE /actions/notes/:id]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
@@ -1745,7 +2232,8 @@ if (require('fs').existsSync(DASHBOARD_DIST)) {
   });
 }
 
-function startApiServer() {
+function startApiServer(discordClient) {
+  if (discordClient) _discordClient = discordClient;
   const server = app.listen(PORT, () => {
     console.log(`🌐 API SUPREMYX démarrée sur le port ${PORT}`);
   });
