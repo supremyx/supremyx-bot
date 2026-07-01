@@ -1,7 +1,8 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { staffLog } = require('../utils/staffLog');
 const { logStaffAction } = require('../utils/staffLog');
-const ScheduledEmbed = require('../database/models/ScheduledEmbed');
+const ScheduledEmbed   = require('../database/models/ScheduledEmbed');
+const EmbedTemplate    = require('../database/models/EmbedTemplate');
 
 // ─── Couleurs ────────────────────────────────────────────────────────────────
 const COLOR_MAP = {
@@ -91,6 +92,14 @@ const HELP_TEXT = [
   '`!embed programmer #salon | Titre | Description | couleur | YYYY-MM-DD HH:MM`',
   '`!embed programmes` — voir les embeds en attente de publication',
   '`!embed déprogrammer <id>` — annuler un embed planifié',
+  '',
+  '**📁 Modèles d\'embeds :**',
+  '`!embed modèle sauvegarder <nom> | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs`',
+  '`!embed modèle charger <nom> | #salon` — publier un modèle',
+  '`!embed modèle aperçu <nom>` — prévisualiser un modèle',
+  '`!embed modèle liste` — voir tous les modèles sauvegardés',
+  '`!embed modèle supprimer <nom>` — supprimer un modèle',
+  '`!embed modèle renommer <ancien> | <nouveau>` — renommer un modèle',
   '',
   '**🎨 Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
 ].join('\n');
@@ -929,6 +938,286 @@ module.exports = (client) => {
           author: message.author.tag,
         });
         return;
+      }
+
+      // ── !embed modèle ──────────────────────────────────────────────────────
+      if (sub === 'modèle' || sub === 'modele') {
+        const spIdx   = args.indexOf(' ');
+        const action  = (spIdx === -1 ? args : args.slice(0, spIdx)).toLowerCase().trim();
+        const rest    = spIdx === -1 ? '' : args.slice(spIdx + 1).trim();
+
+        const MODELE_USAGE = [
+          '**📁 Modèles d\'embeds — Commandes :**',
+          '',
+          '`!embed modèle sauvegarder <nom> | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | Bouton>>URL ; B2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
+          '`!embed modèle charger <nom> | #salon` — publier un modèle dans un salon',
+          '`!embed modèle aperçu <nom>` — prévisualiser un modèle',
+          '`!embed modèle liste` — voir tous les modèles sauvegardés',
+          '`!embed modèle supprimer <nom>` — supprimer un modèle',
+          '`!embed modèle renommer <ancien> | <nouveau>` — renommer un modèle',
+          '',
+          '> Le `<nom>` ne peut pas contenir `|`. Utilise un nom court sans espaces si possible.',
+        ].join('\n');
+
+        if (!action) return message.reply(MODELE_USAGE);
+
+        // Helper : reconstruit boutons/champs depuis le doc BDD
+        function docButtons(doc) {
+          if (!doc.buttons?.length) return [];
+          return [new ActionRowBuilder().addComponents(
+            doc.buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
+          )];
+        }
+        function buildFromDoc(doc) {
+          const emb = new EmbedBuilder().setColor(doc.color || 0x5865F2).setTimestamp();
+          if (doc.title)        emb.setTitle(doc.title);
+          if (doc.description)  emb.setDescription(doc.description);
+          if (doc.imageUrl)     emb.setImage(doc.imageUrl);
+          if (doc.thumbnailUrl) emb.setThumbnail(doc.thumbnailUrl);
+          if (doc.footer)       emb.setFooter({ text: doc.footer });
+          if (doc.authorName)   emb.setAuthor({ name: doc.authorName, iconURL: doc.authorIconUrl || undefined });
+          if (doc.urlTitre)     emb.setURL(doc.urlTitre);
+          if (doc.fields?.length) emb.addFields(doc.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline })));
+          return emb;
+        }
+
+        // ── sauvegarder ──────────────────────────────────────────────────────
+        if (action === 'sauvegarder') {
+          const pipeIdx = rest.indexOf('|');
+          const tplName = (pipeIdx === -1 ? rest : rest.slice(0, pipeIdx)).trim();
+          const fieldsRaw = pipeIdx === -1 ? '' : rest.slice(pipeIdx + 1);
+
+          if (!tplName) return message.reply('❌ Indique un nom pour le modèle.\n**Usage :** `!embed modèle sauvegarder <nom> | Titre | ...`');
+
+          const parts = fieldsRaw.split('|').map(p => p.trim());
+          const tTitle       = parts[0] || '';
+          const tDesc        = parts[1] || '';
+          const tColorRaw    = parts[2] || 'bleu';
+          const tImageUrl    = parts[3] || '';
+          const tThumbUrl    = parts[4] || '';
+          const tAuthorName  = parts[5] || '';
+          const tAuthorIcon  = parts[6] || '';
+          const tFooter      = parts[7] || '';
+          const tUrlTitre    = parts[8] || '';
+          const tBoutonsRaw  = parts[9] || '';
+          const tChampsRaw   = parts[10] || '';
+
+          const parseButtonsT = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(p => {
+            const sep = p.indexOf('>>');
+            if (sep === -1) return null;
+            const label = p.slice(0, sep).trim();
+            const url   = p.slice(sep + 2).trim();
+            return (label && url.startsWith('http')) ? { label, url } : null;
+          }).filter(Boolean).slice(0, 5);
+
+          const parseFieldsT = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(p => {
+            const cols = p.split('::').map(c => c.trim());
+            return cols[0] ? { name: cols[0], value: cols[1] || '\u200B', inline: (cols[2] || '').toLowerCase() === 'oui' } : null;
+          }).filter(Boolean).slice(0, 25);
+
+          const tButtons = parseButtonsT(tBoutonsRaw);
+          const tFields  = parseFieldsT(tChampsRaw);
+
+          const existing = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${tplName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+
+          const data = {
+            guildId:      message.guild.id,
+            name:         tplName,
+            title:        tTitle,
+            description:  tDesc,
+            color:        parseColor(tColorRaw),
+            imageUrl:     tImageUrl,
+            thumbnailUrl: tThumbUrl,
+            authorName:   tAuthorName,
+            authorIconUrl: tAuthorIcon,
+            footer:       tFooter,
+            urlTitre:     tUrlTitre,
+            buttons:      tButtons,
+            fields:       tFields,
+            updatedBy:    message.author.tag,
+          };
+          if (!existing) data.createdBy = message.author.tag;
+
+          const doc = existing
+            ? await EmbedTemplate.findByIdAndUpdate(existing._id, data, { new: true })
+            : await EmbedTemplate.create(data);
+
+          const confirm = new EmbedBuilder()
+            .setColor(0x57F287)
+            .setTitle(existing ? `✅ Modèle \`${tplName}\` mis à jour` : `✅ Modèle \`${tplName}\` sauvegardé`)
+            .addFields(
+              { name: '📋 Titre',     value: tTitle     || '*(aucun)*',                           inline: true },
+              { name: '🎨 Couleur',   value: tColorRaw  || 'bleu',                                inline: true },
+              { name: '👤 Auteur',    value: tAuthorName || '*(aucun)*',                           inline: true },
+              { name: '🖼️ Thumbnail', value: tThumbUrl  ? '✅' : '*(aucun)*',                     inline: true },
+              { name: '🔗 URL titre', value: tUrlTitre  ? '✅' : '*(aucun)*',                     inline: true },
+              { name: '🔘 Boutons',   value: tButtons.length ? `${tButtons.length} bouton(s)` : '*(aucun)*', inline: true },
+              { name: '📊 Champs',    value: tFields.length  ? `${tFields.length} champ(s)`   : '*(aucun)*', inline: true },
+              { name: '📝 Aperçu desc', value: tDesc.slice(0, 200) || '*(vide)*', inline: false },
+            )
+            .setFooter({ text: `!embed modèle charger ${tplName} | #salon — pour publier ce modèle` })
+            .setTimestamp();
+
+          await message.reply({ embeds: [confirm] });
+          await staffLog(client, {
+            action: 'embed modèle sauvegarder',
+            details: `**Nom :** \`${tplName}\`\n**Titre :** ${tTitle || '—'}\n**Boutons :** ${tButtons.length} · **Champs :** ${tFields.length}${existing ? '\n*(mise à jour)*' : ''}`,
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        // ── liste ────────────────────────────────────────────────────────────
+        if (action === 'liste') {
+          const docs = await EmbedTemplate.find({ guildId: message.guild.id }).sort({ name: 1 }).limit(25);
+          if (!docs.length) return message.reply('📭 Aucun modèle sauvegardé sur ce serveur.\n💡 Utilise `!embed modèle sauvegarder <nom> | ...` pour en créer un.');
+
+          const lines = docs.map((d, i) => {
+            const tags = [
+              d.thumbnailUrl ? '🖼️' : '',
+              d.authorName   ? '👤' : '',
+              d.imageUrl     ? '📷' : '',
+              d.buttons?.length ? `🔘×${d.buttons.length}` : '',
+              d.fields?.length  ? `📊×${d.fields.length}`  : '',
+              d.urlTitre        ? '🔗' : '',
+            ].filter(Boolean).join(' ');
+            const titre = d.title ? `**${d.title}**` : '*(sans titre)*';
+            return `**${i + 1}.** \`${d.name}\` — ${titre}${tags ? `  ${tags}` : ''}\n↳ par ${d.createdBy} · ${d.description ? d.description.slice(0, 60).replace(/\n/g, ' ') + (d.description.length > 60 ? '…' : '') : '*(vide)*'}`;
+          });
+
+          const listEmbed = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle(`📁 Modèles d'embeds — ${docs.length} modèle(s)`)
+            .setDescription(lines.join('\n\n'))
+            .setFooter({ text: '!embed modèle charger <nom> | #salon — pour publier · !embed modèle aperçu <nom> — pour prévisualiser' })
+            .setTimestamp();
+
+          return message.reply({ embeds: [listEmbed] });
+        }
+
+        // ── aperçu ───────────────────────────────────────────────────────────
+        if (action === 'aperçu' || action === 'apercu') {
+          const tplName = rest.trim();
+          if (!tplName) return message.reply('**Usage :** `!embed modèle aperçu <nom>`');
+
+          const doc = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${tplName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!doc) return message.reply(`❌ Modèle \`${tplName}\` introuvable. Utilise \`!embed modèle liste\` pour voir les modèles disponibles.`);
+
+          const previewEmbed = buildFromDoc(doc);
+          const components   = docButtons(doc);
+
+          const info = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle(`📋 Modèle : \`${doc.name}\``)
+            .addFields(
+              { name: '🎨 Couleur',   value: `\`#${(doc.color || 0x5865F2).toString(16).padStart(6, '0').toUpperCase()}\``, inline: true },
+              { name: '👤 Auteur',    value: doc.authorName    || '*(aucun)*',       inline: true },
+              { name: '🖼️ Thumbnail', value: doc.thumbnailUrl ? '✅' : '*(aucun)*',  inline: true },
+              { name: '🔗 URL titre', value: doc.urlTitre     ? '✅' : '*(aucun)*',  inline: true },
+              { name: '🔘 Boutons',   value: doc.buttons?.length ? `${doc.buttons.length} bouton(s)` : '*(aucun)*', inline: true },
+              { name: '📊 Champs',    value: doc.fields?.length  ? `${doc.fields.length} champ(s)`  : '*(aucun)*', inline: true },
+              { name: '💾 Créé par',  value: doc.createdBy || '—', inline: true },
+              { name: '✏️ Modifié par', value: doc.updatedBy || '—', inline: true },
+            )
+            .setFooter({ text: `!embed modèle charger ${doc.name} | #salon — pour publier ce modèle` })
+            .setTimestamp();
+
+          await message.reply({ embeds: [info] });
+          await message.channel.send({ embeds: [previewEmbed], components });
+          return;
+        }
+
+        // ── charger ──────────────────────────────────────────────────────────
+        if (action === 'charger') {
+          const pipeIdx  = rest.indexOf('|');
+          const tplName  = (pipeIdx === -1 ? rest : rest.slice(0, pipeIdx)).trim();
+          const chanArg  = pipeIdx === -1 ? '' : rest.slice(pipeIdx + 1).trim();
+
+          if (!tplName) return message.reply('**Usage :** `!embed modèle charger <nom> | #salon`');
+          if (!chanArg) return message.reply('❌ Indique le salon de destination.\n**Usage :** `!embed modèle charger <nom> | #salon`');
+
+          const doc = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${tplName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!doc) return message.reply(`❌ Modèle \`${tplName}\` introuvable. Utilise \`!embed modèle liste\` pour voir les modèles disponibles.`);
+
+          const target = resolveTarget(message, chanArg);
+          if (!target) return message.reply('❌ Salon introuvable. Mentionne-le avec `#` ou écris `ici`.');
+
+          const sendEmbed    = buildFromDoc(doc);
+          const components   = docButtons(doc);
+
+          const confirmed = await awaitConfirmation(message, sendEmbed, components.length ? components : null);
+          if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+
+          await target.send({ embeds: [sendEmbed], components });
+          await message.delete().catch(() => {});
+          if (target.id !== message.channel.id)
+            message.channel.send(`✅ Modèle \`${doc.name}\` publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+          await staffLog(client, {
+            action: 'embed modèle charger',
+            details: `**Modèle :** \`${doc.name}\`\n**Salon :** <#${target.id}>\n**Titre :** ${doc.title || '—'}`,
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        // ── supprimer ────────────────────────────────────────────────────────
+        if (action === 'supprimer') {
+          const tplName = rest.trim();
+          if (!tplName) return message.reply('**Usage :** `!embed modèle supprimer <nom>`');
+
+          const doc = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${tplName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!doc) return message.reply(`❌ Modèle \`${tplName}\` introuvable.`);
+
+          const confirmEmbed = new EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle('🗑️ Confirmer la suppression du modèle')
+            .addFields(
+              { name: '📁 Nom',    value: `\`${doc.name}\``,       inline: true },
+              { name: '📋 Titre', value: doc.title || '*(aucun)*', inline: true },
+            )
+            .setFooter({ text: 'Réagis ✅ pour supprimer, ❌ pour annuler (30s)' });
+
+          const confirmed = await awaitConfirmation(message, confirmEmbed);
+          if (!confirmed) return message.channel.send('❌ Suppression annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+
+          await EmbedTemplate.findByIdAndDelete(doc._id);
+          await message.reply(`✅ Modèle \`${doc.name}\` supprimé.`);
+
+          await staffLog(client, {
+            action: 'embed modèle supprimer',
+            details: `**Nom :** \`${doc.name}\`\n**Titre :** ${doc.title || '—'}`,
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        // ── renommer ─────────────────────────────────────────────────────────
+        if (action === 'renommer') {
+          const parts   = rest.split('|').map(p => p.trim());
+          const oldName = parts[0] || '';
+          const newName = parts[1] || '';
+
+          if (!oldName || !newName) return message.reply('**Usage :** `!embed modèle renommer <ancien_nom> | <nouveau_nom>`');
+
+          const doc = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!doc) return message.reply(`❌ Modèle \`${oldName}\` introuvable.`);
+
+          const conflict = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${newName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (conflict) return message.reply(`❌ Un modèle nommé \`${newName}\` existe déjà.`);
+
+          await EmbedTemplate.findByIdAndUpdate(doc._id, { name: newName, updatedBy: message.author.tag });
+          await message.reply(`✅ Modèle renommé : \`${oldName}\` → \`${newName}\``);
+
+          await staffLog(client, {
+            action: 'embed modèle renommer',
+            details: `\`${oldName}\` → \`${newName}\``,
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        return message.reply(`❌ Action \`${action}\` inconnue.\n\n${MODELE_USAGE}`);
       }
 
       // ── Sous-commande inconnue ─────────────────────────────────────────────

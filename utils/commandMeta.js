@@ -34,7 +34,7 @@ module.exports = {
   'deletetournoi.js':  { commands: ['!supprimertournoi <nom>'],                                                                               staff: true },
   'diffuser.js':       { commands: ['!diffuser <message>|ajouter|retirer|liste|aperçu'],                                                     staff: true },
   'dispo.js':          { commands: ['!dispo oui|non|incertain', '!dispo match|voir|effacer|liste'],                                          staff: 'mixed' },
-  'embed.js':          { commands: ['!embed envoyer|boutons|avancé|complet|liste|modifier|supprimer|cloner|programmer|programmes|déprogrammer'], staff: true },
+  'embed.js':          { commands: ['!embed envoyer|boutons|avancé|complet|liste|modifier|supprimer|cloner|programmer|programmes|déprogrammer|modèle'], staff: true },
   'embedbuilder.js':   { commands: ['!embedplus'],                                                                                            staff: true },
   'endtournoi.js':     { commands: ['!finirtournoi'],                                                                                         staff: true },
   'equipesplus.js':    { commands: ['!equipes', '!agentslibres', '!transfert', '!capitaine <équipe>', '!comparerjoueur <J1> | <J2>'],         staff: 'mixed' },
