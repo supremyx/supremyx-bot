@@ -170,7 +170,7 @@ const STAFF_CATEGORIES = [
       { label: '!dispo effacer @membre',                description: 'Effacer les disponibilités d\'un membre (Staff)',             subs: ['effacer @membre — Effacer', 'liste <équipe> — Vue équipe', 'résumé — Vue globale serveur *(Staff)*'] },
       { label: '!xp multiplicateur #salon <val>',       description: 'Multiplicateur XP par salon 0-10 (Staff)',                   subs: ['multiplicateur #salon <0-10> — Définir', 'multiplicateurs — Voir tous'] },
       { label: '!planifiermatch <T1> vs <T2> <date>',   description: 'Planifier un match avec rappels automatiques 60 min et 15 min avant (Staff)', subs: ['<T1> vs <T2> JJ/MM [HH:MM] [note] — Planifier', 'liste — Matchs planifiés', 'annuler <id> — Annuler un match', '!rappelsmatch — Voir les prochains (public)'] },
-      { label: '!teamvoice <équipe>',                   description: 'Créer un salon vocal temporaire privé pour une équipe (Staff) — auto-supprimé après 3h', subs: ['<équipe> — Créer le salon', 'supprimer <équipe> — Supprimer manuellement'] },
+      { label: '!voixequipe <équipe>',                   description: 'Créer un salon vocal temporaire privé pour une équipe (Staff) — auto-supprimé après 3h', subs: ['<équipe> — Créer le salon', 'supprimer <équipe> — Supprimer manuellement'] },
       { label: '!mvpmatch <id> <joueur>',               description: 'Désigner le MVP d\'un match spécifique (Staff)',             subs: ['<id_match> <joueur> — Désigner', 'liste — 15 derniers MVPs', 'joueur <nom> — MVPs d\'un joueur'] },
       { label: '!auditactivite [N]',                    description: 'Rapport d\'activité des équipes sur les N derniers jours — actifs, inactifs, matchs (Staff)', subs: [] },
     ],

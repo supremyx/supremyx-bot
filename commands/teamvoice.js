@@ -1,6 +1,6 @@
 /**
- * !teamvoice <équipe>           — Créer un salon vocal temporaire pour une équipe (Staff)
- * !teamvoice supprimer <équipe> — Supprimer le salon vocal de l'équipe (Staff)
+ * !voixequipe <équipe>           — Créer un salon vocal temporaire pour une équipe (Staff)
+ * !voixequipe supprimer <équipe> — Supprimer le salon vocal de l'équipe (Staff)
  */
 const { PermissionsBitField, ChannelType } = require('discord.js');
 const Roster = require('../database/models/Roster');
@@ -14,7 +14,7 @@ module.exports = (client) => {
       if (!message.guild) return;
       if (message.author.bot) return;
       if (!message.member) return;
-      if (!message.content.startsWith('!teamvoice')) return;
+      if (!message.content.startsWith('!voixequipe')) return;
 
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
@@ -25,7 +25,7 @@ module.exports = (client) => {
 
       if (sub === 'supprimer') {
         const teamName = parts.slice(2).join(' ');
-        if (!teamName) return message.reply('Usage : `!teamvoice supprimer <équipe>`');
+        if (!teamName) return message.reply('Usage : `!voixequipe supprimer <équipe>`');
 
         const key = Object.keys(Object.fromEntries(activeVoices)).find(k => k.toLowerCase() === teamName.toLowerCase());
         const channelId = activeVoices.get(key || teamName);
@@ -38,7 +38,7 @@ module.exports = (client) => {
       }
 
       const teamName = parts.slice(1).join(' ');
-      if (!teamName) return message.reply('Usage : `!teamvoice <équipe>`');
+      if (!teamName) return message.reply('Usage : `!voixequipe <équipe>`');
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } }).lean();
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
@@ -95,10 +95,10 @@ module.exports = (client) => {
         activeVoices.delete(team.name);
       }, 3 * 60 * 60 * 1000);
 
-      return message.reply(`✅ Salon vocal <#${voiceChannel.id}> créé pour **${team.name}** — auto-suppression dans 3h.\n💡 Utilise \`!teamvoice supprimer ${team.name}\` pour le supprimer manuellement.`);
+      return message.reply(`✅ Salon vocal <#${voiceChannel.id}> créé pour **${team.name}** — auto-suppression dans 3h.\n💡 Utilise \`!voixequipe supprimer ${team.name}\` pour le supprimer manuellement.`);
 
     } catch (err) {
-      console.error('[teamvoice] Erreur:', err);
+      console.error('[voixequipe] Erreur:', err);
       message.reply('❌ Une erreur est survenue. Vérifie que le bot a la permission de gérer les salons.').catch(() => {});
     }
   });

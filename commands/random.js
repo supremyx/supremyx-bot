@@ -28,10 +28,8 @@ module.exports = (client) => {
     }
 
     // --- !randteam [équipe1,équipe2,...] ---
-    if (content.startsWith('!tirageequipe') || content.startsWith('!tirageteam')) {
-      const raw = content.startsWith('!tirageequipe')
-        ? content.slice('!tirageequipe'.length).trim()
-        : content.slice('!tirageteam'.length).trim();
+    if (content.startsWith('!tirageequipe')) {
+      const raw = content.slice('!tirageequipe'.length).trim();
       let teams = [];
 
       if (raw) {

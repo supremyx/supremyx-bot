@@ -131,7 +131,7 @@ module.exports = {
   'badge.js':          { commands: ['!badge donner|retirer|liste', '!badges'],                                                                staff: 'mixed' },
   'record.js':         { commands: ['!record <équipe>', '!record joueur <nom>'],                                                              staff: false },
   'rivaux.js':         { commands: ['!rivaux <équipe>'],                                                                                      staff: false },
-  'teamvoice.js':      { commands: ['!teamvoice <équipe>', '!teamvoice supprimer <équipe>'],                                                  staff: true },
+  'teamvoice.js':      { commands: ['!voixequipe <équipe>', '!voixequipe supprimer <équipe>'],                                                  staff: true },
   'auditactivite.js':  { commands: ['!auditactivite [N]'],                                                                                    staff: true },
   'mvpmatch.js':       { commands: ['!mvpmatch <id> <joueur>', '!mvpmatch liste', '!mvpmatch joueur <nom>'],                                  staff: 'mixed' },
   'capitaines.js':     { commands: ['!capitaines'],                                                                                           staff: false },
