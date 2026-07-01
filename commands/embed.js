@@ -64,16 +64,18 @@ const HELP_TEXT = [
   '**Commandes `!embed` :**',
   '',
   '**📤 Publier un embed simple :**',
-  '`!embed envoyer #salon | Titre | Description | couleur`',
-  '`!embed envoyer ici | Titre | Description | couleur`',
-  '`!embed envoyer aperçu | #salon | Titre | Description | couleur` — prévisualiser avant publication',
+  '`!embed simple #salon | Titre | Description | couleur`',
+  '`!embed simple ici | Titre | Description | couleur`',
+  '`!embed simple aperçu | #salon | Titre | Description | couleur` — prévisualiser avant publication',
   '',
   '**🔘 Embed avec boutons URL :**',
   '`!embed boutons #salon | Titre | Description | Texte >> https://... | couleur`',
   '`!embed boutons aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
   '',
-  '**⚙️ Embed avancé (salon courant, image + footer) :**',
-  '`!embed avancé Titre | Description | couleur | image_url | pied de page`',
+  '**⚙️ Embed riche (image + footer, choix du salon) :**',
+  '`!embed riche #salon | Titre | Description | couleur | image_url | pied de page`',
+  '`!embed riche ici | Titre | Description | couleur | image_url | pied de page`',
+  '`!embed riche aperçu | #salon | Titre | Description | couleur | image_url | pied de page` — prévisualiser avant publication',
   '',
   '**✨ Embed complet (toutes les fonctionnalités) :**',
   '`!embed complet #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
@@ -127,11 +129,11 @@ module.exports = (client) => {
       // ── Aide ───────────────────────────────────────────────────────────────
       if (!sub) return message.reply(HELP_TEXT);
 
-      // ── !embed envoyer ─────────────────────────────────────────────────────
-      if (sub === 'envoyer') {
+      // ── !embed simple ──────────────────────────────────────────────────────
+      if (sub === 'simple') {
         if (!args) return message.reply(
-          '**Usage :** `!embed envoyer [aperçu] #salon | Titre | Description | couleur`\n' +
-          '`!embed envoyer ici | Titre | Description | couleur`'
+          '**Usage :** `!embed simple [aperçu] #salon | Titre | Description | couleur`\n' +
+          '`!embed simple ici | Titre | Description | couleur`'
         );
 
         const parts = args.split('|').map(p => p.trim());
@@ -163,7 +165,7 @@ module.exports = (client) => {
           message.channel.send(`✅ Embed publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
 
         await staffLog(client, {
-          action: 'embed envoyer',
+          action: 'embed simple',
           details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}\n**Contenu :** ${desc.slice(0, 200)}${isPreview ? '\n*(prévisualisé)*' : ''}`,
           author: message.author.tag,
         });
@@ -226,40 +228,53 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !embed avancé ──────────────────────────────────────────────────────
-      if (sub === 'avancé' || sub === 'avance') {
+      // ── !embed riche ───────────────────────────────────────────────────────
+      if (sub === 'riche') {
         if (!args) return message.reply(
-          '**Usage :** `!embed avancé Titre | Description | couleur | image_url | pied de page`\n\n' +
+          '**Usage :** `!embed riche [aperçu] #salon | Titre | Description | couleur | image_url | pied de page`\n' +
+          '`!embed riche ici | Titre | Description | couleur | image_url | pied de page`\n\n' +
           '**Exemples :**\n' +
-          '`!embed avancé Bienvenue | Rejoins notre serveur !`\n' +
-          '`!embed avancé Règles | Sois respectueux. | rouge`\n' +
-          '`!embed avancé Annonce | Texte | #5865F2 | https://... | Pied de page`\n\n' +
+          '`!embed riche #annonces | Bienvenue | Rejoins notre serveur !`\n' +
+          '`!embed riche ici | Règles | Sois respectueux. | rouge`\n' +
+          '`!embed riche #général | Annonce | Texte | #5865F2 | https://img.jpg | Pied de page`\n\n' +
           '**Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `blanc` `noir` `or` `cyan` ou `#HEX`'
         );
 
-        const parts = args.split('|').map(p => p.trim());
-        const title    = parts[0] || '';
-        const desc     = parts[1] || '';
-        const colorRaw = parts[2] || 'or';
-        const imageUrl = parts[3] || '';
-        const footer   = parts[4] || '';
+        const parts      = args.split('|').map(p => p.trim());
+        const isPreview  = parts[0].toLowerCase() === 'aperçu';
+        const channelArg = isPreview ? parts[1] : parts[0];
+        const title      = isPreview ? (parts[2] || '') : (parts[1] || '');
+        const desc       = isPreview ? (parts[3] || '') : (parts[2] || '');
+        const colorRaw   = isPreview ? (parts[4] || 'or') : (parts[3] || 'or');
+        const imageUrl   = isPreview ? (parts[5] || '') : (parts[4] || '');
+        const footer     = isPreview ? (parts[6] || '') : (parts[5] || '');
 
-        let color = COLOR_MAP[colorRaw.toLowerCase()] ?? 0xF1C40F;
-        if (colorRaw.startsWith('#')) {
-          const parsed = parseInt(colorRaw.slice(1), 16);
-          if (!isNaN(parsed)) color = parsed;
-        }
+        if (!channelArg) return message.reply('❌ Indique le salon cible. Ex : `!embed riche #annonces | ...` ou `!embed riche ici | ...`');
+        const target = resolveTarget(message, channelArg);
+        if (!target) return message.reply('❌ Salon introuvable. Mentionne un salon avec `#` ou écris `ici`.');
 
+        const color = parseColor(colorRaw);
         const embed = new EmbedBuilder().setColor(color).setTimestamp();
         if (title)    embed.setTitle(title);
         if (desc)     embed.setDescription(desc);
         if (imageUrl) embed.setImage(imageUrl);
         if (footer)   embed.setFooter({ text: footer });
 
-        await message.channel.send({ embeds: [embed] });
-        try { await message.delete(); } catch {}
+        if (isPreview) {
+          const confirmed = await awaitConfirmation(message, embed);
+          if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
+        }
 
-        logStaffAction(client, `📝 **Embed avancé posté** — "${title || 'Sans titre'}" | Par : ${message.author.tag}`);
+        await target.send({ embeds: [embed] });
+        try { await message.delete(); } catch {}
+        if (target.id !== message.channel.id)
+          message.channel.send(`✅ Embed riche publié dans <#${target.id}>.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+
+        await staffLog(client, {
+          action: 'embed riche',
+          details: `**Salon :** <#${target.id}>\n**Titre :** ${title || '—'}${imageUrl ? `\n**Image :** ${imageUrl}` : ''}${footer ? `\n**Footer :** ${footer}` : ''}${isPreview ? '\n*(prévisualisé)*' : ''}`,
+          author: message.author.tag,
+        });
         return;
       }
 
