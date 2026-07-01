@@ -62,7 +62,7 @@ async function awaitConfirmation(message, previewEmbed, components = null) {
 const HELP_TEXT = [
   '**Commandes `!embed` :**',
   '',
-  '**📤 Publier un embed dans un salon :**',
+  '**📤 Publier un embed simple :**',
   '`!embed envoyer #salon | Titre | Description | couleur`',
   '`!embed envoyer ici | Titre | Description | couleur`',
   '`!embed envoyer aperçu | #salon | Titre | Description | couleur` — prévisualiser avant publication',
@@ -71,14 +71,15 @@ const HELP_TEXT = [
   '`!embed boutons #salon | Titre | Description | Texte >> https://... | couleur`',
   '`!embed boutons aperçu | #salon | Titre | Description | Texte >> https://... | couleur`',
   '',
-  '**⚙️ Embed avancé (dans le salon courant) :**',
+  '**⚙️ Embed avancé (salon courant, image + footer) :**',
   '`!embed avancé Titre | Description | couleur | image_url | pied de page`',
   '',
-  '**✨ Embed riche (avec thumbnail, auteur, liens) :**',
-  '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
-  '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
-  '`!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon | pied de page` — éditer un embed riche existant (`-` pour conserver un champ)',
-  'Dans la description, utilise `[texte](https://lien)` pour créer des liens cliquables.',
+  '**✨ Embed complet (toutes les fonctionnalités) :**',
+  '`!embed complet #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
+  '`!embed complet aperçu | #salon | ...` — prévisualiser avant publication',
+  '`!embed complet modifier #salon | ID | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs` — éditer (`-` pour conserver un champ)',
+  '`!embed complet programmer #salon | ... | YYYY-MM-DD HH:MM` — planifier',
+  'Dans la description : `[texte](https://lien)` crée un lien cliquable.',
   '',
   '**📋 Gérer les embeds existants :**',
   '`!embed liste [#salon]` — lister les embeds du bot dans un salon',
@@ -86,9 +87,8 @@ const HELP_TEXT = [
   '`!embed supprimer #salon | ID_message`',
   '`!embed cloner #salon | ID_message | #salon_destination` — dupliquer un embed vers un autre salon',
   '',
-  '**🕐 Planification :**',
+  '**🕐 Planification simple :**',
   '`!embed programmer #salon | Titre | Description | couleur | YYYY-MM-DD HH:MM`',
-  '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',
   '`!embed programmes` — voir les embeds en attente de publication',
   '`!embed déprogrammer <id>` — annuler un embed planifié',
   '',
@@ -612,8 +612,8 @@ module.exports = (client) => {
         return;
       }
 
-      // ── !embed riche ───────────────────────────────────────────────────────
-      if (sub === 'riche') {
+      // ── !embed complet ─────────────────────────────────────────────────────
+      if (sub === 'complet') {
         const isPreview    = args?.startsWith('aperçu');
         const isProgrammer = args?.startsWith('programmer');
         const isModifier   = args?.startsWith('modifier');
@@ -625,30 +625,39 @@ module.exports = (client) => {
               ? args.replace(/^modifier\s*\|?\s*/, '').trim()
               : (args || '');
 
-        const RICHE_USAGE = [
-          '**✨ Embed riche — Publication immédiate :**',
-          '`!embed riche #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
-          '`!embed riche aperçu | #salon | ...` — prévisualiser avant publication',
+        const COMPLET_USAGE = [
+          '**✨ Embed complet — toutes les fonctionnalités :**',
+          '`!embed complet #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
           '',
-          '**✏️ Embed riche — Modifier un embed existant :**',
-          '`!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page`',
-          '> Utilise `-` pour un champ afin de **conserver** la valeur actuelle de l\'embed.',
+          '> Tous les champs après `#salon` sont **optionnels** — laisse vide (`||`) pour les ignorer.',
           '',
-          '**🕐 Embed riche — Planifié :**',
-          '`!embed riche programmer #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | YYYY-MM-DD HH:MM`',
+          '**📋 Détail des champs :**',
+          '• `couleur` — nom (`rouge`, `vert`, `bleu`...) ou code `#HEX`',
+          '• `image_url` — grande image en bas de l\'embed',
+          '• `thumbnail_url` — petite image en haut à droite',
+          '• `auteur` / `auteur_icon_url` — nom et icône au-dessus du titre',
+          '• `pied de page` — texte en bas de l\'embed',
+          '• `url_titre` — rend le titre cliquable (lien hypertexte)',
+          '• `boutons` — jusqu\'à 5 boutons URL séparés par `;` : `Texte>>https://... ; Texte2>>https://...`',
+          '• `champs` — jusqu\'à 25 champs séparés par `;` : `Nom::Valeur::oui` (oui/non = inline)',
           '',
-          '> **Champs optionnels :** tous sauf #salon (et la date pour la planification).',
-          '> Dans la description : `[texte](https://url)` crée un lien cliquable.',
+          '**👁️ Prévisualisation :**',
+          '`!embed complet aperçu | #salon | ...`',
+          '',
+          '**✏️ Modifier un embed existant :**',
+          '`!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs`',
+          '> Utilise `-` pour **conserver** la valeur actuelle d\'un champ.',
+          '',
+          '**🕐 Planifier :**',
+          '`!embed complet programmer #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs | YYYY-MM-DD HH:MM`',
           '',
           '**Exemple :**',
           '```',
-          '!embed riche programmer #annonces | 🏆 Tournoi | Inscriptions ouvertes !',
-          '  | or | https://img.jpg | https://logo.png | SUPREMYX CI | | Bonne chance à tous',
-          '  | 2025-08-01 20:00',
+          '!embed complet #annonces | 🏆 Tournoi | Inscriptions ouvertes ! | or | https://img.jpg | https://logo.png | SUPREMYX | | Bonne chance ! | https://supremyx.gg | Rejoindre>>https://... ; Règles>>https://... | 📅 Date::15 Août::oui ; 🎮 Format::5v5::oui',
           '```',
         ].join('\n');
 
-        if (!rest) return message.reply(RICHE_USAGE);
+        if (!rest) return message.reply(COMPLET_USAGE);
 
         const parts        = rest.split('|').map(p => p.trim());
         const channelArg   = parts[0] || '';
@@ -660,28 +669,67 @@ module.exports = (client) => {
         const authorName   = parts[6] || '';
         const authorIcon   = parts[7] || '';
         const footer       = parts[8] || '';
-        const dateRaw      = parts[9] || '';   // uniquement pour la planification
+        const urlTitre     = parts[9] || '';
+        const boutonsRaw   = parts[10] || '';
+        const champsRaw    = parts[11] || '';
+        const dateRaw      = parts[12] || '';   // uniquement pour la planification
 
-        // ── Mode modification d'un embed riche existant ────────────────────
+        // Helper : boutons séparés par `;`
+        const parseButtonsComp = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(part => {
+          const sep = part.indexOf('>>');
+          if (sep === -1) return null;
+          const label = part.slice(0, sep).trim();
+          const url   = part.slice(sep + 2).trim();
+          if (!label || !url.startsWith('http')) return null;
+          return { label, url };
+        }).filter(Boolean).slice(0, 5);
+
+        // Helper : champs séparés par `;`, colonnes par `::`
+        const parseFieldsComp = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(part => {
+          const cols   = part.split('::').map(c => c.trim());
+          const name   = cols[0] || '';
+          const value  = cols[1] || '\u200B';
+          const inline = (cols[2] || '').toLowerCase() === 'oui';
+          if (!name) return null;
+          return { name, value, inline };
+        }).filter(Boolean).slice(0, 25);
+
+        // Helper : construire l'embed complet
+        function buildCompletEmbed(t, d, cRaw, imgUrl, thumbUrl, aName, aIcon, ft, urlT) {
+          const emb = new EmbedBuilder().setColor(parseColor(cRaw)).setTimestamp();
+          if (t)       emb.setTitle(t);
+          if (d)       emb.setDescription(d);
+          if (imgUrl)  emb.setImage(imgUrl);
+          if (thumbUrl) emb.setThumbnail(thumbUrl);
+          if (ft)      emb.setFooter({ text: ft });
+          if (aName)   emb.setAuthor({ name: aName, iconURL: aIcon || undefined });
+          if (urlT)    emb.setURL(urlT);
+          return emb;
+        }
+
+        // ── Mode modification d'un embed complet existant ──────────────────
         if (isModifier) {
-          const mParts       = rest.split('|').map(p => p.trim());
-          const mChannelArg  = mParts[0] || '';
-          const mMsgId       = (mParts[1] || '').replace(/\D/g, '');
-          const mTitle       = mParts[2] || '';
-          const mDesc        = mParts[3] || '';
-          const mColorRaw    = mParts[4] || '';
-          const mImageUrl    = mParts[5] || '';
-          const mThumbUrl    = mParts[6] || '';
-          const mAuthorName  = mParts[7] || '';
-          const mAuthorIcon  = mParts[8] || '';
-          const mFooter      = mParts[9] || '';
+          const mParts      = rest.split('|').map(p => p.trim());
+          const mChannelArg = mParts[0] || '';
+          const mMsgId      = (mParts[1] || '').replace(/\D/g, '');
+          const mTitle      = mParts[2] || '';
+          const mDesc       = mParts[3] || '';
+          const mColorRaw   = mParts[4] || '';
+          const mImageUrl   = mParts[5] || '';
+          const mThumbUrl   = mParts[6] || '';
+          const mAuthorName = mParts[7] || '';
+          const mAuthorIcon = mParts[8] || '';
+          const mFooter     = mParts[9] || '';
+          const mUrlTitre   = mParts[10] || '';
+          const mBoutonsRaw = mParts[11] || '';
+          const mChampsRaw  = mParts[12] || '';
 
           if (!mChannelArg || !mMsgId) return message.reply([
-            '**Usage :** `!embed riche modifier #salon | ID_message | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon | pied de page`',
-            '> Utilise `-` pour un champ afin de **conserver** la valeur actuelle de l\'embed.',
+            '**Usage :** `!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs`',
+            '> Utilise `-` pour **conserver** la valeur actuelle d\'un champ.',
             '',
             '**Exemple :**',
-            '`!embed riche modifier #annonces | 1234567890 | 🏆 Nouveau titre | - | or | - | https://logo.png | - | - | Bonne chance !`',
+            '`!embed complet modifier #annonces | 1234567890 | 🏆 Nouveau titre | - | or | - | https://logo.png | - | - | Bonne chance ! | https://supremyx.gg | Règles>>https://... | Date::15 Août::oui`',
           ].join('\n'));
 
           const mTarget = resolveTarget(message, mChannelArg);
@@ -696,80 +744,97 @@ module.exports = (client) => {
           if (!mMsg.embeds.length)
             return message.reply('❌ Ce message ne contient pas d\'embed.');
 
-          // Lire les valeurs actuelles de l'embed
           const prev = mMsg.embeds[0];
-          const keep = v => (!v || v === '-');   // '-' ou vide = conserver
+          const keep = v => (!v || v === '-');
 
-          const newTitle      = keep(mTitle)      ? (prev.title       || '')       : mTitle;
-          const newDesc       = keep(mDesc)       ? (prev.description || '')       : mDesc;
-          const newColor      = keep(mColorRaw)   ? (prev.color       ?? 0xFFA500) : parseColor(mColorRaw);
-          const newImage      = keep(mImageUrl)   ? (prev.image?.url  || null)     : mImageUrl || null;
-          const newThumb      = keep(mThumbUrl)   ? (prev.thumbnail?.url || null)  : mThumbUrl || null;
-          const newAuthorName = keep(mAuthorName) ? (prev.author?.name || '')      : mAuthorName;
-          const newAuthorIcon = keep(mAuthorIcon) ? (prev.author?.iconURL || '')   : mAuthorIcon;
-          const newFooter     = keep(mFooter)     ? (prev.footer?.text || '')      : mFooter;
+          const newTitle      = keep(mTitle)      ? (prev.title           || '') : mTitle;
+          const newDesc       = keep(mDesc)       ? (prev.description     || '') : mDesc;
+          const newColor      = keep(mColorRaw)   ? (prev.color ?? 0xFFA500)     : parseColor(mColorRaw);
+          const newImage      = keep(mImageUrl)   ? (prev.image?.url      || null) : mImageUrl || null;
+          const newThumb      = keep(mThumbUrl)   ? (prev.thumbnail?.url  || null) : mThumbUrl || null;
+          const newAuthorName = keep(mAuthorName) ? (prev.author?.name    || '') : mAuthorName;
+          const newAuthorIcon = keep(mAuthorIcon) ? (prev.author?.iconURL || '') : mAuthorIcon;
+          const newFooter     = keep(mFooter)     ? (prev.footer?.text    || '') : mFooter;
+          const newUrlTitre   = keep(mUrlTitre)   ? (prev.url             || '') : mUrlTitre;
 
-          const updated = new EmbedBuilder()
-            .setColor(newColor)
-            .setTimestamp();
+          const updated = new EmbedBuilder().setColor(newColor).setTimestamp();
           if (newTitle)      updated.setTitle(newTitle);
           if (newDesc)       updated.setDescription(newDesc);
           if (newImage)      updated.setImage(newImage);
           if (newThumb)      updated.setThumbnail(newThumb);
           if (newFooter)     updated.setFooter({ text: newFooter });
           if (newAuthorName) updated.setAuthor({ name: newAuthorName, iconURL: newAuthorIcon || undefined });
+          if (newUrlTitre)   updated.setURL(newUrlTitre);
 
-          await mMsg.edit({ embeds: [updated], components: mMsg.components });
+          // Champs
+          if (!keep(mChampsRaw)) {
+            const fields = parseFieldsComp(mChampsRaw);
+            if (fields.length) updated.addFields(fields);
+          } else if (prev.fields?.length) {
+            updated.addFields(prev.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline })));
+          }
+
+          // Boutons
+          let newComponents = mMsg.components;
+          if (!keep(mBoutonsRaw)) {
+            const buttons = parseButtonsComp(mBoutonsRaw);
+            newComponents = buttons.length ? [new ActionRowBuilder().addComponents(
+              buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
+            )] : [];
+          }
+
+          await mMsg.edit({ embeds: [updated], components: newComponents });
           await message.delete().catch(() => {});
-          message.channel.send(`✅ Embed riche modifié dans <#${mTarget.id}>.`)
+          message.channel.send(`✅ Embed complet modifié dans <#${mTarget.id}>.`)
             .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
 
           await staffLog(client, {
-            action: 'embed riche modifier',
+            action: 'embed complet modifier',
             details: [
               `**Salon :** <#${mTarget.id}>`,
               `**Message :** \`${mMsgId}\``,
-              newTitle      ? `**Titre :** ${newTitle}`           : null,
-              newThumb      ? `**Thumbnail :** ${newThumb}`       : null,
-              newAuthorName ? `**Auteur :** ${newAuthorName}`     : null,
-              newFooter     ? `**Footer :** ${newFooter}`         : null,
+              newTitle      ? `**Titre :** ${newTitle}`        : null,
+              newThumb      ? `**Thumbnail :** ${newThumb}`    : null,
+              newAuthorName ? `**Auteur :** ${newAuthorName}`  : null,
+              newFooter     ? `**Footer :** ${newFooter}`      : null,
+              newUrlTitre   ? `**URL titre :** ${newUrlTitre}` : null,
             ].filter(Boolean).join('\n'),
             author: message.author.tag,
           });
           return;
         }
 
-        if (!channelArg) return message.reply('❌ Précise le salon cible. Ex : `!embed riche #annonces | ...`');
+        if (!channelArg) return message.reply('❌ Précise le salon cible. Ex : `!embed complet #annonces | ...`');
 
         const target = resolveTarget(message, channelArg);
         if (!target) return message.reply('❌ Salon introuvable. Mentionne-le avec `#` ou écris `ici`.');
+
+        const buttons = parseButtonsComp(boutonsRaw);
+        const fields  = parseFieldsComp(champsRaw);
 
         // ── Mode planification ──────────────────────────────────────────────
         if (isProgrammer) {
           if (!dateRaw) return message.reply(
             '❌ La date est requise pour planifier.\n' +
             '**Format :** `YYYY-MM-DD HH:MM` (ex : `2025-08-01 20:00`)\n' +
-            '→ Ajoute-la comme **10ᵉ champ** séparé par `|`.'
+            '→ Ajoute-la comme **13ᵉ champ** séparé par `|` (après les champs).'
           );
 
           const match = dateRaw.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$/);
-          if (!match) return message.reply('❌ Format de date invalide. Utilise `YYYY-MM-DD HH:MM` (ex : `2025-08-01 20:00`)');
+          if (!match) return message.reply('❌ Format de date invalide. Utilise `YYYY-MM-DD HH:MM`');
 
           const [, y, mo, d, h, mi] = match;
           const scheduledAt = new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi));
           if (isNaN(scheduledAt.getTime())) return message.reply('❌ Date invalide.');
           if (scheduledAt <= new Date()) return message.reply('❌ La date doit être dans le futur.');
 
-          // Prévisualisation de l'embed avant de sauvegarder
-          const previewEmbed = new EmbedBuilder().setColor(parseColor(colorRaw)).setTimestamp();
-          if (title)        previewEmbed.setTitle(title);
-          if (desc)         previewEmbed.setDescription(desc);
-          if (imageUrl)     previewEmbed.setImage(imageUrl);
-          if (thumbnailUrl) previewEmbed.setThumbnail(thumbnailUrl);
-          if (footer)       previewEmbed.setFooter({ text: footer });
-          if (authorName)   previewEmbed.setAuthor({ name: authorName, iconURL: authorIcon || undefined });
+          const previewEmbed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
+          if (fields.length) previewEmbed.addFields(fields);
+          const previewComponents = buttons.length ? [new ActionRowBuilder().addComponents(
+            buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
+          )] : null;
 
-          const confirmed = await awaitConfirmation(message, previewEmbed);
+          const confirmed = await awaitConfirmation(message, previewEmbed, previewComponents);
           if (!confirmed) return message.reply('❌ Planification annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
 
           const doc = await ScheduledEmbed.create({
@@ -792,15 +857,18 @@ module.exports = (client) => {
 
           const confirm = new EmbedBuilder()
             .setColor(0x57F287)
-            .setTitle('✅ Embed riche programmé')
+            .setTitle('✅ Embed complet programmé')
             .addFields(
-              { name: '📍 Salon',       value: `<#${target.id}>`,                    inline: true },
-              { name: '🕐 Publication', value: `<t:${ts}:F> (<t:${ts}:R>)`,          inline: true },
-              { name: '🆔 ID court',    value: `\`${shortId}\``,                     inline: true },
-              { name: '📋 Titre',       value: title        || '*(aucun)*',           inline: true },
-              { name: '👤 Auteur',      value: authorName   || '*(aucun)*',           inline: true },
-              { name: '🖼️ Thumbnail',   value: thumbnailUrl ? '✅ Défini' : '*(aucun)*', inline: true },
-              { name: '📝 Aperçu desc', value: desc.slice(0, 200) || '*(vide)*',     inline: false },
+              { name: '📍 Salon',       value: `<#${target.id}>`,                           inline: true },
+              { name: '🕐 Publication', value: `<t:${ts}:F> (<t:${ts}:R>)`,                 inline: true },
+              { name: '🆔 ID court',    value: `\`${shortId}\``,                            inline: true },
+              { name: '📋 Titre',       value: title        || '*(aucun)*',                  inline: true },
+              { name: '👤 Auteur',      value: authorName   || '*(aucun)*',                  inline: true },
+              { name: '🖼️ Thumbnail',   value: thumbnailUrl ? '✅ Défini' : '*(aucun)*',     inline: true },
+              { name: '🔗 URL titre',   value: urlTitre     ? '✅ Défini' : '*(aucun)*',     inline: true },
+              { name: '🔘 Boutons',     value: buttons.length ? `${buttons.length} bouton(s)` : '*(aucun)*', inline: true },
+              { name: '📊 Champs',      value: fields.length  ? `${fields.length} champ(s)`   : '*(aucun)*', inline: true },
+              { name: '📝 Aperçu desc', value: desc.slice(0, 200) || '*(vide)*',             inline: false },
             )
             .setFooter({ text: `!embed déprogrammer ${shortId} pour annuler` })
             .setTimestamp();
@@ -808,14 +876,17 @@ module.exports = (client) => {
           await message.reply({ embeds: [confirm] });
 
           await staffLog(client, {
-            action: 'embed riche programmer',
+            action: 'embed complet programmer',
             details: [
               `**Salon :** <#${target.id}>`,
               `**Date :** <t:${ts}:F>`,
               `**Titre :** ${title || '—'}`,
               `**ID :** \`${shortId}\``,
-              thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}` : null,
-              authorName   ? `**Auteur :** ${authorName}`      : null,
+              thumbnailUrl   ? `**Thumbnail :** ${thumbnailUrl}`        : null,
+              authorName     ? `**Auteur :** ${authorName}`             : null,
+              urlTitre       ? `**URL titre :** ${urlTitre}`            : null,
+              buttons.length ? `**Boutons :** ${buttons.length}`        : null,
+              fields.length  ? `**Champs :** ${fields.length}`          : null,
             ].filter(Boolean).join('\n'),
             author: message.author.tag,
           });
@@ -823,38 +894,37 @@ module.exports = (client) => {
         }
 
         // ── Mode publication immédiate ──────────────────────────────────────
-        const embed = new EmbedBuilder()
-          .setColor(parseColor(colorRaw))
-          .setTimestamp();
+        const embed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
+        if (fields.length) embed.addFields(fields);
 
-        if (title)        embed.setTitle(title);
-        if (desc)         embed.setDescription(desc);
-        if (imageUrl)     embed.setImage(imageUrl);
-        if (thumbnailUrl) embed.setThumbnail(thumbnailUrl);
-        if (footer)       embed.setFooter({ text: footer });
-        if (authorName)   embed.setAuthor({ name: authorName, iconURL: authorIcon || undefined });
+        const components = buttons.length ? [new ActionRowBuilder().addComponents(
+          buttons.map(b => new ButtonBuilder().setLabel(b.label).setURL(b.url).setStyle(ButtonStyle.Link))
+        )] : [];
 
         if (isPreview) {
-          const confirmed = await awaitConfirmation(message, embed);
+          const confirmed = await awaitConfirmation(message, embed, components.length ? components : null);
           if (!confirmed) return message.reply('❌ Publication annulée.').then(m => setTimeout(() => m.delete().catch(() => {}), 4000));
         }
 
-        await target.send({ embeds: [embed] });
+        await target.send({ embeds: [embed], components });
         try { await message.delete(); } catch {}
         if (target.id !== message.channel.id) {
-          message.channel.send(`✅ Embed riche publié dans <#${target.id}>.`)
+          message.channel.send(`✅ Embed complet publié dans <#${target.id}>.`)
             .then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
         }
 
         await staffLog(client, {
-          action: 'embed riche',
+          action: 'embed complet',
           details: [
             `**Salon :** <#${target.id}>`,
             `**Titre :** ${title || '—'}`,
-            imageUrl     ? `**Image :** ${imageUrl}`          : null,
-            thumbnailUrl ? `**Thumbnail :** ${thumbnailUrl}`   : null,
-            authorName   ? `**Auteur :** ${authorName}`        : null,
-            isPreview    ? '*(prévisualisé)*'                   : null,
+            imageUrl       ? `**Image :** ${imageUrl}`         : null,
+            thumbnailUrl   ? `**Thumbnail :** ${thumbnailUrl}` : null,
+            authorName     ? `**Auteur :** ${authorName}`      : null,
+            urlTitre       ? `**URL titre :** ${urlTitre}`     : null,
+            buttons.length ? `**Boutons :** ${buttons.length}` : null,
+            fields.length  ? `**Champs :** ${fields.length}`   : null,
+            isPreview      ? '*(prévisualisé)*'                 : null,
           ].filter(Boolean).join('\n'),
           author: message.author.tag,
         });
