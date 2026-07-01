@@ -3,7 +3,7 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content !== '!latence') return;
+    if (message.content !== '!latence' && message.content !== '!ping') return;
     const cd = checkCooldown(message.author.id, 'latence', 10);
     if (cd) return replyCooldown(message, cd, 'latence');
 
