@@ -287,7 +287,7 @@ const PAGES = [
       {
         name: 'Commandes',
         value: [
-          '`!ping` — Latence du bot et de l\'API Discord',
+          '`!latence` — Latence du bot et de l\'API Discord',
           '`!statut` — État du bot et des services',
           '`!statsbot` — Statistiques d\'utilisation des commandes',
           '`!commandes` — Stats détaillées d\'utilisation par commande',

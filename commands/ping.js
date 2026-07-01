@@ -3,9 +3,9 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (message.content !== '!ping') return;
-    const cd = checkCooldown(message.author.id, 'ping', 10);
-    if (cd) return replyCooldown(message, cd, 'ping');
+    if (message.content !== '!latence') return;
+    const cd = checkCooldown(message.author.id, 'latence', 10);
+    if (cd) return replyCooldown(message, cd, 'latence');
 
     const sent = await message.channel.send('🏓 Calcul...');
     const latency = sent.createdTimestamp - message.createdTimestamp;
