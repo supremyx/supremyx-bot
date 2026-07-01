@@ -100,6 +100,7 @@ const HELP_TEXT = [
   '`!embed modèle liste` — voir tous les modèles sauvegardés',
   '`!embed modèle supprimer <nom>` — supprimer un modèle',
   '`!embed modèle renommer <ancien> | <nouveau>` — renommer un modèle',
+  '`!embed modèle dupliquer <nom> | <nouveau_nom>` — cloner un modèle existant',
   '',
   '**🎨 Couleurs :** `rouge` `vert` `bleu` `jaune` `orange` `violet` `rose` `or` `cyan` `gris` ou `#HEX`',
 ].join('\n');
@@ -955,6 +956,7 @@ module.exports = (client) => {
           '`!embed modèle liste` — voir tous les modèles sauvegardés',
           '`!embed modèle supprimer <nom>` — supprimer un modèle',
           '`!embed modèle renommer <ancien> | <nouveau>` — renommer un modèle',
+          '`!embed modèle dupliquer <nom> | <nouveau_nom>` — cloner un modèle existant',
           '',
           '> Le `<nom>` ne peut pas contenir `|`. Utilise un nom court sans espaces si possible.',
         ].join('\n');
@@ -1212,6 +1214,62 @@ module.exports = (client) => {
           await staffLog(client, {
             action: 'embed modèle renommer',
             details: `\`${oldName}\` → \`${newName}\``,
+            author: message.author.tag,
+          });
+          return;
+        }
+
+        // ── dupliquer ────────────────────────────────────────────────────────
+        if (action === 'dupliquer') {
+          const parts   = rest.split('|').map(p => p.trim());
+          const srcName = parts[0] || '';
+          const dstName = parts[1] || '';
+
+          if (!srcName || !dstName) return message.reply('**Usage :** `!embed modèle dupliquer <nom_source> | <nouveau_nom>`');
+
+          const src = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${srcName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!src) return message.reply(`❌ Modèle \`${srcName}\` introuvable. Utilise \`!embed modèle liste\` pour voir les modèles disponibles.`);
+
+          const conflict = await EmbedTemplate.findOne({ guildId: message.guild.id, name: { $regex: new RegExp(`^${dstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (conflict) return message.reply(`❌ Un modèle nommé \`${dstName}\` existe déjà. Choisis un autre nom.`);
+
+          const clone = await EmbedTemplate.create({
+            guildId:      src.guildId,
+            name:         dstName,
+            title:        src.title,
+            description:  src.description,
+            color:        src.color,
+            imageUrl:     src.imageUrl,
+            thumbnailUrl: src.thumbnailUrl,
+            authorName:   src.authorName,
+            authorIconUrl: src.authorIconUrl,
+            footer:       src.footer,
+            urlTitre:     src.urlTitre,
+            buttons:      src.buttons,
+            fields:       src.fields,
+            createdBy:    message.author.tag,
+            updatedBy:    message.author.tag,
+          });
+
+          const confirm = new EmbedBuilder()
+            .setColor(0x57F287)
+            .setTitle(`✅ Modèle dupliqué : \`${dstName}\``)
+            .addFields(
+              { name: '📋 Source',    value: `\`${srcName}\``,                                    inline: true },
+              { name: '📄 Copie',     value: `\`${dstName}\``,                                    inline: true },
+              { name: '📝 Titre',     value: src.title      || '*(aucun)*',                        inline: true },
+              { name: '🔘 Boutons',   value: src.buttons?.length ? `${src.buttons.length} bouton(s)` : '*(aucun)*', inline: true },
+              { name: '📊 Champs',    value: src.fields?.length  ? `${src.fields.length} champ(s)`   : '*(aucun)*', inline: true },
+              { name: '🖼️ Thumbnail', value: src.thumbnailUrl    ? '✅ Copié'  : '*(aucun)*',       inline: true },
+            )
+            .setFooter({ text: `!embed modèle charger ${dstName} | #salon — pour publier · !embed modèle sauvegarder ${dstName} | ... — pour modifier` })
+            .setTimestamp();
+
+          await message.reply({ embeds: [confirm] });
+
+          await staffLog(client, {
+            action: 'embed modèle dupliquer',
+            details: `**Source :** \`${srcName}\`\n**Copie :** \`${dstName}\`\n**Titre :** ${src.title || '—'}`,
             author: message.author.tag,
           });
           return;
