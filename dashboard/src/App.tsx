@@ -671,8 +671,8 @@ export default function App() {
           {/* Logo + Status */}
           <div className="flex items-center gap-4">
             <button onClick={() => navigate("classement")} className="flex items-center gap-3">
-              <div className="relative flex size-10 items-center justify-center rounded-lg font-black text-lg select-none" style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
-                S
+              <div className="relative flex-shrink-0">
+                <img src="/logo.jpg" alt="SUPREMYX" className="size-10 rounded-lg object-cover" />
                 {botOnline !== null && (
                   <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 ${botOnline ? "bg-emerald-400" : "bg-red-500"}`} style={{ borderColor: "var(--card)" }} />
                 )}
