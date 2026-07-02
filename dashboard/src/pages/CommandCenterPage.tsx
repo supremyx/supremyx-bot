@@ -162,10 +162,7 @@ function TournoisTab({ apiKey, guildInfo }: { apiKey: string; guildInfo: GuildIn
           {active ? `Tournoi actif : "${active.name}"` : "Aucun tournoi actif."}
         </p>
         <Field label="Équipe gagnante (optionnel)">
-          <Select value={winner} onChange={setWinner} placeholder="— Aucun gagnant —"
-            options={guildInfo ? [] : []}
-          />
-          <Input value={winner} onChange={setWinner} placeholder="Nom de l'équipe gagnante" />
+          <Input value={winner} onChange={setWinner} placeholder="Nom de l'équipe gagnante (laisser vide si aucun)" />
         </Field>
         <ActionBtn loading={!!loading.finish} onClick={() => act("finish", () => apiAction("/api/actions/tournoi/finish", "POST", { winner }, apiKey))} label="🏁 Terminer" />
       </Card>
@@ -209,8 +206,8 @@ function MatchsTab({ apiKey }: { apiKey: string }) {
     if (!team || !placement || !kills) return toast.error("Équipe, placement et kills requis");
     setLoading(true);
     try {
-      await apiAction("/api/addpoints", "POST", { team, placement: Number(placement), kills: Number(kills), tournamentName: tournamentName || undefined }, apiKey);
-      toast.success(`Match ajouté pour ${team} — Place ${placement}, ${kills} kills`);
+      const data = await apiAction("/api/actions/match/add", "POST", { team, placement: Number(placement), kills: Number(kills), tournamentName: tournamentName || undefined }, apiKey);
+      toast.success(`Match ajouté pour ${team} — Place ${data.placement}, ${data.kills} kills → ${data.points} points`);
       setPlacement(""); setKills("");
     } catch (e: unknown) { toast.error((e as Error).message); }
     finally { setLoading(false); }
@@ -679,7 +676,7 @@ function BlacklistTab({ apiKey }: { apiKey: string }) {
   const [addTarget, setAddTarget] = useState(""); const [addReason, setAddReason] = useState(""); const [rmTarget, setRmTarget] = useState(""); const [entries, setEntries] = useState<BlacklistEntry[]>([]); const [loading, setLoading] = useState<Record<string, boolean>>({});
 
   const loadBl = useCallback(async () => {
-    try { const d = await apiAction("/api/blacklist", "GET", undefined, apiKey); setEntries(Array.isArray(d) ? d : d.entries || []); }
+    try { const d = await apiAction("/api/blacklist", "GET", undefined, apiKey); setEntries(Array.isArray(d) ? d : d.blacklist || []); }
     catch {}
   }, [apiKey]);
 

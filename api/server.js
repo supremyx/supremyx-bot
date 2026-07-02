@@ -1787,7 +1787,7 @@ router.post('/actions/tournoi/create', requireApiKey, async (req, res) => {
     const existing = await Tournament.findOne({ active: true });
     if (existing) return res.status(409).json({ error: `Tournoi actif déjà en cours : "${existing.name}"` });
     const t = await Tournament.create({ name: name.trim(), startedBy: 'Dashboard', active: true });
-    eventBus.emit('tournoi_start', { name: t.name, startedBy: 'Dashboard' });
+    eventBus.emit('newTournament', { name: t.name, startedBy: 'Dashboard' });
     res.json({ success: true, tournament: t });
   } catch (err) {
     console.error('[POST /actions/tournoi/create]', err);
@@ -1806,7 +1806,7 @@ router.post('/actions/tournoi/finish', requireApiKey, async (req, res) => {
     t.endedAt = new Date();
     t.endedBy = 'Dashboard';
     await t.save();
-    eventBus.emit('tournoi_end', { name: t.name, winner: t.winner });
+    eventBus.emit('endTournament', { name: t.name, winner: t.winner });
     res.json({ success: true, tournament: t });
   } catch (err) {
     console.error('[POST /actions/tournoi/finish]', err);
@@ -1821,6 +1821,45 @@ router.delete('/actions/tournoi/:id', requireApiKey, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('[DELETE /actions/tournoi/:id]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /actions/match/add — résultat placement → points calculés auto ────────
+router.post('/actions/match/add', requireApiKey, async (req, res) => {
+  try {
+    const { team: teamName, placement, kills, tournamentName } = req.body;
+    if (!teamName || placement == null || kills == null)
+      return res.status(400).json({ error: 'Champs requis : team, placement, kills' });
+    const found = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
+    if (!found) return res.status(404).json({ error: `Équipe introuvable : ${teamName}` });
+    const cfg = await Config.findOne().lean();
+    const pointSystem = cfg?.pointSystem
+      ? Object.fromEntries(Object.entries(cfg.pointSystem))
+      : { '1':10,'2':6,'3':5,'4':4,'5':3,'6':2,'7':1,'8':1 };
+    const killBonus = cfg?.killBonus ?? 1;
+    const placementPoints = Number(pointSystem[String(placement)] ?? 0);
+    const killPoints      = Number(kills) * killBonus;
+    const totalPoints     = placementPoints + killPoints;
+    const activeTournoi   = await Tournament.findOne({ active: true }).lean();
+    const team = await Team.findOneAndUpdate(
+      { name: found.name },
+      { $inc: { points: totalPoints, kills: Number(kills) } },
+      { new: true }
+    );
+    await Match.create({
+      team: team.name,
+      placement: Number(placement),
+      kills: Number(kills),
+      points: totalPoints,
+      addedBy: 'Dashboard',
+      tournamentName: tournamentName || activeTournoi?.name || null,
+      tournamentId:   activeTournoi?._id?.toString() || null,
+    });
+    eventBus.emit('newMatch', { team: team.name, placement, kills, points: totalPoints });
+    res.json({ success: true, team: team.name, points: totalPoints, placement, kills });
+  } catch (err) {
+    console.error('[POST /actions/match/add]', err);
     res.status(500).json({ error: err.message });
   }
 });
