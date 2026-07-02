@@ -29,17 +29,18 @@ async function apiAction(path: string, method: string, body?: object, apiKey?: s
 }
 
 const TABS = [
-  { id: "tournois",    label: "Tournois",      emoji: "🎮" },
-  { id: "matchs",     label: "Matchs",         emoji: "⚔️" },
-  { id: "equipes",    label: "Équipes",         emoji: "👥" },
-  { id: "roster",     label: "Roster",         emoji: "🪖" },
-  { id: "xp",         label: "XP & Niveaux",   emoji: "📊" },
-  { id: "comms",      label: "Communication",  emoji: "📢" },
-  { id: "embed",      label: "Embed Builder",  emoji: "🖼️" },
-  { id: "moderation", label: "Modération",     emoji: "🛡️" },
-  { id: "config",     label: "Configuration",  emoji: "⚙️" },
-  { id: "notes",      label: "Notes",          emoji: "📝" },
-  { id: "blacklist",  label: "Blacklist",      emoji: "🚫" },
+  { id: "tournois",      label: "Tournois",      emoji: "🎮" },
+  { id: "matchs",        label: "Matchs",         emoji: "⚔️" },
+  { id: "equipes",       label: "Équipes",         emoji: "👥" },
+  { id: "roster",        label: "Roster",         emoji: "🪖" },
+  { id: "xp",            label: "XP & Niveaux",   emoji: "📊" },
+  { id: "comms",         label: "Communication",  emoji: "📢" },
+  { id: "embed",         label: "Embed Builder",  emoji: "🖼️" },
+  { id: "moderation",    label: "Modération",     emoji: "🛡️" },
+  { id: "inscriptions",  label: "Inscriptions",   emoji: "🎟️" },
+  { id: "config",        label: "Configuration",  emoji: "⚙️" },
+  { id: "notes",         label: "Notes",          emoji: "📝" },
+  { id: "blacklist",     label: "Blacklist",      emoji: "🚫" },
 ];
 
 function Card({ title, emoji, children }: { title: string; emoji: string; children: React.ReactNode }) {
@@ -723,6 +724,231 @@ function BlacklistTab({ apiKey }: { apiKey: string }) {
   );
 }
 
+// ─── Inscriptions Tab ─────────────────────────────────────────────────────────
+
+interface TournamentReg {
+  _id: string; tournamentName: string; teamName: string; players: string[];
+  contact: string; status: string; refuseReason?: string; registeredAt: string;
+}
+interface WaitlistReg {
+  _id: string; teamName: string; tag: string; captainId: string;
+  captainTag: string; status: string; position: number; vip: boolean; createdAt: string;
+}
+interface InscriptionCfg {
+  guildId?: string; maxSlots?: number; tournamentTitle?: string;
+  active?: boolean; registrationChannelId?: string; waitlistChannelId?: string; roleId?: string;
+}
+
+function InscriptionsTab({ apiKey, guildInfo }: { apiKey: string; guildInfo: GuildInfo | null }) {
+  const [tournoiRegs, setTournoiRegs] = useState<TournamentReg[]>([]);
+  const [waitlist, setWaitlist]       = useState<WaitlistReg[]>([]);
+  const [cfg, setCfg]                 = useState<InscriptionCfg>({});
+  const [draft, setDraft]             = useState<InscriptionCfg>({});
+  const [refuseId, setRefuseId]       = useState<string | null>(null);
+  const [refuseReason, setRefuseReason] = useState("");
+  const [loading, setLoading]         = useState<Record<string, boolean>>({});
+
+  const channels = (guildInfo?.channels || []).map(c => ({ value: c.id, label: `#${c.name}` }));
+  const roles    = (guildInfo?.roles || []).map(r => ({ value: r.id, label: r.name }));
+
+  const load = useCallback(async () => {
+    try {
+      const d = await apiAction("/api/inscriptions", "GET", undefined, apiKey);
+      setTournoiRegs(d.tournoi || []);
+      setWaitlist(d.waitlist || []);
+    } catch {}
+    try {
+      const c = await apiAction("/api/inscriptions/config", "GET", undefined, apiKey);
+      setCfg(c); setDraft(c);
+    } catch {}
+  }, [apiKey]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const act = async (key: string, fn: () => Promise<unknown>) => {
+    setLoading(l => ({ ...l, [key]: true }));
+    try { await fn(); toast.success("Action réussie !"); load(); }
+    catch (e: unknown) { toast.error((e as Error).message); }
+    finally { setLoading(l => ({ ...l, [key]: false })); }
+  };
+
+  const statusBadge = (s: string) => {
+    const map: Record<string, [string, string]> = {
+      pending:   ["🟡 En attente", "#f59e0b"],
+      accepted:  ["🟢 Acceptée",   "#34d399"],
+      refused:   ["🔴 Refusée",    "#f87171"],
+      confirmed: ["🟢 Confirmée",  "#34d399"],
+      rejected:  ["🔴 Rejetée",    "#f87171"],
+    };
+    const [label, color] = map[s] || [s, "var(--muted-foreground)"];
+    return <span style={{ fontSize: 11, fontWeight: 600, color }}>{label}</span>;
+  };
+
+  const pending   = tournoiRegs.filter(r => r.status === "pending");
+  const reviewed  = tournoiRegs.filter(r => r.status !== "pending");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* ── Config ──────────────────────────────────────────────────────── */}
+      <Card emoji="⚙️" title="Configuration des inscriptions">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Field label="Titre du tournoi">
+            <Input value={draft.tournamentTitle ?? ""} onChange={v => setDraft(d => ({ ...d, tournamentTitle: v }))} placeholder="Ex: SUPREMYX CUP #5" />
+          </Field>
+          <Field label="Places max">
+            <Input value={String(draft.maxSlots ?? 16)} onChange={v => setDraft(d => ({ ...d, maxSlots: Number(v) }))} placeholder="16" type="number" />
+          </Field>
+          <Field label="Salon inscriptions">
+            <Select value={draft.registrationChannelId ?? ""} onChange={v => setDraft(d => ({ ...d, registrationChannelId: v }))} placeholder="— Choisir —" options={channels} />
+          </Field>
+          <Field label="Salon waitlist">
+            <Select value={draft.waitlistChannelId ?? ""} onChange={v => setDraft(d => ({ ...d, waitlistChannelId: v }))} placeholder="— Choisir —" options={channels} />
+          </Field>
+          <Field label="Rôle inscrit">
+            <Select value={draft.roleId ?? ""} onChange={v => setDraft(d => ({ ...d, roleId: v }))} placeholder="— Choisir —" options={roles} />
+          </Field>
+          <Field label="Statut des inscriptions">
+            <div style={{ display: "flex", gap: 10, alignItems: "center", paddingTop: 6 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="radio" name="active" checked={draft.active !== false} onChange={() => setDraft(d => ({ ...d, active: true }))} />
+                🟢 Ouvertes
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                <input type="radio" name="active" checked={draft.active === false} onChange={() => setDraft(d => ({ ...d, active: false }))} />
+                🔴 Fermées
+              </label>
+            </div>
+          </Field>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <ActionBtn loading={!!loading.savecfg} onClick={() => act("savecfg", () => {
+            const gId = cfg.guildId || guildInfo?.id || "global";
+            return apiAction("/api/inscriptions/config", "PUT", { ...draft, guildId: gId }, apiKey);
+          })} label="💾 Sauvegarder la config" />
+          {cfg.active !== false
+            ? <span style={{ fontSize: 12, color: "#34d399" }}>✅ Inscriptions actuellement <strong>ouvertes</strong></span>
+            : <span style={{ fontSize: 12, color: "#f87171" }}>🔴 Inscriptions actuellement <strong>fermées</strong></span>
+          }
+        </div>
+      </Card>
+
+      {/* ── Inscriptions en attente ─────────────────────────────────────── */}
+      <Card emoji={`🟡 En attente (${pending.length})`} title="">
+        {pending.length === 0
+          ? <p style={{ fontSize: 12, color: "var(--muted-foreground)", margin: 0 }}>Aucune inscription en attente.</p>
+          : pending.map(r => (
+            <div key={r._id} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8, background: "var(--background)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: 14 }}>🏷️ {r.teamName}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted-foreground)" }}>
+                    📋 {r.tournamentName} · Contact : {r.contact}
+                  </p>
+                  {r.players.length > 0 && (
+                    <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted-foreground)" }}>
+                      👥 Joueurs : {r.players.join(", ")}
+                    </p>
+                  )}
+                </div>
+                <span style={{ fontSize: 11, color: "var(--muted-foreground)", whiteSpace: "nowrap", marginLeft: 12 }}>
+                  {new Date(r.registeredAt).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+
+              {/* Panneau refus contextuel */}
+              {refuseId === r._id && (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    value={refuseReason}
+                    onChange={e => setRefuseReason(e.target.value)}
+                    placeholder="Raison du refus (optionnel)"
+                    style={{ flex: 1, padding: "5px 10px", border: "1px solid var(--border)", borderRadius: 6, background: "var(--background)", color: "var(--foreground)", fontSize: 13 }}
+                  />
+                  <button
+                    onClick={() => act(`refuse_${r._id}`, async () => {
+                      await apiAction(`/api/inscriptions/tournoi/${r._id}`, "PATCH", { status: "refused", refuseReason }, apiKey);
+                      setRefuseId(null); setRefuseReason("");
+                    })}
+                    style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: "#ed4245", color: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+                  >Confirmer le refus</button>
+                  <button onClick={() => setRefuseId(null)} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--border)", background: "none", color: "var(--foreground)", fontSize: 13, cursor: "pointer" }}>✕</button>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => act(`accept_${r._id}`, () => apiAction(`/api/inscriptions/tournoi/${r._id}`, "PATCH", { status: "accepted" }, apiKey))}
+                  disabled={!!loading[`accept_${r._id}`]}
+                  style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#34d399", color: "#000", fontSize: 13, cursor: "pointer", fontWeight: 600, opacity: loading[`accept_${r._id}`] ? 0.6 : 1 }}
+                >✅ Accepter</button>
+                <button
+                  onClick={() => { setRefuseId(r._id); setRefuseReason(""); }}
+                  style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#f87171", color: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+                >❌ Refuser</button>
+                <button
+                  onClick={() => act(`del_${r._id}`, () => apiAction(`/api/inscriptions/tournoi/${r._id}`, "DELETE", undefined, apiKey))}
+                  disabled={!!loading[`del_${r._id}`]}
+                  style={{ padding: "5px 14px", borderRadius: 6, border: "1px solid var(--border)", background: "none", color: "var(--muted-foreground)", fontSize: 13, cursor: "pointer" }}
+                >🗑️ Supprimer</button>
+              </div>
+            </div>
+          ))
+        }
+      </Card>
+
+      {/* ── Historique traitées ─────────────────────────────────────────── */}
+      {reviewed.length > 0 && (
+        <Card emoji="📋" title={`Historique (${reviewed.length})`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 260, overflowY: "auto" }}>
+            {reviewed.map(r => (
+              <div key={r._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", borderRadius: 6, background: "var(--muted)", fontSize: 13 }}>
+                <span style={{ fontWeight: 600 }}>{r.teamName}</span>
+                <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>{r.tournamentName}</span>
+                <span>{statusBadge(r.status)}</span>
+                {r.refuseReason && <span style={{ fontSize: 11, color: "var(--muted-foreground)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>💬 {r.refuseReason}</span>}
+                <button
+                  onClick={() => act(`del_${r._id}`, () => apiAction(`/api/inscriptions/tournoi/${r._id}`, "DELETE", undefined, apiKey))}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: 14 }}>🗑️</button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* ── Waitlist ─────────────────────────────────────────────────────── */}
+      {waitlist.length > 0 && (
+        <Card emoji={`📋 Waitlist (${waitlist.length})`} title="">
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
+            {waitlist.map(r => (
+              <div key={r._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 8, background: "var(--background)", border: "1px solid var(--border)", fontSize: 13 }}>
+                <div>
+                  <span style={{ fontWeight: 700 }}>#{r.position} {r.teamName}</span>
+                  {r.vip && <span style={{ marginLeft: 6, fontSize: 11, background: "rgba(212,150,58,0.2)", color: "#d4963a", padding: "1px 6px", borderRadius: 10, fontWeight: 600 }}>VIP</span>}
+                  <span style={{ marginLeft: 8, color: "var(--muted-foreground)" }}>{r.captainTag}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  {statusBadge(r.status)}
+                  <button
+                    onClick={() => act(`wok_${r._id}`, () => apiAction(`/api/inscriptions/waitlist/${r._id}`, "PATCH", { status: "confirmed" }, apiKey))}
+                    disabled={r.status === "confirmed"}
+                    style={{ padding: "3px 10px", borderRadius: 6, border: "none", background: "#34d399", color: "#000", fontSize: 12, cursor: r.status === "confirmed" ? "default" : "pointer", fontWeight: 600, opacity: r.status === "confirmed" ? 0.5 : 1 }}
+                  >✅ Confirmer</button>
+                  <button
+                    onClick={() => act(`wdel_${r._id}`, () => apiAction(`/api/inscriptions/waitlist/${r._id}`, "DELETE", undefined, apiKey))}
+                    style={{ padding: "3px 10px", borderRadius: 6, border: "1px solid var(--border)", background: "none", color: "#f87171", fontSize: 12, cursor: "pointer" }}
+                  >🗑️</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function CommandCenterPage() {
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(LS_KEY) ?? "");
@@ -748,17 +974,18 @@ export default function CommandCenterPage() {
   };
 
   const tabContent: Record<string, React.ReactNode> = {
-    tournois:    <TournoisTab apiKey={apiKey} guildInfo={guildInfo} />,
-    matchs:      <MatchsTab apiKey={apiKey} />,
-    equipes:     <EquipesTab apiKey={apiKey} />,
-    roster:      <RosterTab apiKey={apiKey} guildInfo={guildInfo} />,
-    xp:          <XpTab apiKey={apiKey} guildInfo={guildInfo} />,
-    comms:       <CommsTab apiKey={apiKey} guildInfo={guildInfo} />,
-    embed:       <EmbedTab apiKey={apiKey} guildInfo={guildInfo} />,
-    moderation:  <ModerationTab apiKey={apiKey} guildInfo={guildInfo} />,
-    config:      <ConfigTab apiKey={apiKey} guildInfo={guildInfo} />,
-    notes:       <NotesTab apiKey={apiKey} />,
-    blacklist:   <BlacklistTab apiKey={apiKey} />,
+    tournois:     <TournoisTab apiKey={apiKey} guildInfo={guildInfo} />,
+    matchs:       <MatchsTab apiKey={apiKey} />,
+    equipes:      <EquipesTab apiKey={apiKey} />,
+    roster:       <RosterTab apiKey={apiKey} guildInfo={guildInfo} />,
+    xp:           <XpTab apiKey={apiKey} guildInfo={guildInfo} />,
+    comms:        <CommsTab apiKey={apiKey} guildInfo={guildInfo} />,
+    embed:        <EmbedTab apiKey={apiKey} guildInfo={guildInfo} />,
+    moderation:   <ModerationTab apiKey={apiKey} guildInfo={guildInfo} />,
+    inscriptions: <InscriptionsTab apiKey={apiKey} guildInfo={guildInfo} />,
+    config:       <ConfigTab apiKey={apiKey} guildInfo={guildInfo} />,
+    notes:        <NotesTab apiKey={apiKey} />,
+    blacklist:    <BlacklistTab apiKey={apiKey} />,
   };
 
   return (
