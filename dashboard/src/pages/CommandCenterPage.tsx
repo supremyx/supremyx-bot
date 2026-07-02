@@ -1284,6 +1284,13 @@ export default function CommandCenterPage() {
 
   useEffect(() => { loadGuild(apiKey); loadCache(apiKey); }, [apiKey, loadGuild, loadCache]);
 
+  // ── Polling silencieux toutes les 60 s ───────────────────────────────────
+  useEffect(() => {
+    if (!apiKey) return;
+    const id = setInterval(() => loadCache(apiKey), 60_000);
+    return () => clearInterval(id);
+  }, [apiKey, loadCache]);
+
   const handleKeyChange = (v: string) => {
     setApiKey(v);
     localStorage.setItem(LS_KEY, v);
