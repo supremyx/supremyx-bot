@@ -241,6 +241,74 @@ function GlobalSearch({
   );
 }
 
+// ─── Stats Bar ────────────────────────────────────────────────────────────────
+function StatsBar({
+  teams, players, blacklist, pendingInscriptions,
+}: {
+  teams: { name: string; points: number; kills: number; wins: number; losses: number }[];
+  players: { totalKills: number; totalMatches: number }[];
+  blacklist: { target: string }[];
+  pendingInscriptions: number;
+}) {
+  if (teams.length === 0 && players.length === 0) return null;
+
+  const totalKills   = teams.reduce((s, t) => s + (t.kills || 0), 0);
+  const totalPoints  = teams.reduce((s, t) => s + (t.points || 0), 0);
+  const totalWins    = teams.reduce((s, t) => s + (t.wins || 0), 0);
+  const topTeam      = teams[0];
+
+  const STAT_CARD_STYLE: React.CSSProperties = {
+    background: "var(--card)",
+    border: "1px solid var(--border)",
+    borderRadius: 10,
+    padding: "12px 16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+    flex: "1 1 130px",
+    minWidth: 120,
+  };
+
+  const stats: { emoji: string; label: string; value: string | number; sub?: string; accent?: string }[] = [
+    { emoji: "👥", label: "Équipes",          value: teams.length,    sub: `${totalWins} victoires` },
+    { emoji: "💀", label: "Total kills",       value: totalKills.toLocaleString("fr-FR"), sub: `${totalPoints} pts cumulés` },
+    { emoji: "🎮", label: "Joueurs actifs",    value: players.length,  sub: `via stats matchs` },
+    { emoji: "🚫", label: "Blacklistés",       value: blacklist.length, sub: "joueurs bannis" },
+    {
+      emoji: "🟡",
+      label: "Inscriptions en attente",
+      value: pendingInscriptions,
+      sub: pendingInscriptions === 0 ? "Rien à traiter" : "à valider",
+      accent: pendingInscriptions > 0 ? "#f59e0b" : undefined,
+    },
+    ...(topTeam ? [{
+      emoji: "🥇",
+      label: "Top équipe",
+      value: topTeam.name,
+      sub: `${topTeam.points} pts · ${topTeam.kills} kills`,
+      accent: "#f59e0b",
+    }] : []),
+  ];
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: "1.25rem" }}>
+      {stats.map(s => (
+        <div key={s.label} style={STAT_CARD_STYLE}>
+          <div style={{ fontSize: 11, color: "var(--muted-foreground)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {s.emoji} {s.label}
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: s.accent ?? "var(--foreground)", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {s.value}
+          </div>
+          {s.sub && (
+            <div style={{ fontSize: 11, color: "var(--muted-foreground)" }}>{s.sub}</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const TABS = [
   { id: "tournois",      label: "Tournois",      emoji: "🎮" },
   { id: "matchs",        label: "Matchs",         emoji: "⚔️" },
@@ -1169,16 +1237,19 @@ export default function CommandCenterPage() {
   const [guildInfo, setGuildInfo] = useState<GuildInfo | null>(null);
   const [guildLoading, setGuildLoading] = useState(false);
 
-  // ── Cache pour la recherche globale ──────────────────────────────────────
-  const [cachedTeams, setCachedTeams]       = useState<{ name: string; points: number; kills: number; rank: number }[]>([]);
-  const [cachedPlayers, setCachedPlayers]   = useState<{ displayName: string; teamName: string; totalKills: number; totalMatches: number }[]>([]);
-  const [cachedBlacklist, setCachedBlacklist] = useState<{ target: string; reason: string }[]>([]);
+  // ── Cache pour la recherche globale & stats ──────────────────────────────
+  const [cachedTeams, setCachedTeams]           = useState<{ name: string; points: number; kills: number; wins: number; losses: number; rank: number }[]>([]);
+  const [cachedPlayers, setCachedPlayers]       = useState<{ displayName: string; teamName: string; totalKills: number; totalMatches: number }[]>([]);
+  const [cachedBlacklist, setCachedBlacklist]   = useState<{ target: string; reason: string }[]>([]);
+  const [pendingInscriptions, setPendingInscriptions] = useState(0);
 
   const loadCache = useCallback(async (key: string) => {
     if (!key) return;
     try {
       const r = await apiAction("/api/ranking", "GET", undefined, key);
-      setCachedTeams((r.ranking || []).map((t: { team: string; points: number; kills: number; rank: number }) => ({ name: t.team, points: t.points, kills: t.kills, rank: t.rank })));
+      setCachedTeams((r.ranking || []).map((t: { team: string; points: number; kills: number; wins: number; losses: number; rank: number }) => ({
+        name: t.team, points: t.points, kills: t.kills, wins: t.wins ?? 0, losses: t.losses ?? 0, rank: t.rank,
+      })));
     } catch {}
     try {
       const p = await apiAction("/api/players?limit=100", "GET", undefined, key);
@@ -1187,6 +1258,10 @@ export default function CommandCenterPage() {
     try {
       const b = await apiAction("/api/blacklist", "GET", undefined, key);
       setCachedBlacklist(b.blacklist || []);
+    } catch {}
+    try {
+      const i = await apiAction("/api/inscriptions", "GET", undefined, key);
+      setPendingInscriptions((i.tournoi || []).filter((r: { status: string }) => r.status === "pending").length);
     } catch {}
   }, []);
 
@@ -1247,6 +1322,16 @@ export default function CommandCenterPage() {
           {guildLoading && <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>⏳</span>}
         </div>
       </div>
+
+      {/* Stats globales */}
+      {apiKey && (
+        <StatsBar
+          teams={cachedTeams}
+          players={cachedPlayers}
+          blacklist={cachedBlacklist}
+          pendingInscriptions={pendingInscriptions}
+        />
+      )}
 
       {/* Recherche globale */}
       {apiKey && (
