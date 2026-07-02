@@ -898,6 +898,7 @@ const Birthday    = require('../database/models/Birthday');
 const Suggestion  = require('../database/models/Suggestion');
 const Sondage          = require('../database/models/Sondage');
 const ScheduledEmbed   = require('../database/models/ScheduledEmbed');
+const EmbedTemplate    = require('../database/models/EmbedTemplate');
 const PerfAlert        = require('../database/models/PerfAlert');
 const Pronostic   = require('../database/models/Pronostic');
 const Disponibilite = require('../database/models/Disponibilite');
@@ -1296,6 +1297,34 @@ router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
     await ScheduledEmbed.findByIdAndDelete(doc._id);
     res.json({ ok: true });
   } catch (err) {
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── GET /api/embed-templates ──────────────────────────────────────────────────
+router.get('/embed-templates', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, limit = 100 } = req.query;
+    const filter = guildId ? { guildId } : {};
+    const templates = await EmbedTemplate.find(filter)
+      .sort({ updatedAt: -1 })
+      .limit(Math.min(parseInt(limit) || 100, 200))
+      .lean();
+    res.json({ total: templates.length, templates });
+  } catch (err) {
+    console.error('[GET /embed-templates]', err);
+    res.status(500).json({ error: 'Erreur interne' });
+  }
+});
+
+// ── DELETE /api/embed-templates/:id ──────────────────────────────────────────
+router.delete('/embed-templates/:id', requireApiKey, async (req, res) => {
+  try {
+    const doc = await EmbedTemplate.findByIdAndDelete(req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Template introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /embed-templates]', err);
     res.status(500).json({ error: 'Erreur interne' });
   }
 });
