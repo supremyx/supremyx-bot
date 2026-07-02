@@ -13,6 +13,72 @@ interface GuildInfo { id: string; name: string; channels: Channel[]; roles: Role
 interface Note { _id: string; target: string; content: string; author: string; createdAt: string; }
 interface BlacklistEntry { _id: string; target: string; reason: string; addedBy: string; createdAt: string; }
 
+// ─── Journal d'activité — bus d'événements ────────────────────────────────────
+interface LogEntry { id: string; label: string; status: "ok" | "error"; ts: number; }
+const _logFns: ((e: LogEntry) => void)[] = [];
+function emitLog(entry: Omit<LogEntry, "id">) {
+  const e = { ...entry, id: Math.random().toString(36).slice(2) };
+  _logFns.forEach(fn => fn(e));
+}
+function useActivityLog() {
+  const [log, setLog] = useState<LogEntry[]>([]);
+  useEffect(() => {
+    const fn = (e: LogEntry) => setLog(l => [e, ...l].slice(0, 50));
+    _logFns.push(fn);
+    return () => { const i = _logFns.indexOf(fn); if (i > -1) _logFns.splice(i, 1); };
+  }, []);
+  return log;
+}
+
+// Résolution path+method → label humain
+function resolveLabel(path: string, method: string, body?: object): string {
+  const p = path.replace(/\/[a-f0-9]{24}/gi, "/:id"); // strip Mongo IDs
+  const m = method.toUpperCase();
+  // Inscriptions — peek body for status
+  if (p.startsWith("/api/inscriptions/tournoi")) {
+    if (m === "PATCH") {
+      const s = (body as { status?: string } | undefined)?.status;
+      if (s === "accepted") return "✅ Inscription acceptée";
+      if (s === "refused")  return "❌ Inscription refusée";
+      return "📋 Inscription mise à jour";
+    }
+    if (m === "DELETE") return "🗑️ Inscription supprimée";
+  }
+  if (p.startsWith("/api/inscriptions/waitlist")) {
+    if (m === "PATCH")  return "✅ Waitlist confirmée";
+    if (m === "DELETE") return "🗑️ Retiré de la waitlist";
+  }
+  if (p === "/api/inscriptions/config") return "⚙️ Config inscriptions sauvée";
+  const MAP: Record<string, string> = {
+    "POST /api/actions/tournoi/create":  "🎮 Tournoi créé",
+    "POST /api/actions/tournoi/finish":  "🏁 Tournoi terminé",
+    "DELETE /api/actions/tournoi/:id":   "🗑️ Tournoi supprimé",
+    "POST /api/actions/match/add":       "⚔️ Match ajouté",
+    "POST /api/actions/team/create":     "👥 Équipe créée",
+    "PATCH /api/actions/team/rename":    "✏️ Équipe renommée",
+    "DELETE /api/actions/team":          "🗑️ Équipe supprimée",
+    "POST /api/actions/roster/member":   "➕ Membre ajouté au roster",
+    "DELETE /api/actions/roster/member": "➖ Membre retiré du roster",
+    "POST /api/actions/player/xp":       "📊 XP modifié",
+    "POST /api/actions/announce":        "📣 Annonce envoyée",
+    "POST /api/actions/say":             "💬 Message envoyé",
+    "POST /api/actions/poll":            "📊 Sondage publié",
+    "POST /api/actions/effacer":         "🗑️ Messages supprimés",
+    "POST /api/actions/warn":            "⚠️ Warn ajouté",
+    "DELETE /api/actions/warn":          "🗑️ Warn retiré",
+    "POST /api/actions/mute":            "🔇 Sourdine appliquée",
+    "POST /api/actions/unmute":          "🔊 Sourdine levée",
+    "PUT /api/actions/config/welcome":   "⚙️ Config welcome sauvée",
+    "PUT /api/actions/config/autorole":  "⚙️ Config autorole sauvée",
+    "POST /api/actions/notes":           "📝 Note ajoutée",
+    "DELETE /api/actions/notes/:id":     "🗑️ Note supprimée",
+    "POST /api/actions/blacklist":       "🚫 Ajouté à la blacklist",
+    "DELETE /api/actions/blacklist":     "✅ Retiré de la blacklist",
+    "POST /api/embed/send":              "🎨 Embed envoyé",
+  };
+  return MAP[`${m} ${p}`] ?? `${m} ${p.split("/").pop()}`;
+}
+
 async function apiAction(path: string, method: string, body?: object, apiKey?: string) {
   const opts: RequestInit = {
     method,
@@ -24,8 +90,64 @@ async function apiAction(path: string, method: string, body?: object, apiKey?: s
   if (body && method !== "GET") opts.body = JSON.stringify(body);
   const res = await fetch(apiUrl(path), opts);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+  if (!res.ok) {
+    if (method !== "GET") emitLog({ label: `❌ ${resolveLabel(path, method, body)}`, status: "error", ts: Date.now() });
+    throw new Error(data.error || `Erreur ${res.status}`);
+  }
+  if (method !== "GET") emitLog({ label: resolveLabel(path, method, body), status: "ok", ts: Date.now() });
   return data;
+}
+
+// ─── Composant journal d'activité ─────────────────────────────────────────────
+function ActivityLog() {
+  const log = useActivityLog();
+  const [open, setOpen] = useState(true);
+
+  if (log.length === 0) return null;
+
+  const fmt = (ts: number) => {
+    const d = new Date(ts);
+    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  return (
+    <div style={{ marginTop: "2rem", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden", background: "var(--card)" }}>
+      {/* Header */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: "none", border: "none", cursor: "pointer", color: "var(--foreground)" }}
+      >
+        <span style={{ fontWeight: 700, fontSize: 13 }}>📋 Journal d'activité <span style={{ fontSize: 11, color: "var(--muted-foreground)", fontWeight: 400 }}>({log.length} action{log.length > 1 ? "s" : ""} cette session)</span></span>
+        <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>{open ? "▲ Réduire" : "▼ Afficher"}</span>
+      </button>
+
+      {open && (
+        <div style={{ maxHeight: 260, overflowY: "auto", borderTop: "1px solid var(--border)" }}>
+          {log.map((e, i) => (
+            <div
+              key={e.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "7px 16px",
+                background: i % 2 === 0 ? "transparent" : "var(--muted)",
+                borderBottom: i < log.length - 1 ? "1px solid var(--border)" : "none",
+                fontSize: 13,
+                opacity: i > 10 ? Math.max(0.4, 1 - (i - 10) * 0.05) : 1,
+              }}
+            >
+              <span style={{ fontSize: 10, color: "var(--muted-foreground)", fontFamily: "monospace", whiteSpace: "nowrap" }}>
+                {fmt(e.ts)}
+              </span>
+              <span style={{ flex: 1 }}>{e.label}</span>
+              {e.status === "error" && (
+                <span style={{ fontSize: 10, color: "#f87171", fontWeight: 700 }}>ERREUR</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Types recherche ──────────────────────────────────────────────────────────
@@ -1410,6 +1532,9 @@ export default function CommandCenterPage() {
       <div>
         {tabContent[activeTab]}
       </div>
+
+      {/* Journal d'activité */}
+      {apiKey && <ActivityLog />}
     </div>
   );
 }
