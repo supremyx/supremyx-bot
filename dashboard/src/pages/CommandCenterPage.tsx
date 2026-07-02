@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiUrl } from "../lib/api";
 import { toast } from "sonner";
 
@@ -26,6 +26,219 @@ async function apiAction(path: string, method: string, body?: object, apiKey?: s
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
   return data;
+}
+
+// ─── Types recherche ──────────────────────────────────────────────────────────
+interface TeamResult    { type: "team";      name: string; points: number; kills: number; rank: number; }
+interface PlayerResult  { type: "player";    displayName: string; teamName: string; totalKills: number; totalMatches: number; }
+interface BlackResult   { type: "black";     target: string; reason: string; }
+interface NoteResult    { type: "note";      _id: string; target: string; content: string; }
+type SearchResult = TeamResult | PlayerResult | BlackResult | NoteResult;
+
+// ─── Composant recherche globale ───────────────────────────────────────────────
+function GlobalSearch({
+  apiKey, teams, players, blacklist, onNavigate,
+}: {
+  apiKey: string;
+  teams: { name: string; points: number; kills: number; rank: number }[];
+  players: { displayName: string; teamName: string; totalKills: number; totalMatches: number }[];
+  blacklist: { target: string; reason: string }[];
+  onNavigate: (tab: string) => void;
+}) {
+  const [q, setQ]           = useState("");
+  const [open, setOpen]     = useState(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [noteResults, setNoteResults] = useState<NoteResult[]>([]);
+  const timerRef            = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef             = useRef<HTMLDivElement>(null);
+
+  // Fermer en cliquant dehors
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Recherche debounced
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (q.trim().length < 2) { setResults([]); setNoteResults([]); setOpen(false); return; }
+
+    timerRef.current = setTimeout(async () => {
+      const lower = q.toLowerCase();
+      const teamHits:  TeamResult[]   = teams
+        .filter(t => t.name.toLowerCase().includes(lower))
+        .slice(0, 4)
+        .map(t => ({ type: "team" as const, ...t }));
+      const playerHits: PlayerResult[] = players
+        .filter(p => p.displayName.toLowerCase().includes(lower) || p.teamName.toLowerCase().includes(lower))
+        .slice(0, 4)
+        .map(p => ({ type: "player" as const, ...p }));
+      const blackHits: BlackResult[] = blacklist
+        .filter(b => b.target.toLowerCase().includes(lower))
+        .slice(0, 3)
+        .map(b => ({ type: "black" as const, ...b }));
+
+      setResults([...teamHits, ...playerHits, ...blackHits]);
+
+      // Notes — appel API live
+      try {
+        const d = await apiAction(`/api/actions/notes?target=${encodeURIComponent(q)}`, "GET", undefined, apiKey);
+        setNoteResults((d.notes || []).slice(0, 3).map((n: { _id: string; target: string; content: string }) => ({ type: "note" as const, ...n })));
+      } catch { setNoteResults([]); }
+
+      setOpen(true);
+    }, 280);
+  }, [q, teams, players, blacklist, apiKey]);
+
+  const total = results.length + noteResults.length;
+
+  const highlight = (text: string) => {
+    if (!q.trim()) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <mark style={{ background: "rgba(88,101,242,0.35)", color: "inherit", borderRadius: 2 }}>{text.slice(idx, idx + q.length)}</mark>
+        {text.slice(idx + q.length)}
+      </>
+    );
+  };
+
+  const SECTION = (label: string, emoji: string) => (
+    <div style={{ padding: "4px 12px", fontSize: 10, fontWeight: 700, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid var(--border)", marginBottom: 2 }}>
+      {emoji} {label}
+    </div>
+  );
+
+  const ROW = ({ children, onClick }: { children: React.ReactNode; onClick: () => void }) => (
+    <button onClick={onClick} style={{ width: "100%", textAlign: "left", padding: "7px 12px", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--foreground)", display: "flex", alignItems: "center", gap: 10, borderRadius: 6 }}
+      onMouseEnter={e => (e.currentTarget.style.background = "var(--muted)")}
+      onMouseLeave={e => (e.currentTarget.style.background = "none")}
+    >
+      {children}
+    </button>
+  );
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative", maxWidth: 540, marginBottom: "1rem" }}>
+      {/* Search input */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", border: "1.5px solid", borderColor: open ? "#5865f2" : "var(--border)", borderRadius: 10, background: "var(--card)", transition: "border-color 0.15s" }}>
+        <span style={{ fontSize: 16 }}>🔍</span>
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          onFocus={() => q.length >= 2 && setOpen(true)}
+          onKeyDown={e => e.key === "Escape" && (setOpen(false), setQ(""))}
+          placeholder="Rechercher une équipe, un joueur, une note…"
+          style={{ flex: 1, border: "none", background: "transparent", color: "var(--foreground)", fontSize: 14, outline: "none" }}
+          data-testid="input-global-search"
+        />
+        {q && (
+          <button onClick={() => { setQ(""); setOpen(false); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {open && total > 0 && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.4)", zIndex: 100, overflow: "hidden", maxHeight: 440, overflowY: "auto" }}>
+
+          {/* Équipes */}
+          {results.filter(r => r.type === "team").length > 0 && (
+            <>
+              {SECTION("Équipes", "👥")}
+              {results.filter(r => r.type === "team").map((r) => {
+                const t = r as TeamResult;
+                return (
+                  <ROW key={t.name} onClick={() => { onNavigate("equipes"); setOpen(false); setQ(""); }}>
+                    <span style={{ fontSize: 18 }}>🏆</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: 600 }}>{highlight(t.name)}</span>
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "var(--muted-foreground)" }}>#{t.rank} · {t.points} pts · {t.kills} kills</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "#5865f2" }}>→ Équipes</span>
+                  </ROW>
+                );
+              })}
+            </>
+          )}
+
+          {/* Joueurs */}
+          {results.filter(r => r.type === "player").length > 0 && (
+            <>
+              {SECTION("Joueurs", "💀")}
+              {results.filter(r => r.type === "player").map((r) => {
+                const p = r as PlayerResult;
+                return (
+                  <ROW key={`${p.displayName}-${p.teamName}`} onClick={() => { onNavigate("xp"); setOpen(false); setQ(""); }}>
+                    <span style={{ fontSize: 18 }}>🎮</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: 600 }}>{highlight(p.displayName)}</span>
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "var(--muted-foreground)" }}>{highlight(p.teamName)} · {p.totalKills} kills en {p.totalMatches} matchs</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "#5865f2" }}>→ XP</span>
+                  </ROW>
+                );
+              })}
+            </>
+          )}
+
+          {/* Notes */}
+          {noteResults.length > 0 && (
+            <>
+              {SECTION("Notes", "📝")}
+              {noteResults.map((n) => (
+                <ROW key={n._id} onClick={() => { onNavigate("notes"); setOpen(false); setQ(""); }}>
+                  <span style={{ fontSize: 18 }}>📌</span>
+                  <div style={{ flex: 1, overflow: "hidden" }}>
+                    <span style={{ fontWeight: 600 }}>{highlight(n.target)}</span>
+                    <span style={{ marginLeft: 8, fontSize: 11, color: "var(--muted-foreground)", display: "inline-block", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", verticalAlign: "middle" }}>{n.content}</span>
+                  </div>
+                  <span style={{ fontSize: 11, color: "#5865f2" }}>→ Notes</span>
+                </ROW>
+              ))}
+            </>
+          )}
+
+          {/* Blacklist */}
+          {results.filter(r => r.type === "black").length > 0 && (
+            <>
+              {SECTION("Blacklist", "🚫")}
+              {results.filter(r => r.type === "black").map((r) => {
+                const b = r as BlackResult;
+                return (
+                  <ROW key={b.target} onClick={() => { onNavigate("blacklist"); setOpen(false); setQ(""); }}>
+                    <span style={{ fontSize: 18 }}>🚫</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: 600 }}>{highlight(b.target)}</span>
+                      <span style={{ marginLeft: 8, fontSize: 11, color: "var(--muted-foreground)" }}>{b.reason}</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "#5865f2" }}>→ Blacklist</span>
+                  </ROW>
+                );
+              })}
+            </>
+          )}
+
+          {/* Footer */}
+          <div style={{ padding: "6px 12px", borderTop: "1px solid var(--border)", fontSize: 11, color: "var(--muted-foreground)", display: "flex", justifyContent: "space-between" }}>
+            <span>{total} résultat{total > 1 ? "s" : ""} pour « {q} »</span>
+            <span>Échap pour fermer</span>
+          </div>
+        </div>
+      )}
+
+      {/* No results */}
+      {open && total === 0 && q.length >= 2 && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 12px", textAlign: "center", fontSize: 13, color: "var(--muted-foreground)", zIndex: 100 }}>
+          Aucun résultat pour « {q} »
+        </div>
+      )}
+    </div>
+  );
 }
 
 const TABS = [
@@ -956,6 +1169,27 @@ export default function CommandCenterPage() {
   const [guildInfo, setGuildInfo] = useState<GuildInfo | null>(null);
   const [guildLoading, setGuildLoading] = useState(false);
 
+  // ── Cache pour la recherche globale ──────────────────────────────────────
+  const [cachedTeams, setCachedTeams]       = useState<{ name: string; points: number; kills: number; rank: number }[]>([]);
+  const [cachedPlayers, setCachedPlayers]   = useState<{ displayName: string; teamName: string; totalKills: number; totalMatches: number }[]>([]);
+  const [cachedBlacklist, setCachedBlacklist] = useState<{ target: string; reason: string }[]>([]);
+
+  const loadCache = useCallback(async (key: string) => {
+    if (!key) return;
+    try {
+      const r = await apiAction("/api/ranking", "GET", undefined, key);
+      setCachedTeams((r.ranking || []).map((t: { team: string; points: number; kills: number; rank: number }) => ({ name: t.team, points: t.points, kills: t.kills, rank: t.rank })));
+    } catch {}
+    try {
+      const p = await apiAction("/api/players?limit=100", "GET", undefined, key);
+      setCachedPlayers(p.players || []);
+    } catch {}
+    try {
+      const b = await apiAction("/api/blacklist", "GET", undefined, key);
+      setCachedBlacklist(b.blacklist || []);
+    } catch {}
+  }, []);
+
   const loadGuild = useCallback(async (key: string) => {
     if (!key) return;
     setGuildLoading(true);
@@ -966,7 +1200,7 @@ export default function CommandCenterPage() {
     finally { setGuildLoading(false); }
   }, []);
 
-  useEffect(() => { loadGuild(apiKey); }, [apiKey, loadGuild]);
+  useEffect(() => { loadGuild(apiKey); loadCache(apiKey); }, [apiKey, loadGuild, loadCache]);
 
   const handleKeyChange = (v: string) => {
     setApiKey(v);
@@ -1013,6 +1247,17 @@ export default function CommandCenterPage() {
           {guildLoading && <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>⏳</span>}
         </div>
       </div>
+
+      {/* Recherche globale */}
+      {apiKey && (
+        <GlobalSearch
+          apiKey={apiKey}
+          teams={cachedTeams}
+          players={cachedPlayers}
+          blacklist={cachedBlacklist}
+          onNavigate={(tab) => setActiveTab(tab)}
+        />
+      )}
 
       {/* Tab bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: "1.25rem" }}>
