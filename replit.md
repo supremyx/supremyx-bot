@@ -24,6 +24,7 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 |-----|-------------|
 | `TOKEN` | Discord bot token |
 | `MONGO_URI` | MongoDB Atlas connection string |
+| `BOT_API_KEY` | API key for dashboard admin/settings routes |
 
 ## Tech stack
 
