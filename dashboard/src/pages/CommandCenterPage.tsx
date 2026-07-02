@@ -1242,6 +1242,7 @@ export default function CommandCenterPage() {
   const [cachedPlayers, setCachedPlayers]       = useState<{ displayName: string; teamName: string; totalKills: number; totalMatches: number }[]>([]);
   const [cachedBlacklist, setCachedBlacklist]   = useState<{ target: string; reason: string }[]>([]);
   const [pendingInscriptions, setPendingInscriptions] = useState(0);
+  const [recentWarnings, setRecentWarnings]           = useState(0);
 
   const loadCache = useCallback(async (key: string) => {
     if (!key) return;
@@ -1262,6 +1263,12 @@ export default function CommandCenterPage() {
     try {
       const i = await apiAction("/api/inscriptions", "GET", undefined, key);
       setPendingInscriptions((i.tournoi || []).filter((r: { status: string }) => r.status === "pending").length);
+    } catch {}
+    try {
+      const w = await apiAction("/api/warnings?limit=50", "GET", undefined, key);
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+      const recent = (w.warnings || []).filter((x: { createdAt: string }) => new Date(x.createdAt).getTime() > cutoff).length;
+      setRecentWarnings(recent);
     } catch {}
   }, []);
 
@@ -1345,22 +1352,52 @@ export default function CommandCenterPage() {
       )}
 
       {/* Tab bar */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: "1.25rem" }}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: "6px 14px", borderRadius: 20, border: "1px solid var(--border)", cursor: "pointer", fontSize: 13, fontWeight: 500,
-              background: activeTab === tab.id ? "#5865f2" : "var(--card)",
-              color: activeTab === tab.id ? "#fff" : "var(--foreground)",
-              transition: "all 0.15s",
-            }}
-          >
-            {tab.emoji} {tab.label}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const tabBadges: Record<string, number> = {
+          inscriptions: pendingInscriptions,
+          moderation:   recentWarnings,
+        };
+        return (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: "1.25rem" }}>
+            {TABS.map(tab => {
+              const badge  = tabBadges[tab.id] ?? 0;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  data-testid={`tab-${tab.id}`}
+                  style={{
+                    position: "relative",
+                    padding: "6px 14px", borderRadius: 20, border: "1px solid var(--border)",
+                    cursor: "pointer", fontSize: 13, fontWeight: 500,
+                    background: active ? "#5865f2" : "var(--card)",
+                    color: active ? "#fff" : "var(--foreground)",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {tab.emoji} {tab.label}
+                  {badge > 0 && !active && (
+                    <span style={{
+                      position: "absolute", top: -5, right: -5,
+                      minWidth: 18, height: 18, padding: "0 4px",
+                      background: tab.id === "moderation" ? "#f87171" : "#f59e0b",
+                      color: "#000",
+                      fontSize: 10, fontWeight: 800,
+                      borderRadius: 999,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 0 0 2px var(--background)",
+                      lineHeight: 1,
+                    }}>
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Tab content */}
       <div>
