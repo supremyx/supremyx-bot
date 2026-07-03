@@ -425,6 +425,8 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (message.content.trim() !== '!aide') return;
 
+      message.delete().catch(() => {});
+
       const cd = checkCooldown(message.author.id, 'aide', 10);
       if (cd) return replyCooldown(message, cd, 'aide');
 
@@ -457,6 +459,8 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (message.content.trim() !== '!aide nouveautes') return;
 
+      message.delete().catch(() => {});
+
       const cd = checkCooldown(message.author.id, 'aide_nouveautes', 15);
       if (cd) return replyCooldown(message, cd, 'aide nouveautes');
 
@@ -473,6 +477,8 @@ module.exports = (client) => {
       if (!message.guild) return;
       if (message.author.bot) return;
       if (message.content.trim() !== '!aide historique') return;
+
+      message.delete().catch(() => {});
 
       const doc = await SearchHistory.findOne({
         userId: message.author.id,
@@ -513,12 +519,16 @@ module.exports = (client) => {
       if (!content.startsWith('!chercher')) return;
       if (content.startsWith('!chercher staff')) return; // réservé à aidestaff
 
+      message.delete().catch(() => {});
+
       const term = content.slice('!chercher'.length).trim().toLowerCase();
       if (!term) {
-        return message.reply('**Usage :** `!chercher <terme>`\nExemple : `!chercher tournoi`');
+        message.reply('**Usage :** `!chercher <terme>`\nExemple : `!chercher tournoi`').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
       if (term.length < 2) {
-        return message.reply('❌ Le terme doit contenir au moins 2 caractères.');
+        message.reply('❌ Le terme doit contenir au moins 2 caractères.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
 
       const cd = checkCooldown(message.author.id, 'chercher', 5);
@@ -544,9 +554,11 @@ module.exports = (client) => {
           const suggestText = suggestions
             .map(({ cat, cmd }) => `• \`${cmd.label}\` *(${cat.emoji} ${cat.label})* — ${cmd.description}`)
             .join('\n');
-          return message.reply(`🔍 Aucun résultat exact pour \`${term}\`.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`);
+          message.reply(`🔍 Aucun résultat exact pour \`${term}\`.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`).then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+          return;
         }
-        return message.reply(`🔍 Aucune commande trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aide\` pour naviguer par catégorie.`);
+        message.reply(`🔍 Aucune commande trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aide\` pour naviguer par catégorie.`).then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
 
       const embed = new EmbedBuilder()

@@ -579,8 +579,12 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (message.content.trim() !== '!aidestaff') return;
 
-      if (!message.member.permissions.has('Administrator'))
-        return message.reply('⛔ Cette commande est réservée au staff.');
+      message.delete().catch(() => {});
+
+      if (!message.member.permissions.has('Administrator')) {
+        message.reply('⛔ Cette commande est réservée au staff.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
+      }
 
       const cd = checkCooldown(message.author.id, 'aidestaff', 10);
       if (cd) return replyCooldown(message, cd, 'aidestaff');
@@ -615,8 +619,12 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (message.content.trim() !== '!aidestaff historique') return;
 
-      if (!message.member.permissions.has('Administrator'))
-        return message.reply('⛔ Commande réservée au staff.');
+      message.delete().catch(() => {});
+
+      if (!message.member.permissions.has('Administrator')) {
+        message.reply('⛔ Commande réservée au staff.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
+      }
 
       const doc = await SearchHistory.findOne({
         userId: message.author.id,
@@ -656,8 +664,12 @@ module.exports = (client) => {
       if (!message.member) return;
       if (message.content.trim() !== '!aidestaff nouveautes') return;
 
-      if (!message.member.permissions.has('Administrator'))
-        return message.reply('⛔ Commande réservée au staff.');
+      message.delete().catch(() => {});
+
+      if (!message.member.permissions.has('Administrator')) {
+        message.reply('⛔ Commande réservée au staff.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
+      }
 
       const cd = checkCooldown(message.author.id, 'aidestaff_nouveautes', 15);
       if (cd) return replyCooldown(message, cd, 'aidestaff nouveautes');
@@ -678,15 +690,21 @@ module.exports = (client) => {
       const content = message.content.trim();
       if (!content.startsWith('!chercher staff')) return;
 
-      if (!message.member.permissions.has('Administrator'))
-        return message.reply('⛔ Commande réservée au staff.');
+      message.delete().catch(() => {});
+
+      if (!message.member.permissions.has('Administrator')) {
+        message.reply('⛔ Commande réservée au staff.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
+      }
 
       const term = content.slice('!chercher staff'.length).trim().toLowerCase();
       if (!term) {
-        return message.reply('**Usage :** `!chercher staff <terme>`\nExemple : `!chercher staff inscription`');
+        message.reply('**Usage :** `!chercher staff <terme>`\nExemple : `!chercher staff inscription`').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
       if (term.length < 2) {
-        return message.reply('❌ Le terme doit contenir au moins 2 caractères.');
+        message.reply('❌ Le terme doit contenir au moins 2 caractères.').then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
 
       const cd = checkCooldown(message.author.id, 'chercher_staff', 5);
@@ -712,9 +730,11 @@ module.exports = (client) => {
           const suggestText = suggestions
             .map(({ cat, cmd }) => `• \`${cmd.label}\` *(${cat.emoji} ${cat.label})* — ${cmd.description}`)
             .join('\n');
-          return message.reply(`🔍 Aucun résultat exact pour \`${term}\`.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`);
+          message.reply(`🔍 Aucun résultat exact pour \`${term}\`.\n\n💡 **Peut-être voulais-tu dire :**\n${suggestText}`).then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+          return;
         }
-        return message.reply(`🔍 Aucune commande staff trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aidestaff\` pour naviguer par catégorie.`);
+        message.reply(`🔍 Aucune commande staff trouvée pour \`${term}\`.\nEssaie un autre mot-clé ou consulte \`!aidestaff\` pour naviguer par catégorie.`).then(m => setTimeout(() => m.delete().catch(() => {}), 30 * 60 * 1000)).catch(() => {});
+        return;
       }
 
       const embed = new EmbedBuilder()
