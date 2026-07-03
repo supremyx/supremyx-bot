@@ -452,7 +452,6 @@ const STAFF_CATEGORIES = [
     commands: [
       { label: '!erreurs',                       description: 'Consulter les dernières erreurs du bot (Staff)',                 subs: ['nonresolues — Erreurs non résolues', 'stats — Statistiques globales', 'resoudre <id> — Marquer résolue', 'vider — Effacer tout'] },
       { label: '!maintenance activer [message]', description: 'Activer le mode maintenance (bloque toutes les commandes) (Staff)', subs: ['activer [message] — Activer', 'desactiver — Désactiver', 'message <texte> — Changer message', 'statut — Voir état'] },
-      { label: '!lienbot',                       description: 'Obtenir le lien d\'invitation du bot',                         subs: [] },
     ],
   },
 ];
