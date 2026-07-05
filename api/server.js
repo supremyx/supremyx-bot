@@ -116,6 +116,44 @@ router.use(publicLimiter);
 // ── GET /health ───────────────────────────────────────────────────────────────
 router.get('/health', (_req, res) => res.json({ status: 'ok', bot: 'SUPREMYX', ts: new Date() }));
 
+// ── GET /status ───────────────────────────────────────────────────────────────
+router.get('/status', async (_req, res) => {
+  const MONGO_STATES = ['déconnecté', 'connecté', 'connexion...', 'déconnexion...'];
+  let autopush = null;
+  try {
+    const raw = require('fs').readFileSync(path.join(__dirname, '../.autopush-status.json'), 'utf8');
+    autopush = JSON.parse(raw);
+  } catch {}
+
+  let instances = [];
+  try {
+    instances = await BotInstance.find({}).sort({ heartbeat: -1 }).lean();
+  } catch {}
+
+  res.json({
+    status: 'ok',
+    bot: {
+      online: !!_discordClient?.isReady?.(),
+      tag: _discordClient?.user?.tag ?? null,
+      ping: _discordClient?.ws?.ping ?? null,
+      guilds: _discordClient?.guilds?.cache?.size ?? 0,
+      uptimeSeconds: Math.floor(process.uptime()),
+    },
+    mongo: {
+      state: MONGO_STATES[mongoose.connection.readyState] ?? 'inconnu',
+      connected: mongoose.connection.readyState === 1,
+    },
+    instances: instances.map(i => ({
+      instanceId: i.instanceId,
+      pid: i.pid,
+      startedAt: i.startedAt,
+      heartbeat: i.heartbeat,
+    })),
+    autopush,
+    ts: new Date(),
+  });
+});
+
 // ── GET /api-docs ─────────────────────────────────────────────────────────────
 router.get('/api-docs', (_req, res) => res.json({
   name: 'SUPREMYX Bot API',
@@ -124,6 +162,7 @@ router.get('/api-docs', (_req, res) => res.json({
   base: '/bot-api',
   endpoints: [
     { method: 'GET',  path: '/health',           auth: false, description: 'Statut du bot' },
+    { method: 'GET',  path: '/status',           auth: false, description: 'Statut détaillé : bot, MongoDB, instances, dernier auto-push GitHub' },
     { method: 'GET',  path: '/ranking',           auth: false, description: 'Classement général des équipes' },
     { method: 'GET',  path: '/ranking/:team',     auth: false, description: 'Détail + timeline d\'une équipe' },
     { method: 'GET',  path: '/players',           auth: false, description: 'Classement joueurs par kills' },

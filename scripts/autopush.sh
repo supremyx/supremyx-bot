@@ -9,6 +9,25 @@ fi
 
 REPO="supremyx/supremyx-bot"
 REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"
+STATUS_FILE="/home/runner/workspace/.autopush-status.json"
+
+write_status() {
+  local SUCCESS="$1"   # true / false
+  local COMMITS="$2"
+  local LAST_HASH="$3"
+  local LAST_MSG="$4"
+  local NOW
+  NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  cat > "$STATUS_FILE" <<EOF
+{
+  "lastAttempt": "${NOW}",
+  "lastSuccess": ${SUCCESS},
+  "commitsPushed": ${COMMITS:-0},
+  "lastHash": "${LAST_HASH:-}",
+  "lastMessage": "$(echo "$LAST_MSG" | sed 's/"/\\"/g')"
+}
+EOF
+}
 
 echo "🔁 Auto-push actif — vérification toutes les 60 secondes"
 
@@ -65,12 +84,14 @@ while true; do
 
     if git push "$REMOTE" main --quiet 2>/dev/null; then
       echo "✅ [${TIME_NOW}] ${UNPUSHED} commit(s) poussé(s) sur GitHub"
+      write_status true "$UNPUSHED" "$LAST_HASH" "$LAST_MSG"
       send_discord \
         "5763719" \
         "✅ Push GitHub réussi" \
         "**\`${LAST_HASH}\`** — ${LAST_MSG}\n🌿 Branche : \`main\` · 📦 ${UNPUSHED} commit(s) poussé(s)\n🔗 [Voir sur GitHub](https://github.com/${REPO}/commits/main)"
     else
       echo "⚠️ [${TIME_NOW}] Échec push — nouvelle tentative dans 60s"
+      write_status false "$UNPUSHED" "$LAST_HASH" "$LAST_MSG (échec)"
       send_discord \
         "15548997" \
         "⚠️ Échec du push GitHub" \
