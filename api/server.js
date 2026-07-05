@@ -1330,10 +1330,11 @@ router.post('/scheduled-embeds', requireApiKey, async (req, res) => {
 router.delete('/scheduled-embeds/:id', requireApiKey, async (req, res) => {
   try {
     const { id } = req.params;
-    const docs = await ScheduledEmbed.find({ sent: false });
-    const doc  = docs.find(d => d._id.toString().slice(-6) === id || d._id.toString() === id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'ID invalide' });
+    }
+    const doc = await ScheduledEmbed.findByIdAndDelete(id);
     if (!doc) return res.status(404).json({ error: 'Embed introuvable' });
-    await ScheduledEmbed.findByIdAndDelete(doc._id);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Erreur interne' });

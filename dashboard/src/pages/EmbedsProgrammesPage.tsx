@@ -221,16 +221,16 @@ export default function EmbedsProgrammesPage() {
     finally { setSubmitting(false); }
   }
 
-  async function cancel(id: string) {
-    if (!confirm(`Annuler l'embed programmé #${id} ?`)) return;
-    setCanceling(id);
+  async function cancel(fullId: string, displayId: string) {
+    if (!confirm(`Annuler l'embed programmé #${displayId} ?`)) return;
+    setCanceling(fullId);
     try {
-      const r = await fetch(apiUrl(`/api/scheduled-embeds/${id}`), { method: "DELETE" });
+      const r = await fetch(apiUrl(`/api/scheduled-embeds/${fullId}`), { method: "DELETE" });
       if (r.ok) {
         setData(prev => prev ? {
           ...prev,
           stats: { ...prev.stats, pending: prev.stats.pending - 1 },
-          pending: prev.pending.filter(d => d._id.slice(-6) !== id && d._id !== id),
+          pending: prev.pending.filter(d => d._id !== fullId),
         } : null);
       } else { alert("Erreur lors de l'annulation."); }
     } catch { alert("Erreur réseau."); }
@@ -495,10 +495,10 @@ export default function EmbedsProgrammesPage() {
                             <span>✍️ {doc.createdBy}</span>
                           </div>
                         </div>
-                        <button onClick={() => cancel(sid)} disabled={canceling === sid}
+                        <button onClick={() => cancel(doc._id, sid)} disabled={canceling === doc._id}
                           className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
                           style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}>
-                          {canceling === sid ? "…" : "✕ Annuler"}
+                          {canceling === doc._id ? "…" : "✕ Annuler"}
                         </button>
                       </div>
                     );
