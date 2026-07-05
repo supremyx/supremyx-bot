@@ -10,3 +10,4 @@
 - [IA subcommands location](ia-subcommands.md) — new `!ia` subcommands must be inserted before the free-text catch-all `!ia <question>` handler (last block before module.exports closing); inserting after causes them to never match.
 - [API additional models location](api-models-location.md) — GuildEvent, Ticket, Birthday, Suggestion and new models are imported at the bottom of server.js (after the SSE /events route) to avoid hoisting conflicts; new GET endpoints go after those imports before the Mount block.
 - [Dashboard page pattern](dashboard-page-pattern.md) — new pages require 4 edits in App.tsx: import, Page type union, NAV_ITEMS entry, and conditional render in the Pages section.
+- [Full bug audit findings](full-bug-audit-2026-07.md) — cross-cutting patterns found in a full-codebase audit: missing bot/DM guards, unescaped regex, raw fetch() bypassing apiUrl(), unguarded query filters.

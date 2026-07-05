@@ -40,7 +40,8 @@ module.exports = (client) => {
       const teamName = parts.slice(1).join(' ');
       if (!teamName) return message.reply('Usage : `!voixequipe <équipe>`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } }).lean();
+      const escapedTeamName = teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapedTeamName}$`, 'i') } }).lean();
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       // Vérifier si déjà existant

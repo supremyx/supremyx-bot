@@ -31,9 +31,11 @@ module.exports = (client) => {
       const nom1 = rest.slice(0, vsIndex).join(' ').trim();
       const nom2 = rest.slice(vsIndex + 1).join(' ').trim();
 
+      const escNom1 = nom1.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escNom2 = nom2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const [p1, p2] = await Promise.all([
-        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${nom1}$`, 'i') } }),
-        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${nom2}$`, 'i') } }),
+        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${escNom1}$`, 'i') } }),
+        PlayerStat.findOne({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${escNom2}$`, 'i') } }),
       ]);
 
       if (!p1) return message.reply(`❌ Joueur **${nom1}** introuvable.`);
@@ -267,9 +269,11 @@ module.exports = (client) => {
     const name1 = args.slice(0, separator).join(' ');
     const name2 = args.slice(separator + 1).join(' ');
 
+    const escName1 = name1.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escName2 = name2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const [team1, team2] = await Promise.all([
-      Team.findOne({ name: { $regex: new RegExp(`^${name1}$`, 'i') } }),
-      Team.findOne({ name: { $regex: new RegExp(`^${name2}$`, 'i') } })
+      Team.findOne({ name: { $regex: new RegExp(`^${escName1}$`, 'i') } }),
+      Team.findOne({ name: { $regex: new RegExp(`^${escName2}$`, 'i') } })
     ]);
 
     if (!team1) return message.reply(`❌ Équipe **${name1}** introuvable.`);

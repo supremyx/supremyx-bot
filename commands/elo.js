@@ -102,7 +102,8 @@ module.exports = (client) => {
           return message.reply('Usage : `!elo <équipe>` ou `!classementelo`');
         }
         await message.channel.sendTyping();
-        const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } }).lean();
+        const escapedTeamName = teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapedTeamName}$`, 'i') } }).lean();
         if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
         const { elo, matches, trend } = await computeElo(team.name);

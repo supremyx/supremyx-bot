@@ -13,7 +13,8 @@ module.exports = (client) => {
       const name = message.content.split(' ').slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!statistiques <nom>`');
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
       if (!team) return message.reply(`❌ Équipe **${name}** introuvable.`);
 
       const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 });

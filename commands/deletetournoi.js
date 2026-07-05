@@ -15,8 +15,9 @@ module.exports = (client) => {
     const name = message.content.split(' ').slice(1).join(' ').trim();
     if (!name) return message.reply('Usage : `!deletetournoi <nom du tournoi>`');
 
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const tournament = await Tournament.findOne({
-      name: { $regex: new RegExp(`^${name}$`, 'i') }
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') }
     });
 
     if (!tournament)

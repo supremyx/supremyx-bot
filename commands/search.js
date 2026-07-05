@@ -6,6 +6,7 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
+    if (message.author.bot) return;
     if (!message.content.startsWith('!recherche')) return;
     const cd = checkCooldown(message.author.id, 'search', 5);
     if (cd) return replyCooldown(message, cd, 'search');
@@ -13,8 +14,9 @@ module.exports = (client) => {
     const query = message.content.split(' ').slice(1).join(' ').trim();
     if (!query) return message.reply('Usage : `!recherche <nom>`');
 
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const teams = await Team.find({
-      name: { $regex: query, $options: 'i' }
+      name: { $regex: escapedQuery, $options: 'i' }
     }).sort({ points: -1 });
 
     if (!teams.length)

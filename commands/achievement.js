@@ -63,8 +63,9 @@ module.exports = (client) => {
       const target = args.slice(1).join(' ').trim();
       if (!target) return message.reply('Usage : `!trophees <équipe>`');
 
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const achs = await Achievement.find({
-        target: { $regex: new RegExp(`^${target}$`, 'i') }
+        target: { $regex: new RegExp(`^${escapedTarget}$`, 'i') }
       }).sort({ createdAt: -1 });
 
       if (!achs.length) return message.reply(`🏆 Aucun trophée pour **${target}** pour le moment.`);

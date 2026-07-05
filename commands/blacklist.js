@@ -27,7 +27,8 @@ module.exports = (client) => {
 
       if (!target) return message.reply('Usage : `!listenoiree ajouter <équipe ou joueur> | <raison>`');
 
-      const existing = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const existing = await Blacklist.findOne({ target: { $regex: new RegExp(`^${escapedTarget}$`, 'i') } });
       if (existing) return message.reply(`⚠️ **${target}** est déjà dans la blacklist.`);
 
       await Blacklist.create({ target, reason, addedBy: message.author.tag });
@@ -53,7 +54,8 @@ module.exports = (client) => {
       const target = args.slice(2).join(' ').trim();
       if (!target) return message.reply('Usage : `!listenoiree retirer <équipe ou joueur>`');
 
-      const deleted = await Blacklist.findOneAndDelete({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const deleted = await Blacklist.findOneAndDelete({ target: { $regex: new RegExp(`^${escapedTarget}$`, 'i') } });
       if (!deleted) return message.reply(`❌ **${target}** n'est pas dans la blacklist.`);
 
       logStaffAction(client, `✅ **Blacklist retirée** — \`${target}\` | Par : ${message.author.tag}`);
@@ -87,7 +89,8 @@ module.exports = (client) => {
       const target = args.slice(2).join(' ').trim();
       if (!target) return message.reply('Usage : `!listenoiree verifier <équipe ou joueur>`');
 
-      const entry = await Blacklist.findOne({ target: { $regex: new RegExp(`^${target}$`, 'i') } });
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const entry = await Blacklist.findOne({ target: { $regex: new RegExp(`^${escapedTarget}$`, 'i') } });
       if (!entry) return message.reply(`✅ **${target}** n'est pas dans la blacklist.`);
 
       const embed = new EmbedBuilder()

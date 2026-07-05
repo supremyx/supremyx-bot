@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import { apiUrl } from "../lib/api";
 
 interface SearchResult {
   type: "equipe" | "joueur";
@@ -47,8 +48,8 @@ export default function GlobalSearch({ onSelectTeam, onSelectPlayer }: Props) {
     setLoading(true);
     const lq = query.toLowerCase();
     Promise.all([
-      fetch(`/api/ranking`).then(r => r.json()),
-      fetch(`/api/players?limit=100`).then(r => r.json()),
+      fetch(apiUrl(`/api/ranking`)).then(r => r.json()),
+      fetch(apiUrl(`/api/players?limit=100`)).then(r => r.json()),
     ]).then(([teams, players]) => {
       const teamResults: SearchResult[] = (teams.ranking ?? [])
         .filter((t: { team: string }) => t.team.toLowerCase().includes(lq))

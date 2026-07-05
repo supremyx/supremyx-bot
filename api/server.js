@@ -947,7 +947,7 @@ const Poule       = require('../database/models/Poule');
 router.get('/guild-events', publicLimiter, async (req, res) => {
   try {
     const { guildId, limit = 20 } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const events = await GuildEvent.find(filter)
       .sort({ date: 1 }).limit(Number(limit)).lean();
     res.json({ events });
@@ -962,7 +962,7 @@ router.get('/tickets', publicLimiter, async (req, res) => {
   try {
     const { status, limit = 50 } = req.query;
     const filter = {};
-    if (status) filter.status = status;
+    if (status && typeof status === 'string') filter.status = status;
     const tickets = await Ticket.find(filter)
       .sort({ createdAt: -1 }).limit(Number(limit)).lean();
     const stats = {
@@ -981,7 +981,7 @@ router.get('/tickets', publicLimiter, async (req, res) => {
 router.get('/birthdays', publicLimiter, async (req, res) => {
   try {
     const { guildId } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const birthdays = await Birthday.find(filter).sort({ month: 1, day: 1 }).lean();
 
     // Calcul des prochains anniversaires
@@ -1008,8 +1008,8 @@ router.get('/suggestions', publicLimiter, async (req, res) => {
   try {
     const { guildId, status, limit = 50 } = req.query;
     const filter = {};
-    if (guildId) filter.guildId = guildId;
-    if (status)  filter.status  = status;
+    if (guildId && typeof guildId === 'string') filter.guildId = guildId;
+    if (status  && typeof status  === 'string') filter.status  = status;
     const suggestions = await Suggestion.find(filter)
       .sort({ createdAt: -1 }).limit(Number(limit)).lean();
     const stats = {
@@ -1031,7 +1031,7 @@ router.get('/ia/usage', publicLimiter, async (req, res) => {
     const { guildId, days = 7 } = req.query;
     const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000);
     const filter = { usedAt: { $gte: since } };
-    if (guildId) filter.guildId = guildId;
+    if (guildId && typeof guildId === 'string') filter.guildId = guildId;
 
     const all = await IaUsage.find(filter).lean();
 
@@ -1085,7 +1085,7 @@ router.get('/ia/history', publicLimiter, async (req, res) => {
     const { guildId, days = 30, limit = 50 } = req.query;
     const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000);
     const filter = { usedAt: { $gte: since } };
-    if (guildId) filter.guildId = guildId;
+    if (guildId && typeof guildId === 'string') filter.guildId = guildId;
 
     const records = await IaUsage.find(filter)
       .sort({ usedAt: -1 })
@@ -1115,7 +1115,7 @@ router.get('/ia/history', publicLimiter, async (req, res) => {
 router.get('/ia/bilans', publicLimiter, async (req, res) => {
   try {
     const { guildId, limit = 20 } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const bilans = await BilanHebdo.find(filter)
       .sort({ createdAt: -1 })
       .limit(Number(limit))
@@ -1131,7 +1131,7 @@ router.get('/ia/bilans', publicLimiter, async (req, res) => {
 router.get('/ia/config', publicLimiter, async (req, res) => {
   try {
     const { guildId } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const configs = await IaConfig.find(filter).lean();
     const models = [
       { alias: 'gpt-4o-mini',   label: 'GPT-4o Mini',       emoji: '🟢', desc: 'Rapide et efficace (défaut)',        provider: 'OpenAI' },
@@ -1178,7 +1178,7 @@ router.put('/ia/config', requireApiKey, async (req, res) => {
 router.get('/pronostics', publicLimiter, async (req, res) => {
   try {
     const { guildId, limit = 30 } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const pronostics = await Pronostic.find(filter).sort({ createdAt: -1 }).limit(Number(limit)).lean();
     const correct = pronostics.filter(p => p.correct === true).length;
     const resolved = pronostics.filter(p => p.correct !== null).length;
@@ -1192,7 +1192,7 @@ router.get('/pronostics', publicLimiter, async (req, res) => {
 router.get('/poules', publicLimiter, async (req, res) => {
   try {
     const { guildId } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const poules = await Poule.find(filter).sort({ letter: 1 }).lean();
     res.json({ poules });
   } catch (err) {
@@ -1205,8 +1205,8 @@ router.get('/dispos', publicLimiter, async (req, res) => {
   try {
     const { guildId, teamName } = req.query;
     const filter = {};
-    if (guildId)  filter.guildId  = guildId;
-    if (teamName) filter.teamName = new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+    if (guildId  && typeof guildId  === 'string') filter.guildId  = guildId;
+    if (teamName && typeof teamName === 'string') filter.teamName = new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     const dispos = await Disponibilite.find(filter).sort({ createdAt: -1 }).lean();
     res.json({ dispos });
   } catch (err) {
@@ -1218,7 +1218,7 @@ router.get('/dispos', publicLimiter, async (req, res) => {
 router.get('/sondages', publicLimiter, async (req, res) => {
   try {
     const { guildId } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
 
     const [all, closedAll, openCount] = await Promise.all([
       Sondage.countDocuments(filter),
@@ -1271,7 +1271,7 @@ router.get('/sondages', publicLimiter, async (req, res) => {
 router.get('/scheduled-embeds', publicLimiter, async (req, res) => {
   try {
     const { guildId } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
 
     const [pending, recentSent] = await Promise.all([
       ScheduledEmbed.find({ ...filter, sent: false }).sort({ scheduledAt: 1 }).lean(),
@@ -1297,7 +1297,7 @@ router.get('/scheduled-embeds', publicLimiter, async (req, res) => {
 });
 
 // ── POST /api/scheduled-embeds ────────────────────────────────────────────────
-router.post('/scheduled-embeds', publicLimiter, async (req, res) => {
+router.post('/scheduled-embeds', requireApiKey, async (req, res) => {
   try {
     const { guildId, channelId, title, description, color, scheduledAt, createdBy,
             imageUrl, thumbnailUrl, authorName, authorIconUrl, footer } = req.body;
@@ -1327,7 +1327,7 @@ router.post('/scheduled-embeds', publicLimiter, async (req, res) => {
 });
 
 // ── DELETE /api/scheduled-embeds/:id ─────────────────────────────────────────
-router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
+router.delete('/scheduled-embeds/:id', requireApiKey, async (req, res) => {
   try {
     const { id } = req.params;
     const docs = await ScheduledEmbed.find({ sent: false });
@@ -1344,7 +1344,7 @@ router.delete('/scheduled-embeds/:id', publicLimiter, async (req, res) => {
 router.get('/embed-templates', publicLimiter, async (req, res) => {
   try {
     const { guildId, limit = 100 } = req.query;
-    const filter = guildId ? { guildId } : {};
+    const filter = (guildId && typeof guildId === 'string') ? { guildId } : {};
     const templates = await EmbedTemplate.find(filter)
       .sort({ updatedAt: -1 })
       .limit(Math.min(parseInt(limit) || 100, 200))
@@ -1441,7 +1441,6 @@ router.get('/admin/config', requireApiKey, (_req, res) => {
     ? key.slice(0, 4) + '••••••••••••••••••••••••' + key.slice(-4)
     : '••••••••';
   res.json({
-    botApiKey: key,
     botApiKeyMasked: masked,
     keyLength: key.length,
   });
@@ -1683,7 +1682,7 @@ const PlayerBadge_api = require('../database/models/PlayerBadge');
 router.get('/api/badges', async (req, res) => {
   try {
     const { guildId } = req.query;
-    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    if (!guildId || typeof guildId !== 'string') return res.status(400).json({ error: 'guildId requis' });
     const badges = await PlayerBadge_api.find({ guildId }).sort({ awardedAt: -1 }).lean();
     res.json(badges);
   } catch (err) {
@@ -1698,7 +1697,7 @@ const Warning_api    = require('../database/models/Warning');
 router.get('/api/statsserveur', async (req, res) => {
   try {
     const { guildId } = req.query;
-    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    if (!guildId || typeof guildId !== 'string') return res.status(400).json({ error: 'guildId requis' });
     const [matches, teams, players, tournois, warns] = await Promise.all([
       Match_elo.find().lean(),
       Team_elo.find().lean(),
@@ -1743,7 +1742,7 @@ const MatchPlan_api = require('../database/models/MatchPlan');
 router.get('/api/matchplans', async (req, res) => {
   try {
     const { guildId } = req.query;
-    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    if (!guildId || typeof guildId !== 'string') return res.status(400).json({ error: 'guildId requis' });
     const plans = await MatchPlan_api.find({ guildId }).sort({ scheduledAt: 1 }).lean();
     res.json(plans);
   } catch (err) {
@@ -1757,7 +1756,7 @@ const MatchMVP_api = require('../database/models/MatchMVP');
 router.get('/api/mvps', async (req, res) => {
   try {
     const { guildId } = req.query;
-    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    if (!guildId || typeof guildId !== 'string') return res.status(400).json({ error: 'guildId requis' });
     const mvps = await MatchMVP_api.find({ guildId }).sort({ createdAt: -1 }).limit(50).lean();
     res.json(mvps);
   } catch (err) {

@@ -20,8 +20,9 @@ module.exports = (client) => {
     if (!name)
       return message.reply('Usage : `!tournoi <nom>` — Voir les détails d\'un tournoi.\nListez tous les tournois avec `!tournois`.');
 
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const tournament = await Tournament.findOne({
-      name: { $regex: new RegExp(name, 'i') }
+      name: { $regex: new RegExp(escapedName, 'i') }
     }).sort({ startedAt: -1 });
 
     if (!tournament)

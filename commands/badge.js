@@ -115,7 +115,8 @@ module.exports = (client) => {
         if (!badgeName) return message.reply('Précise un nom de badge. Ex: `!badge donner @Joueur 🔥 KillStreak Meilleur chasseur de kills`');
 
         const displayName = member.displayName || member.user.username;
-        const teamStat = await PlayerStat.findOne({ guildId, displayName: { $regex: new RegExp(`^${displayName}$`, 'i') } }).lean();
+        const escapedDisplayName = displayName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const teamStat = await PlayerStat.findOne({ guildId, displayName: { $regex: new RegExp(`^${escapedDisplayName}$`, 'i') } }).lean();
 
         await PlayerBadge.create({
           guildId,
@@ -151,10 +152,12 @@ module.exports = (client) => {
         if (!badgeName) return message.reply('Précise le nom du badge à retirer.');
 
         const displayName = member.displayName || member.user.username;
+        const escapedDisplayName = displayName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedBadgeName = badgeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const del = await PlayerBadge.findOneAndDelete({
           guildId,
-          displayName: { $regex: new RegExp(`^${displayName}$`, 'i') },
-          badgeName:   { $regex: new RegExp(`^${badgeName}$`, 'i') },
+          displayName: { $regex: new RegExp(`^${escapedDisplayName}$`, 'i') },
+          badgeName:   { $regex: new RegExp(`^${escapedBadgeName}$`, 'i') },
         });
 
         if (!del) return message.reply(`❌ Badge **${badgeName}** introuvable pour **${displayName}**.`);

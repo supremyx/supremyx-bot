@@ -5,14 +5,21 @@ const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    if (message.author.bot) return;
     if (message.content !== '!matchs') return;
     const cd = checkCooldown(message.author.id, 'matchs', 15);
     if (cd) return replyCooldown(message, cd, 'matchs');
 
-    const [matches, teams] = await Promise.all([
-      Match.find().sort({ createdAt: -1 }),
-      Team.find()
-    ]);
+    let matches, teams;
+    try {
+      [matches, teams] = await Promise.all([
+        Match.find().sort({ createdAt: -1 }),
+        Team.find()
+      ]);
+    } catch (err) {
+      console.error('[matchs] Erreur DB:', err);
+      return message.channel.send('❌ Une erreur est survenue lors de la récupération des matchs.').catch(() => {});
+    }
 
     if (!matches.length) return message.channel.send('Aucun match enregistré pour le moment.');
 

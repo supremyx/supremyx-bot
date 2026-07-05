@@ -35,8 +35,11 @@ function PlayerModal({ name, onClose }: { name: string; onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/players/${encodeURIComponent(name)}`)
-      .then(r => r.json())
+    fetch(apiUrl(`/api/players/${encodeURIComponent(name)}`))
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(d => { setDetail(d); setLoading(false); })
       .catch(() => { setError("Impossible de charger les données."); setLoading(false); });
   }, [name]);

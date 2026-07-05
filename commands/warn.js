@@ -104,7 +104,8 @@ module.exports = (client) => {
       if (!rawTarget) return message.reply('Usage : `!avertissements @utilisateur` ou `!avertissements <nom_équipe>`');
 
       const target = mention ? mention.tag : rawTarget;
-      const query = mention ? { targetId: mention.id } : { target: { $regex: new RegExp(`^${rawTarget}$`, 'i') } };
+      const escapedTarget = rawTarget.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const query = mention ? { targetId: mention.id } : { target: { $regex: new RegExp(`^${escapedTarget}$`, 'i') } };
       const warns = await Warning.find(query).sort({ createdAt: -1 });
 
       if (!warns.length) return message.reply(`✅ Aucun avertissement pour **${target}**.`);

@@ -2,8 +2,10 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
+    if (message.author.bot) return;
     const content = message.content.trim();
     if (content !== '!infoserveur') return;
+    if (!message.guild) return message.reply('❌ Cette commande fonctionne uniquement sur un serveur.').catch(() => {});
 
     const guild = message.guild;
     await guild.fetch().catch(() => {});

@@ -24,7 +24,8 @@ module.exports = (client) => {
     if (!name)
       return message.reply('Usage : `!teaminfo <nom équipe>`');
 
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
     if (!team)
       return message.reply(`❌ Équipe **${name}** introuvable. Utilisez \`!search ${name}\` pour chercher.`);
 
