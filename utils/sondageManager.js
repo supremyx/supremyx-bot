@@ -43,7 +43,9 @@ async function closeSondage(client, sondage) {
     await msg.edit({ embeds: [embed] });
     sondage.closed = true;
     await sondage.save();
-  } catch {}
+  } catch (err) {
+    console.error('[sondageManager] Erreur lors de la clôture du sondage', sondage?._id?.toString(), ':', err);
+  }
 }
 
 async function startSondageManager(client) {

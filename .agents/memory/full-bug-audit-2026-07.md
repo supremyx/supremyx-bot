@@ -13,8 +13,10 @@ description: Cross-cutting bug patterns found during a full-codebase audit of th
 
 4. **Frontend must use `apiUrl()` helper** — `dashboard/src/lib/api.ts` exports `apiUrl()` to build correct API base URLs. Raw `fetch("/api/...")` calls work in dev (same-origin proxy) but silently break once dashboard and API are deployed on different origins/ports. Found stray raw fetches in `JoueursPage.tsx` and `GlobalSearch.tsx`; grep for `fetch(\`/api` or `fetch("/api` when auditing frontend pages.
 
-5. **Not yet fixed (lower priority, documented for follow-up):**
-   - `POST/DELETE /api/scheduled-embeds/:id` matches ID via `.slice(-6)` suffix, which risks collisions between different documents whose IDs share the same last 6 chars — should match on full ID instead.
-   - Several `utils/*.js` managers (levelManager, sondageManager, dashboardManager, autoBackup) have empty `catch {}` blocks that silently swallow DB errors.
+5. **Fixed in follow-up passes:**
+   - `DELETE /api/scheduled-embeds/:id` now deletes by full ObjectId (validated with `mongoose.Types.ObjectId.isValid`) instead of matching on the last-6-char display suffix; the dashboard still shows the short ID to users but sends the full `_id` for the actual delete call.
+   - Silent `catch {}` blocks in `sondageManager.js`, `dashboardManager.js` (x2), and `autoBackup.js` (per-collection export) now `console.error` the failure instead of swallowing it. When adding a new manager/cron-style util, always log inside catch blocks — silent failures here are especially hard to debug since there's no request/response to surface them.
+
+6. **Not yet fixed (lower priority, documented for follow-up):**
    - `register.js`/`unregister.js` command race conditions were flagged but not addressed (needs a locking/dedup strategy).
    - Some dashboard pages (IaAnalyticsPage, TicketsPage, EventsPage) lack detailed error-state UI, showing only generic loading with no error message.

@@ -9,7 +9,9 @@ async function postDashboard(client, guild, channelId) {
     if (!channel) return;
     const embeds = await buildDashboardEmbed(guild, client);
     await channel.send({ embeds });
-  } catch {}
+  } catch (err) {
+    console.error(`[dashboardManager] Erreur lors de la publication du dashboard (guild ${guild?.id}) :`, err);
+  }
 }
 
 async function checkAndPost(client) {
@@ -24,7 +26,9 @@ async function checkAndPost(client) {
       if (!guild) continue;
       await postDashboard(client, guild, cfg.channelId);
     }
-  } catch {}
+  } catch (err) {
+    console.error('[dashboardManager] Erreur lors de la vérification des dashboards programmés :', err);
+  }
 }
 
 function startDashboardManager(client) {

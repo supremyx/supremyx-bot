@@ -16,7 +16,11 @@ async function runBackup(client, { manual = false, requesterId = null, requester
   const snapshot = { exportedAt: new Date().toISOString(), type: manual ? 'manuel' : 'automatique', collections: {} };
 
   for (const [name, col] of Object.entries(collections)) {
-    try { snapshot.collections[name] = await col.find({}).toArray(); } catch {}
+    try {
+      snapshot.collections[name] = await col.find({}).toArray();
+    } catch (err) {
+      console.error(`[autoBackup] Erreur lors de l'export de la collection "${name}" :`, err);
+    }
   }
 
   const totalDocs = Object.values(snapshot.collections).reduce((s, arr) => s + arr.length, 0);
