@@ -32,13 +32,22 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
   const [filter, setFilter]   = useState<"all" | "upcoming" | "past">("upcoming");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch(apiUrl("/api/guild-events?limit=100"))
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(`Le serveur a répondu avec une erreur (${r.status}).`);
+        return r.json();
+      })
       .then(d => { setEvents(d.events ?? []); setLoading(false); })
-      .catch(() => { setError("Erreur de chargement"); setLoading(false); });
-  }, []);
+      .catch((e: Error) => {
+        setError(e.message?.startsWith("Le serveur") ? e.message : "Impossible de contacter le serveur. Vérifie ta connexion et réessaie.");
+        setLoading(false);
+      });
+  }, [reloadKey]);
 
   const now = new Date();
   const filtered = events.filter(e => {
@@ -48,8 +57,20 @@ export default function EventsPage() {
     return true;
   });
 
-  if (loading) return <div className="py-24 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Chargement des événements…</div>;
-  if (error)   return <div className="py-24 text-center text-red-400">{error}</div>;
+  if (loading) return <div className="py-24 text-center text-sm animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement des événements…</div>;
+  if (error) return (
+    <div className="py-24 flex flex-col items-center gap-3 text-center px-4">
+      <span className="text-3xl">⚠️</span>
+      <p className="text-sm text-red-400 max-w-sm">{error}</p>
+      <button
+        onClick={() => setReloadKey(k => k + 1)}
+        className="px-4 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"
+        style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+      >
+        Réessayer
+      </button>
+    </div>
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">

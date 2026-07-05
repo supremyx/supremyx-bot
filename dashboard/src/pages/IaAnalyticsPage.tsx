@@ -115,10 +115,13 @@ export default function IaAnalyticsPage() {
   const [loadingU, setLoadingU]   = useState(true);
   const [loadingH, setLoadingH]   = useState(true);
   const [loadingC, setLoadingC]   = useState(false);
+  const [errorU, setErrorU]       = useState<string | null>(null);
+  const [errorH, setErrorH]       = useState<string | null>(null);
   const [fallbacks, setFallbacks] = useState<{ _id: string; message: string; createdAt: string }[]>([]);
   const [loadingF, setLoadingF]   = useState(false);
   const [days, setDays]           = useState(7);
   const [tab, setTab]             = useState<"overview" | "history" | "fallbacks" | "config">("overview");
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
   const [quotaInput, setQuotaInput]       = useState<string>("0");
@@ -129,19 +132,27 @@ export default function IaAnalyticsPage() {
 
   useEffect(() => {
     setLoadingU(true);
+    setErrorU(null);
     fetch(apiUrl(`/api/ia/usage?days=${days}`))
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(`Erreur serveur (${r.status})`);
+        return r.json();
+      })
       .then(d => { setUsage(d); setLoadingU(false); })
-      .catch(() => setLoadingU(false));
-  }, [days]);
+      .catch((e: Error) => { setErrorU(e.message || "Impossible de charger les statistiques d'utilisation."); setLoadingU(false); });
+  }, [days, reloadKey]);
 
   useEffect(() => {
     setLoadingH(true);
+    setErrorH(null);
     fetch(apiUrl(`/api/ia/history?days=${days}&limit=50`))
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(`Erreur serveur (${r.status})`);
+        return r.json();
+      })
       .then(d => { setHistory(d); setLoadingH(false); })
-      .catch(() => setLoadingH(false));
-  }, [days]);
+      .catch((e: Error) => { setErrorH(e.message || "Impossible de charger l'historique."); setLoadingH(false); });
+  }, [days, reloadKey]);
 
   useEffect(() => {
     if (tab !== "fallbacks") return;
@@ -247,13 +258,27 @@ export default function IaAnalyticsPage() {
       </div>
 
       {/* ── OVERVIEW ─────────────────────────────────────────────────────── */}
-      {loading && tab !== "config" && (
+      {loading && tab !== "config" && !errorU && !errorH && (
         <div className="py-24 text-center text-sm animate-pulse" style={{ color: "var(--muted-foreground)" }}>
           Chargement des analytics IA…
         </div>
       )}
 
-      {!loading && tab === "overview" && usage && (
+      {tab !== "config" && tab !== "fallbacks" && (errorU || errorH) && (
+        <div className="py-24 flex flex-col items-center gap-3 text-center px-4">
+          <span className="text-3xl">⚠️</span>
+          <p className="text-sm text-red-400 max-w-sm">{errorU || errorH}</p>
+          <button
+            onClick={() => setReloadKey(k => k + 1)}
+            className="px-4 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"
+            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {!loading && !errorU && !errorH && tab === "overview" && usage && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <StatCard label="Utilisations totales" value={usage.total} color="var(--primary)" sub={`sur ${days} jours`} />
@@ -393,7 +418,7 @@ export default function IaAnalyticsPage() {
       )}
 
       {/* ── HISTORY ──────────────────────────────────────────────────────── */}
-      {!loading && tab === "history" && history && (
+      {!loading && !errorU && !errorH && tab === "history" && history && (
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
           <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
             <h2 className="font-bold">📋 Historique des appels IA</h2>
