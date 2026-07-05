@@ -70,10 +70,10 @@ args = "bash scripts/autopush.sh"
 outputType = "console"
 
 [deployment]
-deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
+deploymentTarget = "vm"
+build = ["bash", "-c", "npm install --legacy-peer-deps && cd dashboard && npm install --legacy-peer-deps && npm run build"]
 publicDir = "dashboard/dist/public"
-run = ["node", "./dist/index.cjs"]
+run = ["node", "index.js"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
