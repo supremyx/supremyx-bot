@@ -227,7 +227,7 @@ module.exports = (client) => {
             { name: '🔘 Auto', value: cfg?.autoEnabled ? '✅ Activé' : '⛔ Désactivé', inline: true },
             { name: '🕐 Heure', value: cfg?.postHour !== undefined ? `**${cfg.postHour}h UTC**` : '*8h UTC*', inline: true }
           )
-          .setFooter({ text: '!tableaudebord now — générer immédiatement' })
+          .setFooter({ text: '!tableaudebord maintenant — générer immédiatement' })
           .setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
@@ -237,7 +237,7 @@ module.exports = (client) => {
         '`!tableaudebord` — Générer le tableau de bord serveur maintenant\n' +
         '`!tableaudebord lien` — Lien vers le dashboard classement en ligne\n' +
         '`!tableaudebord salon #salon` — Configurer le salon *(staff)*\n' +
-        '`!tableaudebord auto activer / désactiver` — Activer / désactiver la publication auto *(staff)*\n' +
+        '`!tableaudebord automatique activer / désactiver` — Activer / désactiver la publication auto *(staff)*\n' +
         '`!tableaudebord heure <0-23>` — Heure de publication (UTC) *(staff)*\n' +
         '`!tableaudebord statut` — Voir la configuration *(staff)*'
       );

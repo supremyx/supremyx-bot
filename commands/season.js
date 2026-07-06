@@ -125,7 +125,7 @@ module.exports = (client) => {
       if (seasonName) {
         const season = await Season.findOne({ name: { $regex: new RegExp(seasonName, 'i') } });
         if (!season) return message.reply(`❌ Saison **${seasonName}** introuvable. Utilise \`!saisons\` pour voir la liste.`);
-        if (season.active) return message.reply(`⚠️ La saison **${season.name}** est encore en cours. Utilise \`!ranking\` pour le classement actuel.`);
+        if (season.active) return message.reply(`⚠️ La saison **${season.name}** est encore en cours. Utilise \`!classement\` pour le classement actuel.`);
         if (!season.snapshot.length) return message.reply('❌ Aucune donnée sauvegardée pour cette saison.');
 
         const medals = ['🥇', '🥈', '🥉'];
@@ -156,7 +156,7 @@ module.exports = (client) => {
       });
 
       const embed = new EmbedBuilder()
-        .setTitle(`🏆 Leaderboard${activeSeason ? ` — ${activeSeason.name}` : ' — Classement général'}`)
+        .setTitle(`🏆 Classement${activeSeason ? ` — ${activeSeason.name}` : ' — Classement général'}`)
         .setColor(0x5865F2)
         .setDescription(rows.join('\n'))
         .setFooter({ text: `${teams.length} équipe(s) • En direct` })
