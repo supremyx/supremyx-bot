@@ -21,6 +21,7 @@ const Note          = require('../database/models/Note');
 const WelcomeConfig = require('../database/models/WelcomeConfig');
 const AutoroleConfig= require('../database/models/AutoroleConfig');
 const XpEntry       = require('../database/models/XpEntry');
+const BotInstance   = require('../database/models/BotInstance');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -2334,7 +2335,7 @@ app.use('/bot-api', router);
 const DASHBOARD_DIST = path.join(__dirname, '../dashboard/dist/public');
 if (require('fs').existsSync(DASHBOARD_DIST)) {
   app.use(express.static(DASHBOARD_DIST));
-  app.get('*', (req, res) => {
+  app.get('/{*path}', (req, res) => {
     res.sendFile(path.join(DASHBOARD_DIST, 'index.html'));
   });
 }
