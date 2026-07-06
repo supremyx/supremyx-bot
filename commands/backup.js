@@ -15,7 +15,7 @@ module.exports = (client) => {
     const args = message.content.trim().split(/\s+/).slice(1);
     const sub  = args[0]?.toLowerCase();
 
-    if (sub === 'automatique' || sub === 'auto') {
+    if (sub === 'automatique') {
       const action = args[1]?.toLowerCase();
       const hours  = parseInt(args[2]) || 24;
       if (action === 'désactiver' || action === 'desactiver' || action === 'arreter' || action === 'arrêter') {

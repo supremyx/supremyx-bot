@@ -50,7 +50,7 @@ module.exports = (client) => {
         if (!isStaff) return message.reply('⛔ Staff uniquement.');
 
         const teamName = args.slice(1).join(' ').trim();
-        if (!teamName) return message.reply('Usage : `!lineup effacer <équipe>`');
+        if (!teamName) return message.reply('Usage : `!composition effacer <équipe>`');
 
         const deleted = await Lineup.findOneAndDelete({
           team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') }
@@ -73,8 +73,8 @@ module.exports = (client) => {
 
         if (!teamName || !playersRaw || !playersRaw.includes(',')) {
           return message.reply(
-            '**Usage :** `!lineup definir <équipe> <Joueur1,Joueur2,...>`\n' +
-            '**Exemple :** `!lineup definir TeamAlpha Kaarl,Yibu,Metz,Solo,Beyz`'
+            '**Usage :** `!composition definir <équipe> <Joueur1,Joueur2,...>`\n' +
+            '**Exemple :** `!composition definir TeamAlpha Kaarl,Yibu,Metz,Solo,Beyz`'
           );
         }
 
@@ -132,11 +132,11 @@ module.exports = (client) => {
 
       if (!teamName) {
         return message.reply(
-          '**Commandes `!lineup` :**\n' +
-          '`!lineup <équipe>` — Voir le lineup\n' +
-          '`!lineup definir <équipe> <J1,J2,...>` — Définir le lineup *(staff)*\n' +
-          '`!lineup effacer <équipe>` — Effacer le lineup *(staff)*\n' +
-          '`!lineup liste` — Tous les lineups *(staff)*'
+          '**Commandes `!composition` :**\n' +
+          '`!composition <équipe>` — Voir la composition\n' +
+          '`!composition definir <équipe> <J1,J2,...>` — Définir la composition *(staff)*\n' +
+          '`!composition effacer <équipe>` — Effacer la composition *(staff)*\n' +
+          '`!composition liste` — Toutes les compositions *(staff)*'
         );
       }
 
@@ -154,7 +154,7 @@ module.exports = (client) => {
         .setTimestamp();
 
       if (!lineup || !lineup.players.length) {
-        embed.setDescription('*Aucun lineup défini pour cette équipe.*\nUtilise `!lineup definir <équipe> <J1,J2,...>` *(staff)*');
+        embed.setDescription('*Aucune composition définie pour cette équipe.*\nUtilise `!composition definir <équipe> <J1,J2,...>` *(staff)*');
       } else {
         // Croiser avec le roster pour enrichir l'affichage
         const roster = await Roster.findOne({

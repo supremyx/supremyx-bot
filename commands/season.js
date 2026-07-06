@@ -28,7 +28,7 @@ module.exports = (client) => {
       if (existing) return message.reply(`❌ Une saison nommée **${name}** existe déjà.`);
 
       const current = await Season.findOne({ active: true });
-      if (current) return message.reply(`❌ La saison **${current.name}** est encore active. Ferme-la d'abord avec \`!endseason\`.`);
+      if (current) return message.reply(`❌ La saison **${current.name}** est encore active. Ferme-la d'abord avec \`!finersaison\`.`);
 
       try {
         await Season.create({ name, startedBy: message.author.tag });

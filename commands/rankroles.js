@@ -53,7 +53,7 @@ module.exports = (client) => {
         { $set: { roleId: role.id } },
         { new: true }
       );
-      if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable. Utilise \`!register\` d'abord.`);
+      if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable. Utilise \`!enregistrer\` d'abord.`);
 
       logStaffAction(client, `🔗 **Team liée** — \`${team.name}\` → @${role.name} | Par : ${message.author.tag}`);
       return message.reply(`✅ **${team.name}** est maintenant liée au rôle **${role.name}**.\nLes membres portant ce rôle recevront les récompenses de rang automatiquement.`);

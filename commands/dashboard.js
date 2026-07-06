@@ -181,7 +181,7 @@ module.exports = (client) => {
       }
 
       // --- !tableaudebord automatique on/off ---
-      if (sub === 'automatique' || sub === 'auto') {
+      if (sub === 'automatique') {
         const state = args[2]?.toLowerCase();
         if (!state || !['activer', 'désactiver', 'desactiver'].includes(state))
           return message.reply('Usage : `!tableaudebord automatique activer` ou `!tableaudebord automatique désactiver`');
