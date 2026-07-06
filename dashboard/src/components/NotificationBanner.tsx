@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent, IaFallbackEvent } from "../hooks/useMatchNotifications";
+import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent, IaFallbackEvent, StaleTicketEvent, UpcomingEventEvent } from "../hooks/useMatchNotifications";
 
 const AUTO_DISMISS_MS = 15_000;
 
@@ -43,6 +43,26 @@ function NotifContent({ notif }: { notif: Notification }) {
       </div>
     );
   }
+  if (notif.type === "staleTicket") {
+    const s = notif.data as StaleTicketEvent;
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-bold text-sm">🎫 Ticket sans réponse — <span style={{ color: "#ef4444" }}>{s.userTag}</span></span>
+        <span className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+          {[s.subject || "Sans sujet", `ouvert depuis ${s.hoursOpen}h`].filter(Boolean).join("  ·  ")}
+        </span>
+      </div>
+    );
+  }
+  if (notif.type === "upcomingEvent") {
+    const u = notif.data as UpcomingEventEvent;
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-bold text-sm">📅 Événement bientôt — <span style={{ color: "#38bdf8" }}>#{u.eventNumber} {u.title}</span></span>
+        <span className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>Commence dans {u.minutesUntil} min</span>
+      </div>
+    );
+  }
   const t = notif.data as TournamentEndEvent;
   return (
     <div className="flex flex-col gap-0.5">
@@ -58,6 +78,9 @@ function accentColor(type: Notification["type"]) {
   if (type === "match")           return "#d4963a";
   if (type === "tournamentStart") return "#34d399";
   if (type === "iaFallback")      return "#f97316";
+  if (type === "staleTicket")     return "#ef4444";
+  if (type === "upcomingEvent")   return "#38bdf8";
+  if (type === "tournamentEnd")   return "#facc15";
   return "#facc15";
 }
 

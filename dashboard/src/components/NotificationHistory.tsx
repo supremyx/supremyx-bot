@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent, IaFallbackEvent } from "../hooks/useMatchNotifications";
+import type { Notification, MatchEvent, TournamentStartEvent, TournamentEndEvent, IaFallbackEvent, StaleTicketEvent, UpcomingEventEvent } from "../hooks/useMatchNotifications";
 
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
@@ -11,6 +11,9 @@ function accentColor(type: Notification["type"]) {
   if (type === "match")           return "#d4963a";
   if (type === "tournamentStart") return "#34d399";
   if (type === "iaFallback")      return "#f97316";
+  if (type === "staleTicket")     return "#ef4444";
+  if (type === "upcomingEvent")   return "#38bdf8";
+  if (type === "tournamentEnd")   return "#facc15";
   return "#facc15";
 }
 
@@ -18,6 +21,8 @@ function typeLabel(type: Notification["type"]) {
   if (type === "match")           return "🎮 Match";
   if (type === "tournamentStart") return "🏁 Tournoi démarré";
   if (type === "iaFallback")      return "⚡ Fallback IA";
+  if (type === "staleTicket")     return "🎫 Ticket sans réponse";
+  if (type === "upcomingEvent")   return "📅 Événement bientôt";
   return "🏆 Tournoi terminé";
 }
 
@@ -41,6 +46,14 @@ function NotifRow({ notif, onDismiss }: { notif: Notification; onDismiss: (id: s
     const short = (m: string) => m.split("/").pop()?.replace(":free", "") ?? m;
     headline = `${short(f.primaryModel)} → ${short(f.fallbackModel)}`;
     detail   = `Code erreur : ${f.reason}`;
+  } else if (notif.type === "staleTicket") {
+    const s = notif.data as StaleTicketEvent;
+    headline = s.userTag;
+    detail   = `${s.subject || "Sans sujet"} · ouvert depuis ${s.hoursOpen}h sans prise en charge`;
+  } else if (notif.type === "upcomingEvent") {
+    const u = notif.data as UpcomingEventEvent;
+    headline = `#${u.eventNumber} ${u.title}`;
+    detail   = `Commence dans ${u.minutesUntil} min`;
   } else {
     const t = notif.data as TournamentEndEvent;
     headline = t.name;
@@ -156,7 +169,7 @@ export default function NotificationHistory({ open, onClose, notifications, onDi
 
         {/* Legend */}
         <div className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: "1px solid var(--border)", background: "rgba(0,0,0,0.2)" }}>
-          {[["#d4963a", "Match"], ["#34d399", "Tournoi démarré"], ["#facc15", "Tournoi terminé"], ["#f97316", "Fallback IA"]].map(([color, label]) => (
+          {[["#d4963a", "Match"], ["#34d399", "Tournoi démarré"], ["#facc15", "Tournoi terminé"], ["#f97316", "Fallback IA"], ["#ef4444", "Ticket sans réponse"], ["#38bdf8", "Événement bientôt"]].map(([color, label]) => (
             <div key={label} className="flex items-center gap-1.5">
               <span className="size-2 rounded-full" style={{ background: color }} />
               <span className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>{label}</span>

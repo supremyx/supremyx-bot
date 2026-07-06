@@ -73,8 +73,9 @@ function rawToFeedItem(e: RawEvent): FeedItem {
   };
 }
 
-function notifToFeedItem(n: Notification): FeedItem {
-  return { id: n.id, type: n.type, data: n.data, time: n.time, isLive: true };
+function notifToFeedItem(n: Notification): FeedItem | null {
+  if (n.type !== "match" && n.type !== "tournamentStart" && n.type !== "tournamentEnd") return null;
+  return { id: n.id, type: n.type, data: n.data as MatchEvent | TournamentStartEvent | TournamentEndEvent, time: n.time, isLive: true };
 }
 
 function buildDesktopNotif(item: FeedItem): { title: string; body: string; icon: string } {
@@ -489,9 +490,10 @@ export default function LiveActivityPage({ liveNotifications }: { liveNotificati
     const newOnes = liveNotifications.filter(n => !prevNotifIds.current.has(n.id));
     if (newOnes.length === 0) return;
     newOnes.forEach(n => prevNotifIds.current.add(n.id));
-    const newItems = newOnes.map(n => notifToFeedItem(n));
+    const newItems = newOnes.map(n => notifToFeedItem(n)).filter((i): i is FeedItem => i !== null);
+    if (newItems.length === 0) return;
     setHistory(prev => [...newItems, ...prev].slice(0, 100));
-    setLiveCount(c => c + newOnes.length);
+    setLiveCount(c => c + newItems.length);
     listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     newItems.forEach(item => send(item));
   }, [liveNotifications, send]);

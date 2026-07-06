@@ -11,3 +11,4 @@
 - [API additional models location](api-models-location.md) — GuildEvent, Ticket, Birthday, Suggestion and new models are imported at the bottom of server.js (after the SSE /events route) to avoid hoisting conflicts; new GET endpoints go after those imports before the Mount block.
 - [Dashboard page pattern](dashboard-page-pattern.md) — new pages require 4 edits in App.tsx: import, Page type union, NAV_ITEMS entry, and conditional render in the Pages section.
 - [Full bug audit findings](full-bug-audit-2026-07.md) — cross-cutting patterns found in a full-codebase audit: missing bot/DM guards, unescaped regex, raw fetch() bypassing apiUrl(), unguarded query filters.
+- [Notification system extension pattern](notification-system-extension.md) — new alert types (toast/banner/history) go in `useMatchNotifications.ts` types + a dedicated polling hook wired via its `push`; keep single-purpose feed pages (e.g. LiveActivityPage) filtering to only the types they care about.

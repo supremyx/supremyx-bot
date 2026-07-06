@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { apiUrl } from "../lib/api";
+import { useOperationalAlerts } from "./useOperationalAlerts";
 
-export type NotifType = "match" | "tournamentStart" | "tournamentEnd" | "iaFallback";
+export type NotifType = "match" | "tournamentStart" | "tournamentEnd" | "iaFallback" | "staleTicket" | "upcomingEvent";
 
 export interface MatchEvent {
   team: string;
@@ -32,10 +33,24 @@ export interface IaFallbackEvent {
   date: string;
 }
 
+export interface StaleTicketEvent {
+  ticketId: string;
+  userTag: string;
+  subject: string;
+  hoursOpen: number;
+}
+
+export interface UpcomingEventEvent {
+  eventId: string;
+  eventNumber: number;
+  title: string;
+  minutesUntil: number;
+}
+
 export interface Notification {
   id: string;
   type: NotifType;
-  data: MatchEvent | TournamentStartEvent | TournamentEndEvent;
+  data: MatchEvent | TournamentStartEvent | TournamentEndEvent | IaFallbackEvent | StaleTicketEvent | UpcomingEventEvent;
   time: Date;
 }
 
@@ -152,6 +167,8 @@ export function useMatchNotifications() {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
   }, [push]);
+
+  useOperationalAlerts(push);
 
   return { notifications, dismiss, dismissAll };
 }
