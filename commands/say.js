@@ -1,5 +1,8 @@
 const { staffLog } = require('../utils/staffLog');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const {
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
+  ModalBuilder, TextInputBuilder, TextInputStyle,
+} = require('discord.js');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -32,19 +35,22 @@ module.exports = (client) => {
     if (!targetChannel) targetChannel = message.channel;
 
     const attachments = [...message.attachments.values()];
-    const hasText = text.length > 0;
+    let hasText = text.length > 0;
     const hasMedia = attachments.length > 0;
 
     if (!hasText && !hasMedia)
       return message.reply('❌ Usage : `!dire [#salon] <texte et/ou fichier joint>`');
 
-    const payload = {};
-    if (hasText)  payload.content = text;
-    if (hasMedia) payload.files   = attachments.map(a => a.url);
+    const buildPayload = () => {
+      const payload = {};
+      if (hasText)  payload.content = text;
+      if (hasMedia) payload.files   = attachments.map(a => a.url);
+      return payload;
+    };
 
     const publish = async () => {
       try {
-        await targetChannel.send(payload);
+        await targetChannel.send(buildPayload());
 
         await staffLog(client, {
           action: 'say',
@@ -62,22 +68,25 @@ module.exports = (client) => {
       }
     };
 
-    // ── Aperçu avant publication ──
-    const row = new ActionRowBuilder().addComponents(
+    const buildPreviewContent = () => {
+      const lines = [
+        `📢 **Aperçu du message à publier dans <#${targetChannel.id}> :**`,
+        '',
+        hasText ? text : '*(aucun texte, pièce(s) jointe(s) uniquement)*',
+      ];
+      if (hasMedia) lines.push('', `📎 **Médias :** ${attachments.map(a => a.name).join(', ')}`);
+      return lines.join('\n');
+    };
+
+    const buildRow = () => new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('say_confirm').setLabel('✅ Publier').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('say_edit').setLabel('✏️ Modifier').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('say_cancel').setLabel('❌ Annuler').setStyle(ButtonStyle.Secondary)
     );
 
-    const previewLines = [
-      `📢 **Aperçu du message à publier dans <#${targetChannel.id}> :**`,
-      '',
-      hasText ? text : '*(aucun texte, pièce(s) jointe(s) uniquement)*',
-    ];
-    if (hasMedia) previewLines.push('', `📎 **Médias :** ${attachments.map(a => a.name).join(', ')}`);
-
     let preview;
     try {
-      preview = await message.reply({ content: previewLines.join('\n'), components: [row] });
+      preview = await message.reply({ content: buildPreviewContent(), components: [buildRow()] });
     } catch (err) {
       console.error('[say] Erreur envoi aperçu :', err);
       return message.reply('❌ Impossible de générer l\'aperçu.');
@@ -85,18 +94,55 @@ module.exports = (client) => {
 
     const collector = preview.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 60_000,
-      max: 1,
+      time: 120_000,
     });
 
     let handled = false;
 
     collector.on('collect', async (i) => {
       if (i.user.id !== message.author.id) {
-        return i.reply({ content: '⛔ Seul l\'auteur de la commande peut confirmer.', ephemeral: true });
+        return i.reply({ content: '⛔ Seul l\'auteur de la commande peut modifier ce message.', ephemeral: true });
+      }
+
+      if (i.customId === 'say_edit') {
+        const modal = new ModalBuilder()
+          .setCustomId('say_edit_modal')
+          .setTitle('Modifier le message');
+
+        const input = new TextInputBuilder()
+          .setCustomId('say_edit_text')
+          .setLabel('Texte du message')
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(!hasMedia)
+          .setMaxLength(2000)
+          .setValue(text.slice(0, 4000));
+
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+
+        try {
+          await i.showModal(modal);
+          const modalSubmit = await i.awaitModalSubmit({
+            filter: (mi) => mi.customId === 'say_edit_modal' && mi.user.id === message.author.id,
+            time: 120_000,
+          });
+
+          text = modalSubmit.fields.getTextInputValue('say_edit_text').trim();
+          hasText = text.length > 0;
+
+          if (!hasText && !hasMedia) {
+            await modalSubmit.reply({ content: '❌ Le message ne peut pas être vide.', ephemeral: true });
+            return;
+          }
+
+          await modalSubmit.update({ content: buildPreviewContent(), components: [buildRow()] });
+        } catch {
+          /* modal timed out or dismissed — keep previous preview */
+        }
+        return;
       }
 
       handled = true;
+      collector.stop();
 
       if (i.customId === 'say_cancel') {
         await i.update({ content: '❌ Publication annulée.', components: [] });
