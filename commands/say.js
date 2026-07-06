@@ -9,8 +9,8 @@ module.exports = (client) => {
     if (!message.member.permissions.has('Administrator'))
       return message.reply('❌ Staff uniquement.');
 
-    // Parse args: !say [#channel] [texte]
-    const args = message.content.slice(4).trim();
+    // Parse args: !dire [#channel] [texte]
+    const args = message.content.slice(5).trim();
 
     // Detect if first arg is a channel mention or ID
     let targetChannel = null;
