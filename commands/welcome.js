@@ -1,7 +1,8 @@
 const WelcomeConfig = require('../database/models/WelcomeConfig');
 const AutoroleConfig = require('../database/models/AutoroleConfig');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { generateWelcomeCard } = require('../utils/welcomeCard');
 
 function applyTemplate(template, member) {
   return template
@@ -9,6 +10,25 @@ function applyTemplate(template, member) {
     .replace(/{username}/g, member.user.username)
     .replace(/{server}/g, member.guild.name)
     .replace(/{count}/g, member.guild.memberCount.toString());
+}
+
+const HEX_COLOR = /^#?[0-9a-fA-F]{6}$/;
+
+async function sendWelcomeCard(channel, member, config) {
+  const text = applyTemplate(config.message, member);
+  const title = applyTemplate(config.cardTitle || 'WELCOME', member);
+  const subtitle = applyTemplate(config.cardSubtitle || 'HELLO AND WELCOME TO {server}', member);
+
+  const buffer = await generateWelcomeCard({
+    member,
+    title,
+    subtitle,
+    color: config.cardColor,
+    accentColor: config.cardAccentColor,
+  });
+  const attachment = new AttachmentBuilder(buffer, { name: 'welcome.png' });
+
+  await channel.send({ content: text, files: [attachment] });
 }
 
 module.exports = (client) => {
@@ -19,14 +39,18 @@ module.exports = (client) => {
       if (config && config.enabled && config.channelId) {
         const channel = member.guild.channels.cache.get(config.channelId);
         if (channel) {
-          const text = applyTemplate(config.message, member);
-          const embed = new EmbedBuilder()
-            .setColor(0x57F287)
-            .setDescription(text)
-            .setThumbnail(member.user.displayAvatarURL())
-            .setFooter({ text: `${member.guild.name} • ${member.guild.memberCount} membres` })
-            .setTimestamp();
-          await channel.send({ embeds: [embed] });
+          await sendWelcomeCard(channel, member, config).catch(async (err) => {
+            console.error('[welcome] Erreur génération affiche :', err);
+            // Fallback texte simple si la génération d'image échoue
+            const text = applyTemplate(config.message, member);
+            const embed = new EmbedBuilder()
+              .setColor(0x57F287)
+              .setDescription(text)
+              .setThumbnail(member.user.displayAvatarURL())
+              .setFooter({ text: `${member.guild.name} • ${member.guild.memberCount} membres` })
+              .setTimestamp();
+            await channel.send({ embeds: [embed] });
+          });
         }
       }
 
@@ -89,15 +113,63 @@ module.exports = (client) => {
       if (!config || !config.channelId) return message.reply('❌ Configure d\'abord un salon avec `!bienvenue salon #salon`.');
       const channel = message.guild.channels.cache.get(config.channelId);
       if (!channel) return message.reply('❌ Salon introuvable.');
-      const text = applyTemplate(config.message, message.member);
-      const embed = new EmbedBuilder()
-        .setColor(0x57F287)
-        .setDescription(text)
-        .setThumbnail(message.author.displayAvatarURL())
-        .setFooter({ text: `${message.guild.name} • ${message.guild.memberCount} membres` })
-        .setTimestamp();
-      await channel.send({ embeds: [embed] });
-      return message.reply(`✅ Message de bienvenue test envoyé dans <#${channel.id}>.`);
+      try {
+        await sendWelcomeCard(channel, message.member, config);
+        return message.reply(`✅ Affiche de bienvenue test envoyée dans <#${channel.id}>.`);
+      } catch (err) {
+        console.error('[welcome] Erreur génération affiche test :', err);
+        return message.reply('❌ Impossible de générer l\'affiche de bienvenue.');
+      }
+    }
+
+    // --- !bienvenue titre <texte> ---
+    if (sub === 'titre') {
+      const text = content.slice('!bienvenue titre'.length).trim();
+      if (!text) return message.reply('Usage : `!bienvenue titre <texte>` (ex : `!bienvenue titre WELCOME`)');
+      await WelcomeConfig.findOneAndUpdate(
+        { guildId: message.guild.id },
+        { $set: { cardTitle: text } },
+        { upsert: true, new: true }
+      );
+      logStaffAction(client, `👋 **Welcome card titre** → "${text}" | Par : ${message.author.tag}`);
+      return message.reply(`✅ Titre de l'affiche mis à jour : **${text}**`);
+    }
+
+    // --- !bienvenue soustitre <texte> ---
+    if (sub === 'soustitre') {
+      const text = content.slice('!bienvenue soustitre'.length).trim();
+      if (!text) return message.reply(
+        'Usage : `!bienvenue soustitre <texte>`\n' +
+        'Variables : `{user}` `{username}` `{server}` `{count}`\n' +
+        'Ex : `!bienvenue soustitre HELLO AND WELCOME TO {server}`'
+      );
+      await WelcomeConfig.findOneAndUpdate(
+        { guildId: message.guild.id },
+        { $set: { cardSubtitle: text } },
+        { upsert: true, new: true }
+      );
+      logStaffAction(client, `👋 **Welcome card sous-titre** mis à jour | Par : ${message.author.tag}`);
+      return message.reply(`✅ Sous-titre de l'affiche mis à jour.`);
+    }
+
+    // --- !bienvenue couleur <hex> [accentHex] ---
+    if (sub === 'couleur') {
+      const [, , mainHex, accentHex] = args;
+      if (!mainHex || !HEX_COLOR.test(mainHex)) {
+        return message.reply('Usage : `!bienvenue couleur #RRGGBB [#accentRRGGBB]` (ex : `!bienvenue couleur #5B2A86 #F5C518`)');
+      }
+      if (accentHex && !HEX_COLOR.test(accentHex)) {
+        return message.reply('❌ Couleur d\'accent invalide. Format attendu : `#RRGGBB`');
+      }
+      const update = { cardColor: mainHex.startsWith('#') ? mainHex : `#${mainHex}` };
+      if (accentHex) update.cardAccentColor = accentHex.startsWith('#') ? accentHex : `#${accentHex}`;
+      await WelcomeConfig.findOneAndUpdate(
+        { guildId: message.guild.id },
+        { $set: update },
+        { upsert: true, new: true }
+      );
+      logStaffAction(client, `👋 **Welcome card couleurs** mises à jour | Par : ${message.author.tag}`);
+      return message.reply('✅ Couleurs de l\'affiche mises à jour. Utilise `!bienvenue tester` pour voir le résultat.');
     }
 
     // --- !bienvenue desactiver ---
@@ -122,9 +194,10 @@ module.exports = (client) => {
       .addFields(
         { name: '🔘 Statut',  value: config?.enabled ? '✅ Activé' : '⛔ Désactivé',                   inline: true },
         { name: '📍 Salon',   value: config?.channelId ? `<#${config.channelId}>` : 'Non configuré',    inline: true },
-        { name: '💬 Message', value: config?.message || 'Défaut' }
+        { name: '💬 Message', value: config?.message || 'Défaut' },
+        { name: '🎨 Affiche', value: `Titre : **${config?.cardTitle || 'WELCOME'}**\nCouleur : \`${config?.cardColor || '#5B2A86'}\` / \`${config?.cardAccentColor || '#F5C518'}\`` }
       )
-      .setFooter({ text: 'Sous-commandes : definir · salon · tester · activer · desactiver' })
+      .setFooter({ text: 'Sous-commandes : definir · salon · tester · titre · soustitre · couleur · activer · desactiver' })
       .setTimestamp();
     return message.channel.send({ embeds: [embed] });
   });
