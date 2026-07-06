@@ -57,7 +57,9 @@ async function checkBirthdays(client) {
       await channel.send({ embeds: [embed] });
       announcedToday.add(key);
     }
-  } catch {}
+  } catch (err) {
+    console.error('[birthday] Erreur:', err.message);
+  }
 }
 
 function startBirthdayManager(client) {

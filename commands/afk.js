@@ -12,7 +12,7 @@ async function loadAfkCache(guildId) {
 
 module.exports = (client) => {
   // Load AFK cache when bot is ready
-  client.once('clientReady', async () => {
+  client.once('ready', async () => {
     for (const [, guild] of client.guilds.cache) {
       await loadAfkCache(guild.id).catch(() => {});
     }

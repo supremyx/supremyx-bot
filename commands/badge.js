@@ -59,7 +59,7 @@ module.exports = (client) => {
         }
 
         const query = targetName
-          ? { guildId, displayName: { $regex: new RegExp(targetName, 'i') } }
+          ? { guildId, displayName: { $regex: new RegExp(targetName.replace(/[.*+?^${}()|[\]\\]/g, '\\          ? { guildId, displayName: { $regex: new RegExp(targetName, 'i') } }'), 'i') } }
           : { guildId };
         const badges = await PlayerBadge.find(query).sort({ awardedAt: -1 }).lean();
 

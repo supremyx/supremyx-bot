@@ -59,6 +59,8 @@ function setupMaintenanceGuard(client) {
     }
   }).catch(() => {});
 
+  if (client.emit._supremyxPatched) return;
+
   const originalEmit = client.emit.bind(client);
 
   client.emit = function (event, ...args) {
@@ -90,6 +92,7 @@ function setupMaintenanceGuard(client) {
 
     return originalEmit(event, ...args);
   };
+  client.emit._supremyxPatched = true;
 }
 
 module.exports = { setupMaintenanceGuard, setMaintenance, setMessage, getCached, loadCache };

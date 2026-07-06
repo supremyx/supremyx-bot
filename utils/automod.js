@@ -84,8 +84,8 @@ async function startAutomod(client) {
         .setTimestamp();
 
       await logChannel.send({ embeds: [embed] }).catch(() => {});
-    } catch {
-      // Silent fail
+    } catch (err) {
+      console.error('[automod] Erreur non gérée:', err.message);
     }
   });
 }

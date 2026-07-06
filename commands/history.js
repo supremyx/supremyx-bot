@@ -1,6 +1,7 @@
 const Match = require('../database/models/Match');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const { checkCooldown, replyCooldown } = require('../utils/cooldown');
+const { escapeRegex } = require('../utils/lib');
 
 const PAGE_SIZE = 5;
 
@@ -30,7 +31,40 @@ module.exports = (client) => {
     if (!name) return message.reply('Usage : `!historique <nom>`');
 
     const Team = require('../database/models/Team');
-    const team = await Team.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}const Match = require('../database/models/Match');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
+const { escapeRegex } = require('../utils/lib');
+
+const PAGE_SIZE = 5;
+
+function buildEmbed(teamName, matches, page, totalPages) {
+  const start = page * PAGE_SIZE;
+  const rows = matches.slice(start, start + PAGE_SIZE).map((m, i) => {
+    const date = new Date(m.createdAt).toLocaleDateString('fr-FR');
+    return `**${start + i + 1}.** \`#${m.placement}\` — ${m.kills} kills — +${m.points} pts *(${date})*`;
+  }).join('\n');
+
+  return new EmbedBuilder()
+    .setTitle(`📋 Historique — ${teamName}`)
+    .setDescription(rows || 'Aucun match.')
+    .setColor(0x57F287)
+    .setFooter({ text: `Page ${page + 1}/${totalPages} — ${matches.length} match(s) au total` })
+    .setTimestamp();
+}
+
+module.exports = (client) => {
+  client.on('messageCreate', async message => {
+    if (!message.content.startsWith('!historique')) return;
+
+    const cd = checkCooldown(message.author.id, 'history', 10);
+    if (cd) return replyCooldown(message, cd, 'history');
+
+    const name = message.content.split(' ').slice(1).join(' ').trim();
+    if (!name) return message.reply('Usage : `!historique <nom>`');
+
+    const Team = require('../database/models/Team');
+, 'i') } });
     if (!team) return message.reply(`❌ Équipe **${name}** introuvable.`);
 
     const matches = await Match.find({ team: team.name }).sort({ createdAt: -1 });

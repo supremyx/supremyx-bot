@@ -51,7 +51,7 @@ setupErrorHandler(client);
 setupMaintenanceGuard(client);
 setupAntiCrash(client);
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   console.log(`🔥 SUPREMYX connecté en tant que ${client.user.tag}`);
 
   // ── Détection d'instances multiples ────────────────────────────────────────
