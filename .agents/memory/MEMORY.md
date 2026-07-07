@@ -12,3 +12,6 @@
 - [Dashboard page pattern](dashboard-page-pattern.md) — new pages require 4 edits in App.tsx: import, Page type union, NAV_ITEMS entry, and conditional render in the Pages section.
 - [Full bug audit findings](full-bug-audit-2026-07.md) — cross-cutting patterns found in a full-codebase audit: missing bot/DM guards, unescaped regex, raw fetch() bypassing apiUrl(), unguarded query filters.
 - [Notification system extension pattern](notification-system-extension.md) — new alert types (toast/banner/history) go in `useMatchNotifications.ts` types + a dedicated polling hook wired via its `push`; keep single-purpose feed pages (e.g. LiveActivityPage) filtering to only the types they care about.
+- [clientReady vs ready event](discordjs-ready-event.md) — discord.js v14 uses `clientReady` (not `ready`); `ready` is deprecated and emits a warning. Audits that say "change clientReady→ready" are wrong for v14.
+- [maintenanceGuard double-patch](maintenance-guard-patch.md) — use a `client.emit._supremyxPatched` flag to make `setupMaintenanceGuard` idempotent; without it, re-calling patches emit recursively.
+- [Python for file edits with backticks/dollars](python-file-edits.md) — use Python `str.replace()` for edits involving JS template literals or `$regex`; the Edit tool corrupts these strings silently (inserts instead of replaces).
