@@ -317,7 +317,7 @@ const STAFF_CATEGORIES = [
     commands: [
       { label: '!annonce <message>',          description: 'Envoyer une annonce dans le salon configuré (Staff)',                subs: [] },
       { label: '!dire <message>',             description: 'Faire parler le bot dans le salon courant (Staff)',                 subs: [] },
-      { label: '!vote <question>',            description: 'Sondage rapide oui/non par réactions (Staff)',                      subs: [] },
+      { label: '!vote <question> | <opt1> | <opt2>…', description: 'Créer un sondage à choix multiples avec réactions numérotées — au moins 2 options requises (Staff)', subs: [] },
       { label: '!sondage <durée> <question> | <opt1> | <opt2>', description: 'Sondage immédiat avec options multiples et résultats auto (Staff)', subs: [
         'programmer <question> | <opt1> | ... | <durée> | <JJ/MM HH:MM> — Programmer',
         'planifie liste — Voir tous les sondages programmés',

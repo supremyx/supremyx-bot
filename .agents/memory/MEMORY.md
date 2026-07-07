@@ -15,3 +15,4 @@
 - [clientReady vs ready event](discordjs-ready-event.md) — discord.js v14 uses `clientReady` (not `ready`); `ready` is deprecated and emits a warning. Audits that say "change clientReady→ready" are wrong for v14.
 - [maintenanceGuard double-patch](maintenance-guard-patch.md) — use a `client.emit._supremyxPatched` flag to make `setupMaintenanceGuard` idempotent; without it, re-calling patches emit recursively.
 - [Python for file edits with backticks/dollars](python-file-edits.md) — use Python `str.replace()` for edits involving JS template literals or `$regex`; the Edit tool corrupts these strings silently (inserts instead of replaces).
+- [Note guild isolation](note-guild-isolation.md) — Note model lacked guildId; added field + filter in note.js, scout.js to prevent cross-server staff note leakage.

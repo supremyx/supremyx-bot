@@ -28,7 +28,7 @@ module.exports = (client) => {
         );
       }
 
-      await Note.create({ target, content: text, author: message.author.tag });
+      await Note.create({ guildId: message.guild.id, target, content: text, author: message.author.tag });
 
       const embed = new EmbedBuilder()
         .setTitle('📝 Note ajoutée')
@@ -49,26 +49,27 @@ module.exports = (client) => {
       if (!target) return message.reply('Usage : `!notes <équipe ou joueur>`');
 
       const notes = await Note.find({
-        target: { $regex: new RegExp(`^${escapeRegex(target)}$`, 'i') }
+        guildId: message.guild.id,
+        target: { $regex: new RegExp('^' + escapeRegex(target) + '$', 'i') }
       }).sort({ createdAt: -1 });
 
-      if (!notes.length) return message.reply(`📭 Aucune note pour **${target}**.`);
+      if (!notes.length) return message.reply('📭 Aucune note pour **' + target + '**.');
 
       const embed = new EmbedBuilder()
-        .setTitle(`📋 Notes — ${target}`)
+        .setTitle('📋 Notes — ' + target)
         .setColor(0x5865F2)
-        .setDescription(`**${notes.length}** note(s) enregistrée(s)`)
+        .setDescription('**' + notes.length + '** note(s) enregistrée(s)')
         .setTimestamp();
 
       for (const n of notes.slice(0, 10)) {
         const date = new Date(n.createdAt).toLocaleDateString('fr-FR');
         embed.addFields({
-          name: `#${n._id.toString().slice(-5)} — ${date} par ${n.author}`,
+          name: '#' + n._id.toString().slice(-5) + ' — ' + date + ' par ' + n.author,
           value: n.content
         });
       }
 
-      if (notes.length > 10) embed.setFooter({ text: `Affichage des 10 dernières sur ${notes.length}` });
+      if (notes.length > 10) embed.setFooter({ text: 'Affichage des 10 dernières sur ' + notes.length });
 
       return message.channel.send({ embeds: [embed] });
     }
@@ -76,19 +77,19 @@ module.exports = (client) => {
     // --- !supprimenote <id> ---
     if (cmd === '!supprimenote') {
       const id = args[1];
-      if (!id) return message.reply('Usage : `!supprimenote <id>`\nL\'ID est visible dans `!notes`.');
+      if (!id) return message.reply("Usage : `!supprimenote <id>`\nL'ID est visible dans `!notes`.");
 
       let deleted = null;
       if (id.length === 24) {
-        deleted = await Note.findByIdAndDelete(id).catch(() => null);
+        deleted = await Note.findOneAndDelete({ _id: id, guildId: message.guild.id }).catch(() => null);
       } else {
-        const all = await Note.find({});
+        const all = await Note.find({ guildId: message.guild.id });
         const match = all.find(n => n._id.toString().slice(-5) === id);
         if (match) deleted = await Note.findByIdAndDelete(match._id).catch(() => null);
       }
 
       if (!deleted) return message.reply('❌ Aucune note trouvée avec cet ID.');
-      return message.reply(`✅ Note sur **${deleted.target}** supprimée.`);
+      return message.reply('✅ Note sur **' + deleted.target + '** supprimée.');
     }
   });
 };

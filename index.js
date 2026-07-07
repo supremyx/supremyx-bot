@@ -129,6 +129,9 @@ require('./commands/maintenance')(client);
 // --- Diffusion ---
 require('./commands/diffuser')(client);
 
+// --- Commandes (stats d'usage) ---
+require('./commands/commandes')(client);
+
 // --- Utilitaires ---
 require('./commands/ping')(client);
 require('./commands/status')(client);
@@ -223,6 +226,8 @@ require('./commands/rankroles')(client);
 
 // --- Config ---
 require('./commands/configbot')(client);
+require('./commands/setchannel')(client);
+require('./commands/voirconfig')(client);
 
 // --- Blacklist ---
 require('./commands/blacklist')(client);
@@ -257,7 +262,9 @@ require('./commands/afk')(client);
 // --- Anniversaires ---
 require('./commands/birthday')(client);
 
-// --- Embed builder (fusionné dans embed.js) ---
+// --- Embed builder interactif ---
+require('./commands/embedbuilder')(client);
+
 
 // --- Welcome & Autorole ---
 require('./commands/welcome')(client);

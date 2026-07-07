@@ -75,46 +75,7 @@ module.exports = (client) => {
       return message.reply(`✅ **${src.name}** fusionnée dans **${dst.name}**.\nPoints : +${src.points} | Kills : +${src.kills}`);
     }
 
-    // --- !composition <equipe> <joueur1,joueur2,...> ---
-    if (cmd === '!composition') {
-      const raw = content.slice('!composition'.length).trim();
-      if (!raw) return message.reply('Usage : `!composition <équipe> <joueur1,joueur2,...>` ou `!composition <équipe>` pour voir');
-
-      const spaceIdx = raw.indexOf(' ');
-      const teamName = spaceIdx >= 0 ? raw.slice(0, spaceIdx).trim() : raw;
-      const playersRaw = spaceIdx >= 0 ? raw.slice(spaceIdx + 1).trim() : '';
-
-      if (!playersRaw) {
-        // View lineup
-        const lineup = await Lineup.findOne({ team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });
-        if (!lineup || !lineup.players.length)
-          return message.reply(`Aucune composition définie pour **${teamName}**.`);
-
-        const embed = new EmbedBuilder()
-          .setTitle(`📋 Composition — ${lineup.team}`)
-          .setColor(0x5865F2)
-          .setDescription(lineup.players.map((p, i) => `**${i + 1}.** ${p}`).join('\n'))
-          .setFooter({ text: `Mis à jour le ${new Date(lineup.updatedAt).toLocaleDateString('fr-FR')} par ${lineup.updatedBy}` })
-          .setTimestamp();
-
-        return message.channel.send({ embeds: [embed] });
-      }
-
-      // Set lineup (staff only)
-      if (!isStaff) return message.reply('Staff uniquement pour définir la composition.');
-
-      const players = playersRaw.split(',').map(p => p.trim()).filter(Boolean);
-      if (!players.length) return message.reply('❌ Aucun joueur valide fourni.');
-
-      await Lineup.findOneAndUpdate(
-        { team: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } },
-        { team: teamName, players, updatedBy: message.author.tag },
-        { upsert: true, new: true }
-      );
-
-      logStaffAction(client, `📋 **Lineup** — \`${teamName}\` : ${players.join(', ')} | Par : ${message.author.tag}`);
-      return message.reply(`✅ Composition de **${teamName}** enregistrée : ${players.join(', ')}`);
-    }
+    // NOTE: !composition est géré entièrement par lineup.js (plus complet)
     } catch (err) {
       console.error('[team_manage] Erreur:', err);
       message.reply('❌ Une erreur est survenue. Réessaie dans un instant.').catch(() => {});

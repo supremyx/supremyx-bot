@@ -88,8 +88,8 @@ module.exports = (client) => {
       const statusStr = rosterEntry ? `🟢 Dans l'équipe **${rosterEntry.team}**` : '🔴 **Free agent** — disponible';
 
       // Notes staff
-      const notes = await Note.find({ guildId, team: stat.teamName }).limit(1);
-      const noteStr = notes.length ? `📝 ${notes[0].text}` : '—';
+      const notes = await Note.find({ guildId, target: stat.teamName }).limit(1);
+      const noteStr = notes.length ? `📝 ${notes[0].content}` : '—';
 
       // Absences récentes
       const absence = await Absence.findOne({ guildId, userId: { $exists: false }, team: stat.teamName });
