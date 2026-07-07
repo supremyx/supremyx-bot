@@ -68,7 +68,7 @@ const CATEGORIES = [
       { label: '!statistiques <équipe>',          description: 'Résumé complet des performances d\'une équipe',       subs: [] },
       { label: '!infoequipe <nom>',            description: 'Fiche détaillée d\'une équipe',                       subs: [] },
       { label: '!equipes',                     description: 'Liste de toutes les équipes enregistrées',            subs: [] },
-      { label: '!classement',                  description: 'Classement général des équipes',                      subs: ['eliminations — Classement par total d\'éliminations', 'ratio — Classement par kills/match', 'elo — Classement ELO (placement + kills pondérés)', 'semaine — Classement sur les 7 derniers jours', '<tournoi> — Classement filtré sur un tournoi'] },
+      { label: '!classement',                  description: 'Classement général des équipes',                      subs: ['eliminations (alias : kills) — Classement par total d\'éliminations', 'ratio (alias : moyenne) — Classement par kills/match', 'elo — Classement ELO (placement + kills pondérés)', 'semaine — Classement sur les 7 derniers jours', '<tournoi> — Classement filtré sur un tournoi'] },
       { label: '!top [N]',                     description: 'Top N équipes par points (défaut : 3, max 25)',        subs: [] },
       { label: '!comparer <T1> vs <T2>',       description: 'Comparer deux équipes ou deux joueurs côte à côte',   subs: ['<T1> vs <T2> — Stats équipes en direct', 'saison <T1> vs <T2> — Comparaison sur l\'historique des saisons', 'joueur <J1> vs <J2> — Comparer deux joueurs (kills, matchs, ratio)'] },
       { label: '!historique <équipe>',         description: 'Historique de tous les matchs d\'une équipe',         subs: [] },
@@ -189,7 +189,8 @@ const CATEGORIES = [
     emoji: '📅',
     color: 0xFEE75C,
     commands: [
-      { label: '!calendrier',              description: 'Liste les prochains matchs planifiés',        subs: ['prochain — Voir le prochain match planifié'] },
+      { label: '!calendrier',              description: 'Liste les prochains matchs planifiés',        subs: ['prochain — Affiche uniquement le prochain match', 'equipe <nom> — Matchs à venir d\'une équipe spécifique'] },
+      { label: '!calendrier equipe <nom>', description: 'Matchs à venir d\'une équipe spécifique',   subs: [] },
       { label: '!evenement creer',         description: 'Créer un événement RSVP',                    subs: ['creer <titre> | <desc> | <date> — Créer *(staff)*', 'liste — Voir les événements', 'joindre <id> — S\'inscrire', 'quitter <id> — Décliner', 'participants <id> — Voir participants', 'annuler <id> — Annuler *(staff)*'] },
       { label: '!rappel <durée> <texte>',  description: 'Se créer un rappel personnel (ex : 1h Match ce soir)', subs: [] },
       { label: '!messagejour',              description: 'Afficher le message du jour configuré par le staff', subs: [] },
@@ -569,7 +570,7 @@ module.exports = (client) => {
       for (const { cat, matches } of results) {
         embed.addFields({
           name: `${cat.emoji} ${cat.label}`,
-          value: matches.map(cmd => `\`${cmd.label}\` — ${cmd.description}`).join('\n'),
+          value: matches.map(cmd => `\`${cmd.label}\` — ${cmd.description}`).join('\n').slice(0, 1024),
           inline: false,
         });
       }
