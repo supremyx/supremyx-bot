@@ -34,43 +34,7 @@ module.exports = (client) => {
         Warning.find({ guildId: message.guild.id, userId: user.id }),
         Roster.find({ guildId: message.guild.id }),
         PlayerStat.findOne({ guildId: message.guild.id, tag: user.tag }),
-        PlayerBadge.find({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${escapeRegex(displayName)}/**
- * !profil [@membre]
- * Fiche complète d'un joueur : infos Discord, équipe, stats K/D, XP, warns.
- */
-const { EmbedBuilder } = require('discord.js');
-const XpEntry     = require('../database/models/XpEntry');
-const Warning     = require('../database/models/Warning');
-const Roster      = require('../database/models/Roster');
-const PlayerStat  = require('../database/models/PlayerStat');
-const PlayerBadge = require('../database/models/PlayerBadge');
-const { checkCooldown, replyCooldown } = require('../utils/cooldown');
-const { escapeRegex } = require('../utils/lib');
-
-function xpToLevel(xp)         { return Math.floor(Math.sqrt(xp / 50)); }
-function xpForNextLevel(level)  { return Math.pow(level + 1, 2) * 50; }
-
-module.exports = (client) => {
-  client.on('messageCreate', async message => {
-    try {
-      if (!message.guild)                           return;
-      if (message.author.bot)                       return;
-      if (!message.content.startsWith('!profil'))   return;
-
-      const cd = checkCooldown(message.author.id, 'profil', 8);
-      if (cd) return replyCooldown(message, cd, 'profil');
-
-      const target = message.mentions.members.first() || message.member;
-      const user   = target.user;
-
-      // ── Requêtes en parallèle ──────────────────────────────────────────────
-      const displayName = target.displayName || user.username;
-      const [xpEntry, warns, rosters, playerStat, badges] = await Promise.all([
-        XpEntry.findOne({ guildId: message.guild.id, userId: user.id }),
-        Warning.find({ guildId: message.guild.id, userId: user.id }),
-        Roster.find({ guildId: message.guild.id }),
-        PlayerStat.findOne({ guildId: message.guild.id, tag: user.tag }),
-, 'i') } }).lean(),
+        PlayerBadge.find({ guildId: message.guild.id, displayName: { $regex: new RegExp(`^${escapeRegex(displayName)}$`, 'i') } }).lean(),
       ]);
 
       // ── Équipe via Roster ──────────────────────────────────────────────────
