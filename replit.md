@@ -34,6 +34,12 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 - **Database:** MongoDB (Atlas)
 - **Package manager:** npm (root bot) / npm (dashboard workspace)
 
+## Optional secrets
+
+| Key | Description |
+|-----|-------------|
+| `GITHUB_TOKEN` | Required only for the **Auto-push GitHub** workflow (`scripts/autopush.sh`). Without it the workflow fails harmlessly — bot and dashboard are unaffected. |
+
 ## User preferences
 
 - Keep existing project structure — do not restructure or migrate.
