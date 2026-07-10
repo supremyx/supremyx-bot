@@ -33,7 +33,8 @@ async function checkAndPost(client) {
 
 function startDashboardManager(client) {
   // Check every hour on the dot
-  const msUntilNextHour = (60 - new Date().getMinutes()) * 60 * 1000 - new Date().getSeconds() * 1000;
+  const _now = new Date();
+  const msUntilNextHour = (60 - _now.getMinutes()) * 60 * 1000 - _now.getSeconds() * 1000 - _now.getMilliseconds();
   setTimeout(() => {
     checkAndPost(client);
     setInterval(() => checkAndPost(client), 60 * 60 * 1000);

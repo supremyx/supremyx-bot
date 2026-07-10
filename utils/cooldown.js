@@ -37,11 +37,11 @@ setInterval(() => {
  * DB config overrides defaultSeconds. Returns 0 if command is disabled (0s).
  * @returns {number} Remaining seconds, or 0 if not on cooldown.
  */
-function checkCooldown(userId, command, defaultSeconds) {
+function checkCooldown(userId, command, defaultSeconds, guildId = 'global') {
   const seconds = dbConfig.has(command) ? dbConfig.get(command) : defaultSeconds;
   if (seconds === 0) return 0; // 0 = no cooldown
 
-  const key = `${userId}:${command}`;
+  const key = `${guildId}:${userId}:${command}`;
   const now = Date.now();
 
   if (cooldowns.has(key)) {

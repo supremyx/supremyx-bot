@@ -7,7 +7,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     if (message.content !== '!mvp') return;
-    const cd = checkCooldown(message.author.id, 'mvp', 15);
+    const cd = checkCooldown(message.author.id, 'mvp', 15, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'mvp');
 
     const teams = await Team.find();

@@ -18,7 +18,7 @@ module.exports = (client) => {
 
       // ── !pronostic classement ────────────────────────────────────────────
       if (sub === 'classement') {
-        const cd = checkCooldown(message.author.id, 'pronostic-class', 10);
+        const cd = checkCooldown(message.author.id, 'pronostic-class', 10, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'pronostic-class');
 
         const all = await Pronostic.find({ guildId, correct: { $ne: null } });
@@ -48,7 +48,7 @@ module.exports = (client) => {
 
       // ── !pronostic resultats ─────────────────────────────────────────────
       if (sub === 'resultats' || sub === 'résultats') {
-        const cd = checkCooldown(message.author.id, 'pronostic-res', 10);
+        const cd = checkCooldown(message.author.id, 'pronostic-res', 10, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'pronostic-res');
 
         const prons = await Pronostic.find({ guildId, userId: message.author.id }).sort({ createdAt: -1 }).limit(15);
@@ -106,7 +106,7 @@ module.exports = (client) => {
       const t2Name = rest.slice(vsIdx + 4).trim();
       if (!t1Name || !t2Name) return message.reply('❌ Précise les deux équipes.');
 
-      const cd = checkCooldown(message.author.id, 'pronostic', 10);
+      const cd = checkCooldown(message.author.id, 'pronostic', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'pronostic');
 
       const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

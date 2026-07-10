@@ -8,7 +8,7 @@ module.exports = (client) => {
     try {
     if (message.author.bot) return;
     if (!message.content.startsWith('!recherche')) return;
-    const cd = checkCooldown(message.author.id, 'search', 5);
+    const cd = checkCooldown(message.author.id, 'search', 5, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'search');
 
     const query = message.content.split(' ').slice(1).join(' ').trim();

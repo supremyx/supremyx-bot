@@ -44,16 +44,14 @@ module.exports = (client) => {
 
     // --- !antispam activer ---
     if (sub === 'activer') {
-      config.enabled = true;
-      await config.save();
+      await AntispamConfig.findOneAndUpdate({}, { enabled: true }, { upsert: true });
       logStaffAction(client, `✅ **Anti-spam activé** | Par : ${message.author.tag}`);
       return message.reply('✅ Anti-spam **activé**.');
     }
 
     // --- !antispam désactiver ---
     if (sub === 'désactiver' || sub === 'desactiver') {
-      config.enabled = false;
-      await config.save();
+      await AntispamConfig.findOneAndUpdate({}, { enabled: false }, { upsert: true });
       logStaffAction(client, `⛔ **Anti-spam désactivé** | Par : ${message.author.tag}`);
       return message.reply('⛔ Anti-spam **désactivé**.');
     }
@@ -71,9 +69,7 @@ module.exports = (client) => {
         );
       }
 
-      config.maxMessages = maxMessages;
-      config.windowSeconds = windowSeconds;
-      await config.save();
+      await AntispamConfig.findOneAndUpdate({}, { maxMessages, windowSeconds }, { upsert: true });
 
       logStaffAction(client, `⚙️ **Anti-spam reconfiguré** — ${maxMessages} msg / ${windowSeconds}s | Par : ${message.author.tag}`);
       return message.reply(`✅ Seuil mis à jour : **${maxMessages}** messages en **${windowSeconds}** seconde(s).`);

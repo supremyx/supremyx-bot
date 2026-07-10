@@ -36,7 +36,7 @@ function buildEmbed(tournaments, page, totalPages) {
 module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.content !== '!tournois') return;
-    const cd = checkCooldown(message.author.id, 'tournois', 10);
+    const cd = checkCooldown(message.author.id, 'tournois', 10, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'tournois');
 
     const tournaments = await Tournament.find().sort({ startedAt: -1 });

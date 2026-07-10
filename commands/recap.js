@@ -200,7 +200,7 @@ module.exports = (client) => {
       if (!message.member)    return;
       if (!message.content.startsWith('!recapitulatif') && !message.content.startsWith('!recap')) return;
 
-      const cd = checkCooldown(message.author.id, 'recapitulatif', 20);
+      const cd = checkCooldown(message.author.id, 'recapitulatif', 20, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'recapitulatif');
 
       const arg = message.content.trim().split(/\s+/).slice(1).join(' ').trim().toLowerCase();

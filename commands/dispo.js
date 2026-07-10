@@ -23,7 +23,7 @@ module.exports = (client) => {
 
       // ── !dispo oui|non|incertain [raison] ────────────────────────────────
       if (['oui', 'non', 'incertain'].includes(sub)) {
-        const cd = checkCooldown(message.author.id, 'dispo', 10);
+        const cd = checkCooldown(message.author.id, 'dispo', 10, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'dispo');
 
         const raison = args.slice(1).join(' ').trim();
@@ -48,7 +48,7 @@ module.exports = (client) => {
         if (!schedId || !['oui', 'non', 'incertain'].includes(status))
           return message.reply('Usage : `!dispo match <id_du_match> <oui|non|incertain>`\nTrouve l\'ID avec `!calendrier`.');
 
-        const cd = checkCooldown(message.author.id, 'dispo-match', 10);
+        const cd = checkCooldown(message.author.id, 'dispo-match', 10, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'dispo-match');
 
         const schedule = await Schedule.findById(schedId).catch(() => null);

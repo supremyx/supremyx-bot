@@ -9,10 +9,10 @@ function parseDuration(str) {
   if (!match) return null;
   const [, d, h, m, s] = match;
   const ms =
-    (parseInt(d) || 0) * 86400000 +
-    (parseInt(h) || 0) * 3600000 +
-    (parseInt(m) || 0) * 60000 +
-    (parseInt(s) || 0) * 1000;
+    (parseInt(d, 10) || 0) * 86400000 +
+    (parseInt(h, 10) || 0) * 3600000 +
+    (parseInt(m, 10) || 0) * 60000 +
+    (parseInt(s, 10) || 0) * 1000;
   return ms > 0 ? ms : null;
 }
 

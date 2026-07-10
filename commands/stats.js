@@ -7,7 +7,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     if (message.content.startsWith('!statistiques')) {
-      const cd = checkCooldown(message.author.id, 'statistiques', 5);
+      const cd = checkCooldown(message.author.id, 'statistiques', 5, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'statistiques');
 
       const name = message.content.split(' ').slice(1).join(' ').trim();

@@ -50,30 +50,37 @@ function startScheduleManager(client) {
       for (const match of upcoming) {
         const msUntil = match.date.getTime() - now.getTime();
         const minUntil = msUntil / 60000;
-        let changed = false;
 
         // 24h reminder (between 23h50 and 24h10)
+        // Atomically claim the flag before sending to prevent duplicate sends across restarts/instances
         if (!match.reminded24h && minUntil >= 1430 && minUntil <= 1450) {
-          await sendReminder(client, match, 'dans 24 heures', 0x5865F2);
-          match.reminded24h = true;
-          changed = true;
+          const claimed = await Schedule.findOneAndUpdate(
+            { _id: match._id, reminded24h: { $ne: true } },
+            { $set: { reminded24h: true } },
+            { new: false }
+          );
+          if (claimed) await sendReminder(client, match, 'dans 24 heures', 0x5865F2);
         }
 
         // 1h reminder (between 55 and 65 min)
         if (!match.reminded1h && minUntil >= 55 && minUntil <= 65) {
-          await sendReminder(client, match, 'dans 1 heure', 0xFEE75C);
-          match.reminded1h = true;
-          changed = true;
+          const claimed = await Schedule.findOneAndUpdate(
+            { _id: match._id, reminded1h: { $ne: true } },
+            { $set: { reminded1h: true } },
+            { new: false }
+          );
+          if (claimed) await sendReminder(client, match, 'dans 1 heure', 0xFEE75C);
         }
 
         // 15min reminder (between 12 and 18 min)
         if (!match.reminded15m && minUntil >= 12 && minUntil <= 18) {
-          await sendReminder(client, match, 'dans 15 minutes', 0xED4245);
-          match.reminded15m = true;
-          changed = true;
+          const claimed = await Schedule.findOneAndUpdate(
+            { _id: match._id, reminded15m: { $ne: true } },
+            { $set: { reminded15m: true } },
+            { new: false }
+          );
+          if (claimed) await sendReminder(client, match, 'dans 15 minutes', 0xED4245);
         }
-
-        if (changed) await match.save();
       }
     } catch (err) {
       console.error('[scheduleManager]', err);

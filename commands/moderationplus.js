@@ -25,7 +25,7 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const cd = checkCooldown(message.author.id, 'casier', 10);
+      const cd = checkCooldown(message.author.id, 'casier', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'casier');
 
       const target = message.mentions.members.first();
@@ -74,7 +74,7 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const cd = checkCooldown(message.author.id, 'rapport', 30);
+      const cd = checkCooldown(message.author.id, 'rapport', 30, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'rapport');
 
       const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -137,7 +137,7 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const cd = checkCooldown(message.author.id, 'topwarn', 15);
+      const cd = checkCooldown(message.author.id, 'topwarn', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'topwarn');
 
       const guildId = message.guild.id;

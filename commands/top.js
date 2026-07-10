@@ -8,7 +8,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     if (!message.content.startsWith('!top')) return;
-    const cd = checkCooldown(message.author.id, 'top', 10);
+    const cd = checkCooldown(message.author.id, 'top', 10, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'top');
 
     const n = parseInt(message.content.split(' ')[1]) || 3;

@@ -190,8 +190,10 @@ module.exports = (client) => {
         if (!cfg || !cfg.channelId)
           return message.reply('❌ Configure d\'abord un salon avec `!tableaudebord salon #salon`.');
 
-        cfg.autoEnabled = state === 'activer';
-        await cfg.save();
+        await DashboardConfig.findOneAndUpdate(
+          { guildId: message.guild.id },
+          { autoEnabled: state === 'activer' }
+        );
 
         logStaffAction(client, `📊 **Dashboard auto ${state === 'activer' ? 'activé' : 'désactivé'}** | Par : ${message.author.tag}`);
         return message.reply(

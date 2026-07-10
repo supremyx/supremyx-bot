@@ -13,7 +13,7 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!detailtournoi ') && content !== '!detailtournoi') return;
 
-    const cd = checkCooldown(message.author.id, 'tournoidetail', 8);
+    const cd = checkCooldown(message.author.id, 'tournoidetail', 8, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'tournoidetail');
 
     const name = content.slice('!detailtournoi'.length).trim();

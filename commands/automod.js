@@ -38,14 +38,12 @@ module.exports = (client) => {
     if (cmd === '!automod') {
       const config = await getOrCreateConfig();
       if (sub === 'activer') {
-        config.enabled = true;
-        await config.save();
+        await AutomodConfig.findOneAndUpdate({}, { enabled: true }, { upsert: true });
         logStaffAction(client, `✅ **Automod activé** | Par : ${message.author.tag}`);
         return message.reply('✅ Détection de mots interdits **activée**.');
       }
       if (sub === 'désactiver' || sub === 'desactiver') {
-        config.enabled = false;
-        await config.save();
+        await AutomodConfig.findOneAndUpdate({}, { enabled: false }, { upsert: true });
         logStaffAction(client, `⛔ **Automod désactivé** | Par : ${message.author.tag}`);
         return message.reply('⛔ Détection de mots interdits **désactivée**.');
       }

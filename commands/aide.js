@@ -426,7 +426,7 @@ module.exports = (client) => {
 
       message.delete().catch(() => {});
 
-      const cd = checkCooldown(message.author.id, 'aide', 10);
+      const cd = checkCooldown(message.author.id, 'aide', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'aide');
 
       const sent = await message.channel.send({
@@ -460,7 +460,7 @@ module.exports = (client) => {
 
       message.delete().catch(() => {});
 
-      const cd = checkCooldown(message.author.id, 'aide_nouveautes', 15);
+      const cd = checkCooldown(message.author.id, 'aide_nouveautes', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'aide nouveautes');
 
       const sent = await message.channel.send({ embeds: [buildNouveautesEmbed(client)] });
@@ -530,7 +530,7 @@ module.exports = (client) => {
         return;
       }
 
-      const cd = checkCooldown(message.author.id, 'chercher', 5);
+      const cd = checkCooldown(message.author.id, 'chercher', 5, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'chercher');
 
       saveSearchTerm(message.author.id, message.guild.id, term, 'aide').catch(() => {});

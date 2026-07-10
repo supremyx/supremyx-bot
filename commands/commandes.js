@@ -130,7 +130,7 @@ module.exports = (client) => {
     if (message.author.bot) return;
     if (message.content.trim() !== '!commandes') return;
 
-    const cd = checkCooldown(message.author.id, 'commandes', 15);
+    const cd = checkCooldown(message.author.id, 'commandes', 15, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'commandes');
 
     const period = 'all';

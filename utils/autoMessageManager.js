@@ -107,7 +107,10 @@ function startAutoMessageManager(client) {
         if (doc.title) embed.setTitle(doc.title);
 
         try {
-          await channel.send({ embeds: [embed] });
+          const perms = channel.permissionsFor(channel.guild?.members?.me);
+          if (perms && perms.has('SendMessages')) {
+            await channel.send({ embeds: [embed] });
+          }
         } catch { /* accès refusé, on ne crash pas */ }
 
         doc.lastRun = now;

@@ -18,7 +18,7 @@ module.exports = (client) => {
 
     // ── !equipes ───────────────────────────────────────────────────────────────
     if (cmd === '!equipes') {
-      const cd = checkCooldown(message.author.id, 'equipes', 10);
+      const cd = checkCooldown(message.author.id, 'equipes', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'equipes');
 
       const teams = await Team.find().sort({ points: -1 });
@@ -52,7 +52,7 @@ module.exports = (client) => {
 
     // ── !freeagents ────────────────────────────────────────────────────────────
     if (cmd === '!agentslibres') {
-      const cd = checkCooldown(message.author.id, 'freeagents', 15);
+      const cd = checkCooldown(message.author.id, 'freeagents', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'freeagents');
 
       const guildId = message.guild.id;
@@ -150,7 +150,7 @@ module.exports = (client) => {
 
     // ── !capitaine <équipe> [joueur] ───────────────────────────────────────────
     if (cmd === '!capitaine') {
-      const cd = checkCooldown(message.author.id, 'capitaine', 10);
+      const cd = checkCooldown(message.author.id, 'capitaine', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'capitaine');
 
       const rest = content.slice('!capitaine'.length).trim();
@@ -202,7 +202,7 @@ module.exports = (client) => {
 
     // ── !comparerjoueur <J1> | <J2> ───────────────────────────────────────────
     if (cmd === '!comparerjoueur') {
-      const cd = checkCooldown(message.author.id, 'comparerjoueur', 10);
+      const cd = checkCooldown(message.author.id, 'comparerjoueur', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'comparerjoueur');
 
       const rest  = content.slice('!comparerjoueur'.length).trim();

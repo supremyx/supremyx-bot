@@ -469,7 +469,7 @@ module.exports = (client) => {
 
     // ── !ia rapport <joueur> ─────────────────────────────────────────────────
     if (sub === 'rapport') {
-      const cd = checkCooldown(message.author.id, 'ia-rapport', 30);
+      const cd = checkCooldown(message.author.id, 'ia-rapport', 30, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'ia-rapport');
 
       const playerName = args.slice(1).join(' ').trim();
@@ -560,7 +560,7 @@ module.exports = (client) => {
 
     // ── !ia historique <joueur> ───────────────────────────────────────────────
     if (sub === 'historique') {
-      const cd = checkCooldown(message.author.id, 'ia-historique', 10);
+      const cd = checkCooldown(message.author.id, 'ia-historique', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'ia-historique');
 
       const playerName = args.slice(1).join(' ').trim();
@@ -827,7 +827,7 @@ module.exports = (client) => {
         '`!ia debrief statut` — Voir la configuration'
       );
 
-      const cd = checkCooldown(message.author.id, 'ia-debrief', 30);
+      const cd = checkCooldown(message.author.id, 'ia-debrief', 30, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'debrief');
 
       const thinking = await message.channel.send('🤖 Génération du débrief post-match...');
@@ -1225,7 +1225,7 @@ module.exports = (client) => {
       );
     }
 
-    const cd = checkCooldown(message.author.id, 'ia', 15);
+    const cd = checkCooldown(message.author.id, 'ia', 15, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'ia');
 
     const thinking = await message.channel.send('🤖 Réflexion en cours...');

@@ -4,6 +4,7 @@
  * !mvpmatch joueur <nom>             — MVPs d'un joueur
  */
 const { EmbedBuilder } = require('discord.js');
+const { escapeRegex } = require('../utils/lib');
 const MatchMVP   = require('../database/models/MatchMVP');
 const Match      = require('../database/models/Match');
 const PlayerStat = require('../database/models/PlayerStat');
@@ -44,7 +45,7 @@ module.exports = (client) => {
         const playerName = parts.slice(2).join(' ');
         if (!playerName) return message.reply('Usage : `!mvpmatch joueur <nom>`');
 
-        const mvps = await MatchMVP.find({ guildId, displayName: { $regex: new RegExp(playerName, 'i') } })
+        const mvps = await MatchMVP.find({ guildId, displayName: { $regex: new RegExp(escapeRegex(playerName), 'i') } })
           .sort({ awardedAt: -1 }).lean();
 
         if (!mvps.length) return message.reply(`📭 **${playerName}** n'a pas encore de titre MVP.`);
@@ -73,18 +74,21 @@ module.exports = (client) => {
         return message.reply('Usage : `!mvpmatch <id_match> <nom_joueur>` — ou `!mvpmatch liste` / `!mvpmatch joueur <nom>`');
 
       // Retrouver le match
-      const match = await Match.findOne({ _id: { $regex: new RegExp(matchIdShort, 'i') } }).lean()
-        .catch(async () => {
-          const all = await Match.find().sort({ createdAt: -1 }).limit(100).lean();
-          return all.find(m => m._id.toString().endsWith(matchIdShort));
-        });
+      // Search by suffix of ObjectId (hex, no special regex chars needed but escape for safety)
+      let match;
+      try {
+        match = await Match.findOne({ _id: { $regex: new RegExp(escapeRegex(matchIdShort), 'i') } }).lean();
+      } catch {
+        const all = await Match.find().sort({ createdAt: -1 }).limit(100).lean();
+        match = all.find(m => m._id.toString().endsWith(matchIdShort));
+      }
 
       if (!match) return message.reply(`❌ Match \`${matchIdShort}\` introuvable. Utilise les 6 derniers caractères de l'ID.`);
 
       // Trouver le joueur
       const stat = await PlayerStat.findOne({
         guildId,
-        displayName: { $regex: new RegExp(playerName, 'i') },
+        displayName: { $regex: new RegExp(escapeRegex(playerName), 'i') },
       }).lean();
 
       const displayName = stat?.displayName || playerName;

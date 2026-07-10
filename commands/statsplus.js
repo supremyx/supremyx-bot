@@ -23,7 +23,7 @@ module.exports = (client) => {
 
     // ── !moyenne <équipe> ──────────────────────────────────────────────────────
     if (cmd === '!moyenne') {
-      const cd = checkCooldown(message.author.id, 'moyenne', 10);
+      const cd = checkCooldown(message.author.id, 'moyenne', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'moyenne');
 
       const name = args.slice(1).join(' ').trim();
@@ -62,7 +62,7 @@ module.exports = (client) => {
 
     // ── !tendance <équipe> ─────────────────────────────────────────────────────
     if (cmd === '!tendance') {
-      const cd = checkCooldown(message.author.id, 'tendance', 10);
+      const cd = checkCooldown(message.author.id, 'tendance', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'tendance');
 
       const name = args.slice(1).join(' ').trim();
@@ -105,7 +105,7 @@ module.exports = (client) => {
 
     // ── !meilleurmatch <équipe> ────────────────────────────────────────────────
     if (cmd === '!meilleurmatch') {
-      const cd = checkCooldown(message.author.id, 'meilleurmatch', 10);
+      const cd = checkCooldown(message.author.id, 'meilleurmatch', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'meilleurmatch');
 
       const name = args.slice(1).join(' ').trim();
@@ -137,7 +137,7 @@ module.exports = (client) => {
 
     // ── !pirematch <équipe> ────────────────────────────────────────────────────
     if (cmd === '!pirematch') {
-      const cd = checkCooldown(message.author.id, 'pirematch', 10);
+      const cd = checkCooldown(message.author.id, 'pirematch', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'pirematch');
 
       const name = args.slice(1).join(' ').trim();
@@ -169,7 +169,7 @@ module.exports = (client) => {
 
     // ── !podium ────────────────────────────────────────────────────────────────
     if (cmd === '!podium') {
-      const cd = checkCooldown(message.author.id, 'podium', 10);
+      const cd = checkCooldown(message.author.id, 'podium', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'podium');
 
       const teams = await Team.find().sort({ points: -1 }).limit(3);
@@ -207,7 +207,7 @@ module.exports = (client) => {
 
     // ── !resume ────────────────────────────────────────────────────────────────
     if (cmd === '!resume') {
-      const cd = checkCooldown(message.author.id, 'resume', 15);
+      const cd = checkCooldown(message.author.id, 'resume', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'resume');
 
       const [activeTournoi, topTeams, recentMatches, nextMatch] = await Promise.all([
@@ -250,7 +250,7 @@ module.exports = (client) => {
 
     // ── !prediction <T1> <T2> ─────────────────────────────────────────────────
     if (cmd === '!prediction') {
-      const cd = checkCooldown(message.author.id, 'prediction', 10);
+      const cd = checkCooldown(message.author.id, 'prediction', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'prediction');
 
       const rest = args.slice(1).join(' ');

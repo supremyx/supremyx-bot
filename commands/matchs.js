@@ -7,7 +7,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (message.author.bot) return;
     if (message.content !== '!matchs') return;
-    const cd = checkCooldown(message.author.id, 'matchs', 15);
+    const cd = checkCooldown(message.author.id, 'matchs', 15, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'matchs');
 
     let matches, teams;

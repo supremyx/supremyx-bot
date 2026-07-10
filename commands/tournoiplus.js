@@ -26,7 +26,7 @@ module.exports = (client) => {
 
     // ── !vainqueurs ────────────────────────────────────────────────────────────
     if (cmd === '!vainqueurs') {
-      const cd = checkCooldown(message.author.id, 'vainqueurs', 10);
+      const cd = checkCooldown(message.author.id, 'vainqueurs', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'vainqueurs');
 
       const [tournaments, seasons] = await Promise.all([
@@ -60,7 +60,7 @@ module.exports = (client) => {
 
     // ── !prochainmatch ─────────────────────────────────────────────────────────
     if (cmd === '!prochainmatch') {
-      const cd = checkCooldown(message.author.id, 'prochainmatch', 10);
+      const cd = checkCooldown(message.author.id, 'prochainmatch', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'prochainmatch');
 
       const next = await Schedule.findOne({ date: { $gt: new Date() }, completed: false }).sort({ date: 1 });
@@ -132,7 +132,7 @@ module.exports = (client) => {
 
     // ── !saisoncourante ────────────────────────────────────────────────────────
     if (cmd === '!saisoncourante') {
-      const cd = checkCooldown(message.author.id, 'saisoncourante', 10);
+      const cd = checkCooldown(message.author.id, 'saisoncourante', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'saisoncourante');
 
       const [season, topTeams, matchCount] = await Promise.all([
@@ -163,7 +163,7 @@ module.exports = (client) => {
 
     // ── !classementsaison <nom> ────────────────────────────────────────────────
     if (cmd === '!classementsaison') {
-      const cd = checkCooldown(message.author.id, 'classementsaison', 10);
+      const cd = checkCooldown(message.author.id, 'classementsaison', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'classementsaison');
 
       const name = args.slice(1).join(' ').trim();

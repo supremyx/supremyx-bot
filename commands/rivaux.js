@@ -5,6 +5,7 @@
 const { EmbedBuilder } = require('discord.js');
 const Match = require('../database/models/Match');
 const Team  = require('../database/models/Team');
+const { escapeRegex } = require('../utils/lib');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -19,7 +20,7 @@ module.exports = (client) => {
 
       await message.channel.sendTyping();
 
-      const team = await Team.findOne({ name: { $regex: new RegExp(`^${teamName}$`, 'i') } }).lean();
+      const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } }).lean();
       if (!team) return message.reply(`❌ Équipe **${teamName}** introuvable.`);
 
       // Trouver tous les matchs de cette équipe

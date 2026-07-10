@@ -35,7 +35,8 @@ async function startReactionRoles(client) {
     const member = await guild.members.fetch(user.id).catch(() => null);
     if (!member) return;
 
-    const role = guild.roles.cache.get(entry.roleId);
+    let role = guild.roles.cache.get(entry.roleId);
+    if (!role) role = await guild.roles.fetch(entry.roleId).catch(() => null);
     if (!role) return;
 
     await member.roles.add(role).catch(() => {});
@@ -58,7 +59,8 @@ async function startReactionRoles(client) {
     const member = await guild.members.fetch(user.id).catch(() => null);
     if (!member) return;
 
-    const role = guild.roles.cache.get(entry.roleId);
+    let role = guild.roles.cache.get(entry.roleId);
+    if (!role) role = await guild.roles.fetch(entry.roleId).catch(() => null);
     if (!role) return;
 
     await member.roles.remove(role).catch(() => {});

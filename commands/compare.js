@@ -15,7 +15,7 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     try {
     if (!message.content.startsWith('!comparer')) return;
-    const cd = checkCooldown(message.author.id, 'compare', 5);
+    const cd = checkCooldown(message.author.id, 'compare', 5, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'compare');
 
     const args = message.content.split(' ').slice(1);

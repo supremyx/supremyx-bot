@@ -50,7 +50,7 @@ module.exports = (client) => {
 
     // ── !rebours <date> [événement] ───────────────────────────────────────────
     if (cmd === '!rebours') {
-      const cd = checkCooldown(message.author.id, 'rebours', 10);
+      const cd = checkCooldown(message.author.id, 'rebours', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'rebours');
 
       const rest = content.slice(cmd.length).trim();
@@ -90,7 +90,7 @@ module.exports = (client) => {
 
     // ── !tempsenligne ─────────────────────────────────────────────────────────
     if (cmd === '!tempsenligne') {
-      const cd = checkCooldown(message.author.id, 'tempsenligne', 10);
+      const cd = checkCooldown(message.author.id, 'tempsenligne', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'tempsenligne');
 
       const uptimeMs   = Date.now() - BOT_START;
@@ -115,7 +115,7 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const cd = checkCooldown(message.author.id, 'memoire', 10);
+      const cd = checkCooldown(message.author.id, 'memoire', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'memoire');
 
       const mem = process.memoryUsage();
@@ -141,7 +141,7 @@ module.exports = (client) => {
 
     // ── !lienbot ───────────────────────────────────────────────────────────────
     if (cmd === '!lienbot') {
-      const cd = checkCooldown(message.author.id, 'lienbot', 30);
+      const cd = checkCooldown(message.author.id, 'lienbot', 30, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'lienbot');
 
       const clientId = client.user.id;

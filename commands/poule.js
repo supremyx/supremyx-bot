@@ -56,7 +56,7 @@ module.exports = (client) => {
 
       // ── !poule liste ──────────────────────────────────────────────────────
       if (!sub || sub === 'liste') {
-        const cd = checkCooldown(message.author.id, 'poule-liste', 5);
+        const cd = checkCooldown(message.author.id, 'poule-liste', 5, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'poule-liste');
 
         const poules = await Poule.find({ guildId: message.guild.id }).sort({ letter: 1 });
@@ -75,7 +75,7 @@ module.exports = (client) => {
 
       // ── !poule classement <Lettre> ────────────────────────────────────────
       if (sub === 'classement') {
-        const cd = checkCooldown(message.author.id, 'poule-class', 5);
+        const cd = checkCooldown(message.author.id, 'poule-class', 5, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'poule-class');
 
         const letter = args[1]?.toUpperCase();
@@ -106,7 +106,7 @@ module.exports = (client) => {
 
       // ── !poule resultat <Lettre> ──────────────────────────────────────────
       if (sub === 'resultat' || sub === 'résultat') {
-        const cd = checkCooldown(message.author.id, 'poule-res', 5);
+        const cd = checkCooldown(message.author.id, 'poule-res', 5, message.guild?.id);
         if (cd) return replyCooldown(message, cd, 'poule-res');
 
         const letter = args[1]?.toUpperCase();

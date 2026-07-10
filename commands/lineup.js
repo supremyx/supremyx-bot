@@ -140,7 +140,7 @@ module.exports = (client) => {
         );
       }
 
-      const cd = checkCooldown(message.author.id, 'lineup', 5);
+      const cd = checkCooldown(message.author.id, 'lineup', 5, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'lineup');
 
       const team = await Team.findOne({ name: { $regex: new RegExp(`^${escapeRegex(teamName)}$`, 'i') } });

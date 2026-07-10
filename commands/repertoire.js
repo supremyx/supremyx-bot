@@ -347,7 +347,7 @@ module.exports = (client) => {
     if (message.author.bot) return;
     if (message.content.trim().toLowerCase() !== '!repertoire') return;
 
-    const cd = checkCooldown(message.author.id, 'repertoire', 10);
+    const cd = checkCooldown(message.author.id, 'repertoire', 10, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'repertoire');
 
     let page = 0;

@@ -586,7 +586,7 @@ module.exports = (client) => {
         return;
       }
 
-      const cd = checkCooldown(message.author.id, 'aidestaff', 10);
+      const cd = checkCooldown(message.author.id, 'aidestaff', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'aidestaff');
 
       const sent = await message.channel.send({
@@ -671,7 +671,7 @@ module.exports = (client) => {
         return;
       }
 
-      const cd = checkCooldown(message.author.id, 'aidestaff_nouveautes', 15);
+      const cd = checkCooldown(message.author.id, 'aidestaff_nouveautes', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'aidestaff nouveautes');
 
       const sent = await message.channel.send({ embeds: [buildNouveautesStaffEmbed(client)] });
@@ -707,7 +707,7 @@ module.exports = (client) => {
         return;
       }
 
-      const cd = checkCooldown(message.author.id, 'chercher_staff', 5);
+      const cd = checkCooldown(message.author.id, 'chercher_staff', 5, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'chercher staff');
 
       saveSearchTerm(message.author.id, message.guild.id, term, 'staff').catch(() => {});

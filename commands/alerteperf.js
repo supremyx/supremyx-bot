@@ -35,8 +35,7 @@ module.exports = (client) => {
               .setTimestamp();
             channel.send({ embeds: [embed] }).catch(() => {});
           }
-          alert.lastValue = team.points;
-          await alert.save();
+          await PerfAlert.findOneAndUpdate({ _id: alert._id }, { lastValue: team.points });
         }
 
         if (alert.type === 'podium') {
@@ -50,8 +49,7 @@ module.exports = (client) => {
               .setDescription(`🎉 **${team.name}** est maintenant dans le **top 3** !`)
               .setTimestamp();
             channel.send({ embeds: [embed] }).catch(() => {});
-            alert.lastValue = 1;
-            await alert.save();
+            await PerfAlert.findOneAndUpdate({ _id: alert._id }, { lastValue: 1 });
           } else if (!inPodium && wasIn) {
             const embed = new EmbedBuilder()
               .setColor(0xED4245)
@@ -59,8 +57,7 @@ module.exports = (client) => {
               .setDescription(`⚠️ **${team.name}** est sortie du **top 3**.`)
               .setTimestamp();
             channel.send({ embeds: [embed] }).catch(() => {});
-            alert.lastValue = 0;
-            await alert.save();
+            await PerfAlert.findOneAndUpdate({ _id: alert._id }, { lastValue: 0 });
           }
         }
       }

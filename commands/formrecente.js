@@ -13,7 +13,7 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (!message.member) return;
 
-      const cd = checkCooldown(message.author.id, 'formrecente', 10);
+      const cd = checkCooldown(message.author.id, 'formrecente', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'formrecente');
 
       const raw = content.slice('!formrecente'.length).trim();

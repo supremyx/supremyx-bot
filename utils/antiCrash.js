@@ -55,7 +55,6 @@ function setupAntiCrash(client) {
     logError({ source: 'clientError', error: err }).catch(() => {});
   });
 
-  process.removeAllListeners('unhandledRejection');
   process.on('unhandledRejection', (reason) => {
     const count = recordError();
     const msg = reason?.message ?? String(reason);
@@ -68,7 +67,6 @@ function setupAntiCrash(client) {
     }
   });
 
-  process.removeAllListeners('uncaughtException');
   process.on('uncaughtException', (error) => {
     const count = recordError();
     console.error(`[antiCrash] Exception non capturée (${count}/min): ${error.message}`);

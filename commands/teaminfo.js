@@ -17,7 +17,7 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (!content.startsWith('!infoequipe')) return;
 
-    const cd = checkCooldown(message.author.id, 'teaminfo', 8);
+    const cd = checkCooldown(message.author.id, 'teaminfo', 8, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'teaminfo');
 
     const name = content.slice('!infoequipe'.length).trim();

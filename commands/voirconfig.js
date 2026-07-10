@@ -35,7 +35,7 @@ module.exports = (client) => {
     if (!message.member.permissions.has('Administrator'))
       return message.reply('⛔ Cette commande est réservée au staff Administrateur.');
 
-    const cd = checkCooldown(message.author.id, 'voirconfig', 10);
+    const cd = checkCooldown(message.author.id, 'voirconfig', 10, message.guild?.id);
     if (cd) return replyCooldown(message, cd, 'voirconfig');
 
     try {

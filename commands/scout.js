@@ -17,7 +17,7 @@ module.exports = (client) => {
       const args    = content.slice('!depistage'.length).trim();
       const guildId = message.guild.id;
 
-      const cd = checkCooldown(message.author.id, 'depistage', 15);
+      const cd = checkCooldown(message.author.id, 'depistage', 15, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'depistage');
 
       // ── !depistage comparer <J1> vs <J2> ─────────────────────────────────────

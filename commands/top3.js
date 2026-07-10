@@ -13,7 +13,7 @@ module.exports = (client) => {
       if (message.author.bot) return;
       if (!message.content.startsWith('!top3')) return;
 
-      const cd = checkCooldown(message.author.id, 'top3', 10);
+      const cd = checkCooldown(message.author.id, 'top3', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'top3');
 
       const args = message.content.trim().split(/\s+/).slice(1);

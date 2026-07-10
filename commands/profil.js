@@ -21,7 +21,7 @@ module.exports = (client) => {
       if (message.author.bot)                       return;
       if (!message.content.startsWith('!profil'))   return;
 
-      const cd = checkCooldown(message.author.id, 'profil', 8);
+      const cd = checkCooldown(message.author.id, 'profil', 8, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'profil');
 
       const target = message.mentions.members.first() || message.member;

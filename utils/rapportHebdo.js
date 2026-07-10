@@ -25,12 +25,12 @@ async function buildRapportEmbed(client, guildId) {
     allTeams,
     topPlayers,
   ] = await Promise.all([
-    Match.find({ createdAt: { $gte: from } }),
+    Match.find({ createdAt: { $gte: from } }), // Note: Match model has no guildId field
     Sanction.find({ guildId, createdAt: { $gte: from } }),
     CommandStat.countDocuments({ guildId, usedAt: { $gte: from } }),
     XpEntry.countDocuments({ guildId, lastXpAt: { $gte: from } }),
     Team.find().lean(),
-    PlayerStat.find({ guildId }).lean(),
+    PlayerStat.find({ guildId, 'history.date': { $gte: from } }).lean(),
   ]);
 
   // ── Stats matchs ────────────────────────────────────────────────────────────

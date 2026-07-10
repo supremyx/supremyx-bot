@@ -1,4 +1,5 @@
 const Season = require('../database/models/Season');
+const { escapeRegex } = require('../utils/lib');
 const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
@@ -24,7 +25,7 @@ module.exports = (client) => {
       const name = args.slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!nouvellesaison <nom de la saison>`\nExemple : `!nouvellesaison Saison 2`');
 
-      const existing = await Season.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      const existing = await Season.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
       if (existing) return message.reply(`❌ Une saison nommée **${name}** existe déjà.`);
 
       const current = await Season.findOne({ active: true });
@@ -123,7 +124,7 @@ module.exports = (client) => {
 
       // Historical season
       if (seasonName) {
-        const season = await Season.findOne({ name: { $regex: new RegExp(seasonName, 'i') } });
+        const season = await Season.findOne({ name: { $regex: new RegExp(escapeRegex(seasonName), 'i') } });
         if (!season) return message.reply(`❌ Saison **${seasonName}** introuvable. Utilise \`!saisons\` pour voir la liste.`);
         if (season.active) return message.reply(`⚠️ La saison **${season.name}** est encore en cours. Utilise \`!classement\` pour le classement actuel.`);
         if (!season.snapshot.length) return message.reply('❌ Aucune donnée sauvegardée pour cette saison.');

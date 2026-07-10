@@ -17,7 +17,7 @@ module.exports = (client) => {
 
     // ── !progression [@user] ───────────────────────────────────────────────────
     if (cmd === '!progression') {
-      const cd = checkCooldown(message.author.id, 'progression', 10);
+      const cd = checkCooldown(message.author.id, 'progression', 10, message.guild?.id);
       if (cd) return replyCooldown(message, cd, 'progression');
 
       const target = message.mentions.members.first() ?? message.member;
