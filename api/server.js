@@ -2327,6 +2327,67 @@ router.delete('/actions/notes/:id', requireApiKey, async (req, res) => {
   }
 });
 
+// ─── Bad Words CRUD ───────────────────────────────────────────────────────────
+const BadWord = require('../database/models/BadWord');
+
+// GET /api/badwords?search=&limit=&skip=
+router.get('/badwords', publicLimiter, async (req, res) => {
+  try {
+    const { search = '', limit = 500, skip = 0 } = req.query;
+    const filter = search
+      ? { word: { $regex: new RegExp(escapeRegex(String(search)), 'i') } }
+      : {};
+    const [words, total] = await Promise.all([
+      BadWord.find(filter).sort({ word: 1 }).skip(Number(skip)).limit(Math.min(Number(limit), 1000)).lean(),
+      BadWord.countDocuments(filter),
+    ]);
+    res.json({ words, total });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/badwords  { word } or { words: [] }
+router.post('/badwords', requireApiKey, async (req, res) => {
+  try {
+    const list = req.body.words
+      ? req.body.words.map(w => String(w).trim().toLowerCase()).filter(Boolean)
+      : [String(req.body.word || '').trim().toLowerCase()].filter(Boolean);
+    if (!list.length) return res.status(400).json({ error: 'Aucun mot fourni' });
+    let added = 0, skipped = 0;
+    for (const word of list) {
+      try { await BadWord.create({ word, addedBy: 'Dashboard' }); added++; }
+      catch (e) { if (e.code === 11000) skipped++; else throw e; }
+    }
+    res.json({ success: true, added, skipped });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE /api/badwords/:id
+router.delete('/badwords/:id', requireApiKey, async (req, res) => {
+  try {
+    const doc = await BadWord.findByIdAndDelete(req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Mot introuvable' });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/badwords/bulk-delete  { ids: [] }
+router.post('/badwords/bulk-delete', requireApiKey, async (req, res) => {
+  try {
+    const ids = req.body.ids || [];
+    if (!ids.length) return res.status(400).json({ error: 'Aucun id fourni' });
+    const result = await BadWord.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, deleted: result.deletedCount });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/badwords/clear-all
+router.post('/badwords/clear-all', requireApiKey, async (req, res) => {
+  try {
+    const result = await BadWord.deleteMany({});
+    res.json({ success: true, deleted: result.deletedCount });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ─── Advanced AutoMod config ──────────────────────────────────────────────────
 const AutomodConfig  = require('../database/models/AutomodConfig');
 const AntispamConfig = require('../database/models/AntispamConfig');
