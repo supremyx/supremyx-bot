@@ -1,5 +1,6 @@
-const BadWord = require('../database/models/BadWord');
-const AutomodConfig = require('../database/models/AutomodConfig');
+const BadWord         = require('../database/models/BadWord');
+const AutomodConfig   = require('../database/models/AutomodConfig');
+const ViolationTracker= require('../database/models/ViolationTracker');
 const { EmbedBuilder } = require('discord.js');
 const { getLogChannelId } = require('./channelConfig');
 
@@ -24,8 +25,8 @@ function invalidateCache(guildId) {
 function normalize(text) {
   return text
     .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
-    .replace(/[^a-z0-9\s]/g, ' ')                    // remove special chars
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -39,6 +40,16 @@ function findMatches(text, words) {
   });
 }
 
+async function trackViolation(guildId, userId, threshold) {
+  const resetAt = new Date(Date.now() + 24 * 3600 * 1000);
+  const doc = await ViolationTracker.findOneAndUpdate(
+    { guildId, userId, type: 'badword' },
+    { $inc: { count: 1 }, $set: { lastAt: new Date(), resetAt } },
+    { upsert: true, new: true }
+  );
+  return doc.count;
+}
+
 async function startAutomod(client) {
   client.on('messageCreate', async message => {
     if (message.author.bot) return;
@@ -47,8 +58,17 @@ async function startAutomod(client) {
 
     try {
       const guildId = message.guild.id;
-      const config = await AutomodConfig.findOne({ guildId });
+      const config = await AutomodConfig.findOne({ guildId }) || await AutomodConfig.findOne({});
       if (config && !config.enabled) return;
+
+      // Exempt channels
+      if (config?.exemptChannels?.includes(message.channel.id)) return;
+
+      // Exempt roles
+      if (config?.exemptRoles?.length && message.member) {
+        const hasExempt = message.member.roles.cache.some(r => config.exemptRoles.includes(r.id));
+        if (hasExempt) return;
+      }
 
       const words = await getWords(guildId);
       if (!words.length) return;
@@ -56,8 +76,23 @@ async function startAutomod(client) {
       const matches = findMatches(message.content, words);
       if (!matches.length) return;
 
-      // React to flag the message
-      await message.react('🚨').catch(() => {});
+      // Auto-delete the message
+      const shouldDelete = config?.autoDelete !== false;
+      if (shouldDelete) {
+        await message.delete().catch(() => {});
+      } else {
+        await message.react('🚨').catch(() => {});
+      }
+
+      // Track violations and maybe timeout
+      const threshold = config?.violationThreshold ?? 3;
+      const violationCount = await trackViolation(guildId, message.author.id, threshold);
+
+      if (config?.autoTimeout && violationCount >= threshold && message.member) {
+        const minutes = config?.timeoutMinutes ?? 10;
+        await message.member.timeout(minutes * 60 * 1000, `AutoMod: ${violationCount} violations (mots interdits)`)
+          .catch(() => {});
+      }
 
       // Report to log channel
       const logChannelId = getLogChannelId();
@@ -77,7 +112,9 @@ async function startAutomod(client) {
           { name: '👤 Auteur', value: `${message.author} (${message.author.tag})`, inline: true },
           { name: '📍 Salon', value: `<#${message.channel.id}>`, inline: true },
           { name: '🔴 Mot(s) détecté(s)', value: matches.map(w => `\`${w}\``).join(', '), inline: false },
-          { name: '💬 Message', value: maskedContent.slice(0, 1000) }
+          { name: '💬 Message', value: maskedContent.slice(0, 1000) },
+          { name: '📊 Violations (24h)', value: `${violationCount} / ${threshold}`, inline: true },
+          { name: '⚡ Action', value: [shouldDelete ? '🗑️ Supprimé' : '🚩 Signalé', config?.autoTimeout && violationCount >= threshold ? `⏱️ Timeout ${config?.timeoutMinutes ?? 10}min` : ''].filter(Boolean).join(' · ') || '⚡ Signalé', inline: true },
         )
         .setThumbnail(message.author.displayAvatarURL())
         .setFooter({ text: `ID message : ${message.id}` })

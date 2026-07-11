@@ -2327,6 +2327,244 @@ router.delete('/actions/notes/:id', requireApiKey, async (req, res) => {
   }
 });
 
+// ─── Advanced AutoMod config ──────────────────────────────────────────────────
+const AutomodConfig  = require('../database/models/AutomodConfig');
+const AntispamConfig = require('../database/models/AntispamConfig');
+const AntiLinkConfig = require('../database/models/AntiLinkConfig');
+const AntiRaidConfig = require('../database/models/AntiRaidConfig');
+const AuditLog       = require('../database/models/AuditLog');
+const ServerBackup   = require('../database/models/ServerBackup');
+const MonitoringMetric = require('../database/models/MonitoringMetric');
+const { createBackup, restoreBackup, listBackups, deleteBackup } = require('../utils/serverBackup');
+const { unlockGuild } = require('../utils/antiRaid');
+
+router.get('/automod-config', publicLimiter, async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    const config  = guildId
+      ? await AutomodConfig.findOne({ guildId }).lean()
+      : await AutomodConfig.findOne({}).lean();
+    res.json({ config: config || { enabled: true, autoDelete: true, autoTimeout: false, timeoutMinutes: 10, violationThreshold: 3, exemptRoles: [], exemptChannels: [] } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/automod-config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, ...fields } = req.body;
+    const filter = guildId ? { guildId } : {};
+    const config = await AutomodConfig.findOneAndUpdate(filter, { $set: fields }, { upsert: true, new: true });
+    res.json({ success: true, config });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/antispam-config', publicLimiter, async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    const config  = guildId
+      ? await AntispamConfig.findOne({ guildId }).lean()
+      : await AntispamConfig.findOne({}).lean();
+    res.json({ config: config || { enabled: true, maxMessages: 5, windowSeconds: 5, autoDelete: true, autoTimeout: false, timeoutMinutes: 5, violationThreshold: 3 } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/antispam-config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, ...fields } = req.body;
+    const filter = guildId ? { guildId } : {};
+    const config = await AntispamConfig.findOneAndUpdate(filter, { $set: fields }, { upsert: true, new: true });
+    res.json({ success: true, config });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/antilink-config', publicLimiter, async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    if (!guildId) return res.json({ config: null });
+    const config = await AntiLinkConfig.findOne({ guildId }).lean();
+    res.json({ config: config || { enabled: false, blockDiscordInvites: true, blockExternalLinks: false, allowedDomains: [], action: 'delete_warn', timeoutSeconds: 300, violationThreshold: 3 } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/antilink-config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, ...fields } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const config = await AntiLinkConfig.findOneAndUpdate({ guildId }, { $set: fields }, { upsert: true, new: true });
+    res.json({ success: true, config });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/antiraid-config', publicLimiter, async (req, res) => {
+  try {
+    const guildId = req.query.guildId;
+    if (!guildId) return res.json({ config: null });
+    const config = await AntiRaidConfig.findOne({ guildId }).lean();
+    res.json({ config: config || { enabled: false, joinThreshold: 10, joinWindowSeconds: 10, minAccountAgeDays: 7, action: 'alert', autoUnlockMinutes: 30, lockdownActive: false, lockdownAt: null, lastRaidAt: null } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/antiraid-config', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, ...fields } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const config = await AntiRaidConfig.findOneAndUpdate({ guildId }, { $set: fields }, { upsert: true, new: true });
+    res.json({ success: true, config });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/antiraid/unlock', requireApiKey, async (req, res) => {
+  try {
+    const { guildId } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const guild = _discordClient?.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    await unlockGuild(guild, _discordClient);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+router.get('/audit-logs', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, category, severity, search, limit = 100 } = req.query;
+    const filter = {};
+    if (guildId)  filter.guildId  = guildId;
+    if (category && category !== 'all') filter.category = category;
+    if (severity  && severity  !== 'all') filter.severity  = severity;
+    if (search) {
+      const re = new RegExp(escapeRegex(String(search)), 'i');
+      filter.$or = [{ type: re }, { actorTag: re }, { targetTag: re }];
+    }
+    const logs = await AuditLog.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Math.min(Number(limit), 500))
+      .lean();
+    res.json({ logs });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Server Backup ────────────────────────────────────────────────────────────
+router.get('/backup', requireApiKey, async (req, res) => {
+  try {
+    const guildId = req.query.guildId || req.body?.guildId;
+    const backups = await listBackups(guildId, 50);
+    res.json({ backups });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/backup', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, name, createdBy } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    const backup = await createBackup(guildId, name || `Backup ${new Date().toISOString().slice(0, 19)}`, createdBy || 'API');
+    res.json({ success: true, backup });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/backup/:id/restore', requireApiKey, async (req, res) => {
+  try {
+    const results = await restoreBackup(req.params.id, req.body?.restoredBy || 'API');
+    res.json({ success: true, results });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/backup/:id', requireApiKey, async (req, res) => {
+  try {
+    const doc = await deleteBackup(req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Sauvegarde introuvable' });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Monitoring ───────────────────────────────────────────────────────────────
+router.get('/monitoring', publicLimiter, async (req, res) => {
+  try {
+    const mem  = process.memoryUsage();
+    const since24h = new Date(Date.now() - 86400000);
+    const [commandCount24h, errorCount24h] = await Promise.all([
+      CommandStat.countDocuments({ usedAt: { $gte: since24h } }).catch(() => 0),
+      require('../database/models/ErrorLog').countDocuments({ createdAt: { $gte: since24h } }).catch(() => 0),
+    ]);
+    res.json({
+      status:          'ok',
+      uptime:          Math.floor(process.uptime()),
+      memoryMB:        Math.round(mem.rss / 1024 / 1024),
+      heapUsedMB:      Math.round(mem.heapUsed / 1024 / 1024),
+      guildCount:      _discordClient?.guilds.cache.size ?? 0,
+      wsLatency:       _discordClient?.ws.ping ?? -1,
+      mongoStatus:     require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected',
+      commandCount24h,
+      errorCount24h,
+      nodeVersion:     process.version,
+      pid:             process.pid,
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/monitoring/history', publicLimiter, async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 60, 288);
+    const metrics = await MonitoringMetric.find({})
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+    res.json({ metrics: metrics.reverse() });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Command Statistics ───────────────────────────────────────────────────────
+router.get('/command-stats', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, period = '7d' } = req.query;
+    const periodMs = period === '24h' ? 86400000 : period === '30d' ? 30 * 86400000 : 7 * 86400000;
+    const since   = new Date(Date.now() - periodMs);
+    const filter  = guildId ? { guildId } : {};
+    const fRecent = { ...filter, usedAt: { $gte: since } };
+
+    const [total, total24h, total7d, topCommandsRaw, topUsersRaw, topChannelsRaw, dailyRaw] = await Promise.all([
+      CommandStat.countDocuments(filter),
+      CommandStat.countDocuments({ ...filter, usedAt: { $gte: new Date(Date.now() - 86400000) } }),
+      CommandStat.countDocuments({ ...filter, usedAt: { $gte: new Date(Date.now() - 7 * 86400000) } }),
+      CommandStat.aggregate([
+        { $match: fRecent },
+        { $group: { _id: '$command', count: { $sum: 1 }, lastUsed: { $max: '$usedAt' } } },
+        { $sort: { count: -1 } },
+        { $limit: 20 },
+      ]),
+      CommandStat.aggregate([
+        { $match: fRecent },
+        { $group: { _id: { userId: '$userId', username: '$username' }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 20 },
+      ]),
+      CommandStat.aggregate([
+        { $match: fRecent },
+        { $group: { _id: { channelId: '$channelId', channelName: '$channelName' }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+      CommandStat.aggregate([
+        { $match: fRecent },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$usedAt' } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+
+    res.json({
+      total,
+      total24h,
+      total7d,
+      topCommands: topCommandsRaw.map(r => ({ command: r._id, count: r.count, lastUsed: r.lastUsed })),
+      topUsers:    topUsersRaw.map(r => ({ userId: r._id.userId, username: r._id.username, count: r.count })),
+      topChannels: topChannelsRaw.map(r => ({ channelId: r._id.channelId, channelName: r._id.channelName || 'inconnu', count: r.count })),
+      daily:       dailyRaw.map(r => ({ date: r._id, count: r.count })),
+    });
+  } catch (err) {
+    console.error('[GET /command-stats]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);

@@ -16,3 +16,4 @@
 - [maintenanceGuard double-patch](maintenance-guard-patch.md) — use a `client.emit._supremyxPatched` flag to make `setupMaintenanceGuard` idempotent; without it, re-calling patches emit recursively.
 - [Python for file edits with backticks/dollars](python-file-edits.md) — use Python `str.replace()` for edits involving JS template literals or `$regex`; the Edit tool corrupts these strings silently (inserts instead of replaces).
 - [Note guild isolation](note-guild-isolation.md) — Note model lacked guildId; added field + filter in note.js, scout.js to prevent cross-server staff note leakage.
+- [Phase 2 new features](phase2-features.md) — Anti-Link/Raid/AuditLog/Backup/Monitoring added; VITE_BOT_API_KEY must match BOT_API_KEY for dashboard write endpoints.

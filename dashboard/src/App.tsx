@@ -36,13 +36,19 @@ import BadgesPage from "./pages/BadgesPage";
 import StatsServeurPage from "./pages/StatsServeurPage";
 import CommandCenterPage from "./pages/CommandCenterPage";
 import StatusPage from "./pages/StatusPage";
+import AutoModPage from "./pages/AutoModPage";
+import AntiRaidPage from "./pages/AntiRaidPage";
+import AuditLogsPage from "./pages/AuditLogsPage";
+import BackupPage from "./pages/BackupPage";
+import MonitoringPage from "./pages/MonitoringPage";
+import CommandStatsPage from "./pages/CommandStatsPage";
 import GlobalSearch from "./components/GlobalSearch";
 import NotificationBanner from "./components/NotificationBanner";
 import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status" | "automod" | "antiraid" | "audit-logs" | "backup" | "monitoring" | "cmdstats";
 
 interface Team {
   rank: number;
@@ -87,6 +93,12 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "commandcenter",     label: "Commandes",   icon: "🎛️" },
   { key: "status",            label: "Statut",      icon: "🩺" },
   { key: "parametres",        label: "Paramètres",  icon: "⚙️" },
+  { key: "automod",           label: "AutoMod",     icon: "🚨" },
+  { key: "antiraid",          label: "Anti-Raid",   icon: "🛡️" },
+  { key: "audit-logs",        label: "Audit Logs",  icon: "📋" },
+  { key: "backup",            label: "Sauvegarde",  icon: "💾" },
+  { key: "monitoring",        label: "Monitoring",  icon: "📡" },
+  { key: "cmdstats",          label: "Stats Cmds",  icon: "📊" },
 ];
 
 function useBotStatus() {
@@ -828,6 +840,12 @@ export default function App() {
       {page === "statsserveur"      && <StatsServeurPage />}
       {page === "commandcenter"     && <CommandCenterPage />}
       {page === "status"            && <StatusPage />}
+      {page === "automod"           && <AutoModPage />}
+      {page === "antiraid"          && <AntiRaidPage />}
+      {page === "audit-logs"        && <AuditLogsPage />}
+      {page === "backup"            && <BackupPage />}
+      {page === "monitoring"        && <MonitoringPage />}
+      {page === "cmdstats"          && <CommandStatsPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>

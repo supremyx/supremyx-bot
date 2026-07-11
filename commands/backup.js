@@ -1,71 +1,89 @@
+const { createBackup, restoreBackup, listBackups, deleteBackup } = require('../utils/serverBackup');
 const { EmbedBuilder } = require('discord.js');
-const { checkPerm, permDenied, LEVELS } = require('../utils/permissions');
-const { runBackup, startAutoBackup, stopAutoBackup, setBackupChannel, isEnabled, getIntervalHrs } = require('../utils/autoBackup');
-const { logAdmin } = require('../utils/adminLog');
+
+function fmtDate(d) {
+  return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
-    if (!message.content.trim().startsWith('!sauvegarde')) return;
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
+    if (!message.content.startsWith('!backup')) return;
 
-    if (!await checkPerm(message, LEVELS.ADMIN)) return permDenied(message, LEVELS.ADMIN);
+    if (!message.member.permissions.has('Administrator'))
+      return message.reply('🔒 Réservé aux administrateurs.');
 
-    const args = message.content.trim().split(/\s+/).slice(1);
-    const sub  = args[0]?.toLowerCase();
+    const guildId = message.guild.id;
+    const args    = message.content.split(/\s+/).slice(1);
+    const sub     = args[0]?.toLowerCase();
 
-    if (sub === 'automatique') {
-      const action = args[1]?.toLowerCase();
-      const hours  = parseInt(args[2]) || 24;
-      if (action === 'désactiver' || action === 'desactiver' || action === 'arreter' || action === 'arrêter') {
-        stopAutoBackup();
-        await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: 'Sauvegarde automatique désactivée', category: 'données', severity: 'warn' });
-        return message.reply('🔴 Sauvegarde automatique **désactivée**.');
-      }
-      startAutoBackup(client, hours);
-      await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: `Sauvegarde automatique activée (${hours}h)`, category: 'données', severity: 'info' });
-      return message.reply(`✅ Sauvegarde automatique **activée** toutes les **${hours}h**.\nFichiers envoyés dans le canal configuré.\n*(Utilise \`!sauvegarde automatique désactiver\` pour arrêter.)*`);
-    }
+    // List backups
+    if (!sub || sub === 'liste') {
+      const backups = await listBackups(guildId);
+      if (!backups.length) return message.reply('📂 Aucune sauvegarde pour ce serveur. Utilise `!backup creer` pour en créer une.');
 
-    if (sub === 'canal') {
-      const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('❌ Mentionne un salon : `!sauvegarde canal #salon`');
-      setBackupChannel(channel.id);
-      await logAdmin({ guildId: message.guild.id, guildName: message.guild.name, userId: message.author.id, userTag: message.author.tag, channelId: message.channel.id, action: `Canal de sauvegarde → #${channel.name}`, category: 'config', severity: 'info' });
-      return message.reply(`✅ Canal de sauvegarde défini : ${channel}`);
-    }
-
-    if (sub === 'statut') {
       const embed = new EmbedBuilder()
-        .setTitle('💾 Statut — Sauvegarde automatique')
-        .setColor(isEnabled() ? 0x57F287 : 0xED4245)
-        .addFields(
-          { name: '🔄 État',       value: isEnabled() ? '✅ Activée' : '🔴 Désactivée', inline: true },
-          { name: '⏱️ Intervalle', value: isEnabled() ? `${getIntervalHrs()}h` : '—',   inline: true },
-        )
-        .setTimestamp();
-      return message.channel.send({ embeds: [embed] });
+        .setTitle('💾 Sauvegardes du serveur')
+        .setColor(0x5865F2)
+        .setDescription(backups.map((b, i) =>
+          `**${i + 1}.** \`${b._id.toString().slice(-6)}\` · **${b.name}** · ${fmtDate(b.createdAt)}${b.restoredAt ? ` *(restauré le ${fmtDate(b.restoredAt)})*` : ''} · par ${b.createdBy}`
+        ).join('\n'))
+        .setFooter({ text: '!backup creer [nom] | !backup restaurer <id> | !backup supprimer <id>' });
+      return message.reply({ embeds: [embed] });
     }
 
-    message.channel.sendTyping().catch(() => {});
-    try {
-      const { embed, file } = await runBackup(client, {
-        manual: true,
-        requesterId: message.author.id,
-        requesterTag: message.author.tag,
-      });
+    if (sub === 'creer') {
+      const name = args.slice(1).join(' ') || `Sauvegarde ${new Date().toLocaleString('fr-FR')}`;
+      const msg  = await message.reply('⏳ Création de la sauvegarde en cours...');
       try {
-        const dm = await message.author.createDM();
-        await dm.send({ content: '**💾 Sauvegarde SUPREMYX** — Conserve ce fichier en lieu sûr.', files: [file] });
-        embed.setDescription((embed.data.description ?? '') + '\n\n📬 Fichier JSON envoyé en DM.');
-      } catch {
-        embed.setDescription((embed.data.description ?? '') + '\n\n⚠️ Impossible d\'envoyer en DM (messages privés fermés).');
+        const backup = await createBackup(guildId, name, message.author.tag);
+        await msg.edit(`✅ Sauvegarde **"${backup.name}"** créée (ID: \`${backup._id.toString().slice(-6)}\`)`);
+      } catch (err) {
+        await msg.edit(`❌ Erreur : ${err.message}`);
       }
-      return message.channel.send({ embeds: [embed] });
-    } catch (err) {
-      console.error('[backup] Erreur:', err);
-      return message.reply('❌ Erreur lors de la sauvegarde.');
+      return;
     }
+
+    if (sub === 'restaurer') {
+      const idPart = args[1];
+      if (!idPart) return message.reply('Usage : `!backup restaurer <id>` (les 6 derniers caractères de l\'ID)');
+
+      // Find by suffix
+      const backups = await listBackups(guildId, 50);
+      const backup  = backups.find(b => b._id.toString().endsWith(idPart) || b._id.toString().slice(-6) === idPart);
+      if (!backup) return message.reply(`❌ Sauvegarde \`${idPart}\` introuvable.`);
+
+      const confirm = await message.reply(`⚠️ Restaurer **"${backup.name}"** (${fmtDate(backup.createdAt)}) ? Cette action remplace les configurations actuelles. Réponds \`oui\` en moins de 30 secondes.`);
+      const filter  = m => m.author.id === message.author.id && m.content.toLowerCase() === 'oui';
+      try {
+        await message.channel.awaitMessages({ filter, max: 1, time: 30_000, errors: ['time'] });
+      } catch {
+        return confirm.edit('⛔ Restauration annulée (temps écoulé).');
+      }
+
+      const msg = await message.channel.send('⏳ Restauration en cours...');
+      try {
+        const results = await restoreBackup(backup._id.toString(), message.author.tag);
+        const summary = Object.entries(results).map(([m, n]) => `${m}: ${n}`).join(', ');
+        await msg.edit(`✅ Restauration terminée.\n\`\`\`${summary}\`\`\``);
+      } catch (err) {
+        await msg.edit(`❌ Erreur lors de la restauration : ${err.message}`);
+      }
+      return;
+    }
+
+    if (sub === 'supprimer') {
+      const idPart = args[1];
+      if (!idPart) return message.reply('Usage : `!backup supprimer <id>`');
+      const backups = await listBackups(guildId, 50);
+      const backup  = backups.find(b => b._id.toString().endsWith(idPart) || b._id.toString().slice(-6) === idPart);
+      if (!backup) return message.reply(`❌ Sauvegarde \`${idPart}\` introuvable.`);
+      await deleteBackup(backup._id.toString());
+      return message.reply(`🗑️ Sauvegarde **"${backup.name}"** supprimée.`);
+    }
+
+    return message.reply('❓ Usage : `!backup` | `!backup creer [nom]` | `!backup restaurer <id>` | `!backup supprimer <id>`');
   });
 };

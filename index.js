@@ -14,8 +14,12 @@ const BotInstance = require('./database/models/BotInstance');
 const crypto = require('crypto');
 const INSTANCE_ID = crypto.randomBytes(6).toString('hex');
 const { startReminder } = require('./utils/reminder');
-const { startAutomod } = require('./utils/automod');
-const { startAntispam } = require('./utils/antispam');
+const { startAutomod }      = require('./utils/automod');
+const { startAntispam }     = require('./utils/antispam');
+const { startAntiLink }     = require('./utils/antiLink');
+const { startAntiRaid }     = require('./utils/antiRaid');
+const { startAuditLogger }  = require('./utils/auditLogger');
+const { startMonitoring }   = require('./utils/monitoringManager');
 const { startReactionRoles } = require('./utils/reactionRoles');
 const { startSondageManager } = require('./utils/sondageManager');
 const { startSondageProgManager } = require('./utils/sondageProgManager');
@@ -89,6 +93,14 @@ client.once('clientReady', async () => {
   console.log('🚨 Système automod activé');
   startAntispam(client);
   console.log('⏱️ Système anti-spam activé');
+  startAntiLink(client);
+  console.log('🔗 Système anti-liens activé');
+  startAntiRaid(client);
+  console.log('🛡️ Système anti-raid activé');
+  startAuditLogger(client);
+  console.log('📋 Système audit logs activé');
+  startMonitoring(client);
+  console.log('📡 Système monitoring activé');
   startReactionRoles(client);
   console.log('🎭 Système reaction-roles activé');
   startSondageManager(client);
@@ -375,6 +387,15 @@ require('./commands/waitlist')(client);
 require('./commands/rapportHebdo')(client);
 
 // --- Nouvelles commandes v2 ---
+// --- Anti-liens ---
+require('./commands/antilink')(client);
+
+// --- Anti-raid ---
+require('./commands/antiraid')(client);
+
+// --- Sauvegarde/restauration ---
+require('./commands/backup')(client);
+
 require('./commands/elo')(client);
 require('./commands/statsserveur')(client);
 require('./commands/draft')(client);
