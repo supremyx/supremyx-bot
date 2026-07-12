@@ -11,6 +11,7 @@ const ScheduledEmbedSchema = new mongoose.Schema({
   authorName:   { type: String, default: '' },
   authorIconUrl:{ type: String, default: '' },
   footer:       { type: String, default: '' },
+  footerIconUrl:{ type: String, default: '' },
   scheduledAt:  { type: Date, required: true },
   createdBy:    { type: String, default: '' },
   sent:         { type: Boolean, default: false },

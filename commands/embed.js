@@ -91,9 +91,9 @@ const HELP_TEXT = [
   '`!embed riche aperçu | #salon | Titre | Description | couleur | image_url | pied de page` — prévisualiser avant publication',
   '',
   '**✨ Embed complet (toutes les fonctionnalités) :**',
-  '`!embed complet #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
+  '`!embed complet #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | footer_icon | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
   '`!embed complet aperçu | #salon | ...` — prévisualiser avant publication',
-  '`!embed complet modifier #salon | ID | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs` — éditer (`-` pour conserver un champ)',
+  '`!embed complet modifier #salon | ID | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | footer_icon | url_titre | boutons | champs` — éditer (`-` pour conserver un champ)',
   '`!embed complet programmer #salon | ... | YYYY-MM-DD HH:MM` — planifier',
   'Dans la description : `[texte](https://lien)` crée un lien cliquable.',
   '',
@@ -663,7 +663,7 @@ module.exports = (client) => {
 
         const COMPLET_USAGE = [
           '**✨ Embed complet — toutes les fonctionnalités :**',
-          '`!embed complet #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
+          '`!embed complet #salon | Titre | Description | couleur | image_url | thumbnail_url | auteur | auteur_icon_url | pied de page | footer_icon_url | url_titre | Bouton>>URL ; Bouton2>>URL2 | Champ::Valeur::oui ; Champ2::Valeur2`',
           '',
           '> Tous les champs après `#salon` sont **optionnels** — laisse vide (`||`) pour les ignorer.',
           '',
@@ -672,7 +672,7 @@ module.exports = (client) => {
           '• `image_url` — grande image en bas de l\'embed',
           '• `thumbnail_url` — petite image en haut à droite',
           '• `auteur` / `auteur_icon_url` — nom et icône au-dessus du titre',
-          '• `pied de page` — texte en bas de l\'embed',
+          '• `pied de page` / `footer_icon_url` — texte et petite icône en bas de l\'embed',
           '• `url_titre` — rend le titre cliquable (lien hypertexte)',
           '• `boutons` — jusqu\'à **25 boutons** URL séparés par `;` : `Texte>>https://... ; Texte2>>https://...` (5 par rangée, jusqu\'à 5 rangées)',
           '• `champs` — jusqu\'à 25 champs séparés par `;` : `Nom::Valeur::oui` (oui/non = inline)',
@@ -681,15 +681,15 @@ module.exports = (client) => {
           '`!embed complet aperçu | #salon | ...`',
           '',
           '**✏️ Modifier un embed existant :**',
-          '`!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs`',
+          '`!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | footer_icon | url_titre | boutons | champs`',
           '> Utilise `-` pour **conserver** la valeur actuelle d\'un champ.',
           '',
           '**🕐 Planifier :**',
-          '`!embed complet programmer #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs | YYYY-MM-DD HH:MM`',
+          '`!embed complet programmer #salon | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | footer_icon | url_titre | boutons | champs | YYYY-MM-DD HH:MM`',
           '',
           '**Exemple :**',
           '```',
-          '!embed complet #annonces | 🏆 Tournoi | Inscriptions ouvertes ! | or | https://img.jpg | https://logo.png | SUPREMYX | | Bonne chance ! | https://supremyx.gg | Rejoindre>>https://... ; Règles>>https://... | 📅 Date::15 Août::oui ; 🎮 Format::5v5::oui',
+          '!embed complet #annonces | 🏆 Tournoi | Inscriptions ouvertes ! | or | https://img.jpg | https://logo.png | SUPREMYX | | Bonne chance ! | https://icone-footer.png | https://supremyx.gg | Rejoindre>>https://... ; Règles>>https://... | 📅 Date::15 Août::oui ; 🎮 Format::5v5::oui',
           '```',
         ].join('\n');
 
@@ -705,10 +705,11 @@ module.exports = (client) => {
         const authorName   = parts[6] || '';
         const authorIcon   = parts[7] || '';
         const footer       = parts[8] || '';
-        const urlTitre     = parts[9] || '';
-        const boutonsRaw   = parts[10] || '';
-        const champsRaw    = parts[11] || '';
-        const dateRaw      = parts[12] || '';   // uniquement pour la planification
+        const footerIcon   = parts[9] || '';
+        const urlTitre     = parts[10] || '';
+        const boutonsRaw   = parts[11] || '';
+        const champsRaw    = parts[12] || '';
+        const dateRaw      = parts[13] || '';   // uniquement pour la planification
 
         // Helper : boutons séparés par `;`
         const parseButtonsComp = (raw) => raw.split(';').map(s => s.trim()).filter(Boolean).map(part => {
@@ -731,13 +732,13 @@ module.exports = (client) => {
         }).filter(Boolean).slice(0, 25);
 
         // Helper : construire l'embed complet
-        function buildCompletEmbed(t, d, cRaw, imgUrl, thumbUrl, aName, aIcon, ft, urlT) {
+        function buildCompletEmbed(t, d, cRaw, imgUrl, thumbUrl, aName, aIcon, ft, ftIcon, urlT) {
           const emb = new EmbedBuilder().setColor(parseColor(cRaw)).setTimestamp();
           if (t)       emb.setTitle(t);
           if (d)       emb.setDescription(d);
           if (imgUrl)  emb.setImage(imgUrl);
           if (thumbUrl) emb.setThumbnail(thumbUrl);
-          if (ft)      emb.setFooter({ text: ft });
+          if (ft)      emb.setFooter({ text: ft, iconURL: ftIcon || undefined });
           if (aName)   emb.setAuthor({ name: aName, iconURL: aIcon || undefined });
           if (urlT)    emb.setURL(urlT);
           return emb;
@@ -756,16 +757,17 @@ module.exports = (client) => {
           const mAuthorName = mParts[7] || '';
           const mAuthorIcon = mParts[8] || '';
           const mFooter     = mParts[9] || '';
-          const mUrlTitre   = mParts[10] || '';
-          const mBoutonsRaw = mParts[11] || '';
-          const mChampsRaw  = mParts[12] || '';
+          const mFooterIcon = mParts[10] || '';
+          const mUrlTitre   = mParts[11] || '';
+          const mBoutonsRaw = mParts[12] || '';
+          const mChampsRaw  = mParts[13] || '';
 
           if (!mChannelArg || !mMsgId) return message.reply([
-            '**Usage :** `!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | url_titre | boutons | champs`',
+            '**Usage :** `!embed complet modifier #salon | ID_message | Titre | Desc | couleur | image | thumbnail | auteur | auteur_icon | footer | footer_icon | url_titre | boutons | champs`',
             '> Utilise `-` pour **conserver** la valeur actuelle d\'un champ.',
             '',
             '**Exemple :**',
-            '`!embed complet modifier #annonces | 1234567890 | 🏆 Nouveau titre | - | or | - | https://logo.png | - | - | Bonne chance ! | https://supremyx.gg | Règles>>https://... | Date::15 Août::oui`',
+            '`!embed complet modifier #annonces | 1234567890 | 🏆 Nouveau titre | - | or | - | https://logo.png | - | - | Bonne chance ! | - | https://supremyx.gg | Règles>>https://... | Date::15 Août::oui`',
           ].join('\n'));
 
           const mTarget = resolveTarget(message, mChannelArg);
@@ -791,6 +793,7 @@ module.exports = (client) => {
           const newAuthorName = keep(mAuthorName) ? (prev.author?.name    || '') : mAuthorName;
           const newAuthorIcon = keep(mAuthorIcon) ? (prev.author?.iconURL || '') : mAuthorIcon;
           const newFooter     = keep(mFooter)     ? (prev.footer?.text    || '') : mFooter;
+          const newFooterIcon = keep(mFooterIcon) ? (prev.footer?.iconURL || '') : mFooterIcon;
           const newUrlTitre   = keep(mUrlTitre)   ? (prev.url             || '') : mUrlTitre;
 
           const updated = new EmbedBuilder().setColor(newColor).setTimestamp();
@@ -798,7 +801,7 @@ module.exports = (client) => {
           if (newDesc)       updated.setDescription(newDesc);
           if (newImage)      updated.setImage(newImage);
           if (newThumb)      updated.setThumbnail(newThumb);
-          if (newFooter)     updated.setFooter({ text: newFooter });
+          if (newFooter)     updated.setFooter({ text: newFooter, iconURL: newFooterIcon || undefined });
           if (newAuthorName) updated.setAuthor({ name: newAuthorName, iconURL: newAuthorIcon || undefined });
           if (newUrlTitre)   updated.setURL(newUrlTitre);
 
@@ -862,7 +865,7 @@ module.exports = (client) => {
           if (isNaN(scheduledAt.getTime())) return message.reply('❌ Date invalide.');
           if (scheduledAt <= new Date()) return message.reply('❌ La date doit être dans le futur.');
 
-          const previewEmbed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
+          const previewEmbed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, footerIcon, urlTitre);
           if (fields.length) previewEmbed.addFields(fields);
           const previewComponents = buttons.length ? buildButtonRows(buttons) : null;
 
@@ -880,6 +883,7 @@ module.exports = (client) => {
             authorName,
             authorIconUrl: authorIcon,
             footer,
+            footerIconUrl: footerIcon,
             scheduledAt,
             createdBy:    message.author.tag,
           });
@@ -926,7 +930,7 @@ module.exports = (client) => {
         }
 
         // ── Mode publication immédiate ──────────────────────────────────────
-        const embed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, urlTitre);
+        const embed = buildCompletEmbed(title, desc, colorRaw, imageUrl, thumbnailUrl, authorName, authorIcon, footer, footerIcon, urlTitre);
         if (fields.length) embed.addFields(fields);
 
         const components = buildButtonRows(buttons);

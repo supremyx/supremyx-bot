@@ -21,7 +21,7 @@ async function processDueEmbeds() {
         if (doc.description)  embed.setDescription(doc.description);
         if (doc.imageUrl)     embed.setImage(doc.imageUrl);
         if (doc.thumbnailUrl) embed.setThumbnail(doc.thumbnailUrl);
-        if (doc.footer)       embed.setFooter({ text: doc.footer });
+        if (doc.footer)       embed.setFooter({ text: doc.footer, iconURL: doc.footerIconUrl || undefined });
         if (doc.authorName) {
           embed.setAuthor({
             name:    doc.authorName,
