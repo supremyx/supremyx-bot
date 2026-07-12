@@ -93,9 +93,9 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   }
   ctx.restore();
 
-  // Diagonales argentées, un peu plus visibles
+  // Diagonales argentées, assombries de 50%
   ctx.save();
-  ctx.globalAlpha = 0.12;
+  ctx.globalAlpha = 0.06;
   ctx.fillStyle = '#ffffff';
   for (let i = -4; i < 14; i++) {
     ctx.beginPath();
@@ -139,26 +139,26 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   ctx.lineJoin = 'round';
   ctx.lineWidth = 3;
   ctx.strokeStyle = shade(gold, -20);
-  ctx.strokeText(titleText, 48, 74);
+  ctx.strokeText(titleText, 48, 94);
   ctx.fillStyle = silver;
-  ctx.fillText(titleText, 48, 74);
+  ctx.fillText(titleText, 48, 94);
 
   // Petit soulignement doré
   const underlineGrad = ctx.createLinearGradient(50, 0, 160, 0);
   underlineGrad.addColorStop(0, gold);
   underlineGrad.addColorStop(1, 'rgba(245,197,24,0)');
   ctx.fillStyle = underlineGrad;
-  ctx.fillRect(50, 132, 220, 5);
+  ctx.fillRect(50, 152, 220, 5);
 
   // Pseudo Discord de l'utilisateur (mis en avant, doré, sans "@")
   const username = member.user ? member.user.username : member.username;
   ctx.font = 'bold 30px sans-serif';
   ctx.fillStyle = gold;
-  ctx.fillText(username, 48, 150);
+  ctx.fillText(username, 48, 170);
 
   // Bannière du sous-titre (translucide, liseré doré)
   const subText = (subtitle || 'RALLIER • DOMINER • INSPIRER — BIENVENUE');
-  const bannerX = 48, bannerY = 200, bannerW = 560, bannerH = 100;
+  const bannerX = 48, bannerY = 220, bannerW = 560, bannerH = 100;
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   roundRect(ctx, bannerX, bannerY, bannerW, bannerH, 14);
   ctx.fill();
