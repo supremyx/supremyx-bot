@@ -1,7 +1,7 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const path = require('path');
 
-const LOGO_PATH = path.join(__dirname, '..', 'assets', 'supremyx_logo.png');
+const LOGO_PATH = path.join(__dirname, '..', 'assets', 'supremyx_logo_no_bg.png');
 let cachedLogo = null;
 async function getLogo() {
   if (cachedLogo) return cachedLogo;
@@ -67,11 +67,11 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   const gold = accentColor || '#F5C518';
   const silver = '#C7CDD4';
 
-  // Fond dégradé noir (façon "SUPREMYX")
+  // Fond dégradé noir (façon "SUPREMYX"), légèrement éclairci
   const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, shade(base, 10));
-  bgGrad.addColorStop(0.5, shade(base, -6));
-  bgGrad.addColorStop(1, shade(base, 14));
+  bgGrad.addColorStop(0, shade(base, 28));
+  bgGrad.addColorStop(0.5, shade(base, 14));
+  bgGrad.addColorStop(1, shade(base, 32));
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
@@ -93,10 +93,10 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   }
   ctx.restore();
 
-  // Diagonales argentées discrètes
+  // Diagonales argentées, un peu plus visibles
   ctx.save();
-  ctx.globalAlpha = 0.05;
-  ctx.fillStyle = silver;
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#ffffff';
   for (let i = -4; i < 14; i++) {
     ctx.beginPath();
     ctx.moveTo(i * 90, 0);
@@ -139,26 +139,26 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   ctx.lineJoin = 'round';
   ctx.lineWidth = 3;
   ctx.strokeStyle = shade(gold, -20);
-  ctx.strokeText(titleText, 48, 42);
+  ctx.strokeText(titleText, 48, 74);
   ctx.fillStyle = silver;
-  ctx.fillText(titleText, 48, 42);
+  ctx.fillText(titleText, 48, 74);
 
   // Petit soulignement doré
   const underlineGrad = ctx.createLinearGradient(50, 0, 160, 0);
   underlineGrad.addColorStop(0, gold);
   underlineGrad.addColorStop(1, 'rgba(245,197,24,0)');
   ctx.fillStyle = underlineGrad;
-  ctx.fillRect(50, 100, 220, 5);
+  ctx.fillRect(50, 132, 220, 5);
 
-  // Pseudo Discord de l'utilisateur (mis en avant, doré)
+  // Pseudo Discord de l'utilisateur (mis en avant, doré, sans "@")
   const username = member.user ? member.user.username : member.username;
   ctx.font = 'bold 30px sans-serif';
   ctx.fillStyle = gold;
-  ctx.fillText(`@${username}`, 48, 118);
+  ctx.fillText(username, 48, 150);
 
   // Bannière du sous-titre (translucide, liseré doré)
   const subText = (subtitle || 'RALLIER • DOMINER • INSPIRER — BIENVENUE');
-  const bannerX = 48, bannerY = 168, bannerW = 560, bannerH = 100;
+  const bannerX = 48, bannerY = 200, bannerW = 560, bannerH = 100;
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   roundRect(ctx, bannerX, bannerY, bannerW, bannerH, 14);
   ctx.fill();
