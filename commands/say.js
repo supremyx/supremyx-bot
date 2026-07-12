@@ -1,4 +1,5 @@
 const { staffLog } = require('../utils/staffLog');
+const SayLog = require('../database/models/SayLog');
 const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
   ModalBuilder, TextInputBuilder, TextInputStyle,
@@ -61,6 +62,17 @@ module.exports = (client) => {
           ].filter(Boolean).join('\n'),
           author: message.author.tag
         });
+
+        await SayLog.create({
+          guildId:     message.guild.id,
+          channelId:   targetChannel.id,
+          channelName: targetChannel.name,
+          authorId:    message.author.id,
+          authorTag:   message.author.tag,
+          content:     text,
+          mediaUrls:   attachments.map(a => a.url),
+        }).catch(err => console.error('[say] Erreur log historique :', err));
+
         return true;
       } catch (err) {
         console.error('[say] Erreur :', err);

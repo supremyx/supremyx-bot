@@ -39,6 +39,7 @@ import StatusPage from "./pages/StatusPage";
 import AutoModPage from "./pages/AutoModPage";
 import AntiRaidPage from "./pages/AntiRaidPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
+import SayLogsPage from "./pages/SayLogsPage";
 import BackupPage from "./pages/BackupPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import CommandStatsPage from "./pages/CommandStatsPage";
@@ -48,7 +49,7 @@ import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status" | "automod" | "antiraid" | "audit-logs" | "backup" | "monitoring" | "cmdstats";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status" | "automod" | "antiraid" | "audit-logs" | "backup" | "monitoring" | "cmdstats" | "say-logs";
 
 interface Team {
   rank: number;
@@ -96,6 +97,7 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "automod",           label: "AutoMod",     icon: "🚨" },
   { key: "antiraid",          label: "Anti-Raid",   icon: "🛡️" },
   { key: "audit-logs",        label: "Audit Logs",  icon: "📋" },
+  { key: "say-logs",          label: "Historique !dire", icon: "📢" },
   { key: "backup",            label: "Sauvegarde",  icon: "💾" },
   { key: "monitoring",        label: "Monitoring",  icon: "📡" },
   { key: "cmdstats",          label: "Stats Cmds",  icon: "📊" },
@@ -843,6 +845,7 @@ export default function App() {
       {page === "automod"           && <AutoModPage />}
       {page === "antiraid"          && <AntiRaidPage />}
       {page === "audit-logs"        && <AuditLogsPage />}
+      {page === "say-logs"          && <SayLogsPage />}
       {page === "backup"            && <BackupPage />}
       {page === "monitoring"        && <MonitoringPage />}
       {page === "cmdstats"          && <CommandStatsPage />}

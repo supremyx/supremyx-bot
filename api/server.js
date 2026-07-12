@@ -2394,6 +2394,7 @@ const AntispamConfig = require('../database/models/AntispamConfig');
 const AntiLinkConfig = require('../database/models/AntiLinkConfig');
 const AntiRaidConfig = require('../database/models/AntiRaidConfig');
 const AuditLog       = require('../database/models/AuditLog');
+const SayLog         = require('../database/models/SayLog');
 const ServerBackup   = require('../database/models/ServerBackup');
 const MonitoringMetric = require('../database/models/MonitoringMetric');
 const { createBackup, restoreBackup, listBackups, deleteBackup } = require('../utils/serverBackup');
@@ -2497,6 +2498,25 @@ router.get('/audit-logs', publicLimiter, async (req, res) => {
       filter.$or = [{ type: re }, { actorTag: re }, { targetTag: re }];
     }
     const logs = await AuditLog.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Math.min(Number(limit), 500))
+      .lean();
+    res.json({ logs });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── Historique !dire ──────────────────────────────────────────────────────────
+router.get('/say-logs', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, channelId, search, limit = 100 } = req.query;
+    const filter = {};
+    if (guildId)   filter.guildId   = guildId;
+    if (channelId) filter.channelId = channelId;
+    if (search) {
+      const re = new RegExp(escapeRegex(String(search)), 'i');
+      filter.$or = [{ content: re }, { authorTag: re }, { channelName: re }];
+    }
+    const logs = await SayLog.find(filter)
       .sort({ createdAt: -1 })
       .limit(Math.min(Number(limit), 500))
       .lean();
