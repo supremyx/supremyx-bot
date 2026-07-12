@@ -109,7 +109,7 @@ module.exports = (client) => {
       }
 
       // ── !dispo résumé — vue globale serveur ───────────────────────────────
-      if (sub === 'résumé' || sub === 'resume' || sub === 'résume') {
+      if (sub === 'résumé' || sub === 'résume') {
         if (!isStaff) return message.reply('⛔ Staff uniquement.');
         const allDispos = await Disponibilite.find({ guildId, scheduleId: null }).lean();
         if (!allDispos.length) return message.reply('📭 Aucune disponibilité déclarée pour le prochain match.');

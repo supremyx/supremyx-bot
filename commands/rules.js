@@ -8,7 +8,7 @@ module.exports = (client) => {
     const content = message.content.trim();
     if (
       !content.startsWith('!regles') &&
-      !content.startsWith('!setregles') &&
+      !content.startsWith('!definirregles') &&
       !content.startsWith('!ajouterregle') &&
       !content.startsWith('!supprimerregle') &&
       !content.startsWith('!modifierregle') &&
@@ -27,7 +27,7 @@ module.exports = (client) => {
     if (cmd === '!regles') {
       const doc = await Rules.findOne();
       if (!doc || !doc.rules.length)
-        return message.reply('Aucune règle de tournoi définie. Un staff peut en ajouter avec `!setrules`.');
+        return message.reply('Aucune règle de tournoi définie. Un staff peut en ajouter avec `!definirregles`.');
 
       const rulesText = doc.rules.map((r, i) => `**${i + 1}.** ${r}`).join('\n');
       const lastUpdate = new Date(doc.updatedAt).toLocaleDateString('fr-FR');
@@ -42,15 +42,15 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // ─── !setrules <titre> | règle1 | règle2 | ... ────────────────
-    if (cmd === '!setregles') {
+    // ─── !definirregles <titre> | règle1 | règle2 | ... ────────────
+    if (cmd === '!definirregles') {
       if (!isStaff) return message.reply('❌ Staff uniquement.');
 
-      const raw = content.slice('!setregles'.length).trim();
+      const raw = content.slice('!definirregles'.length).trim();
       if (!raw)
         return message.reply(
-          '**Usage :** `!setregles <titre> | <règle1> | <règle2> | ...`\n' +
-          '**Exemple :** `!setregles Règles S2 | Pas de cheating | Respect obligatoire`'
+          '**Usage :** `!definirregles <titre> | <règle1> | <règle2> | ...`\n' +
+          '**Exemple :** `!definirregles Règles S2 | Pas de cheating | Respect obligatoire`'
         );
 
       const parts = raw.split('|').map(p => p.trim()).filter(Boolean);
@@ -69,7 +69,7 @@ module.exports = (client) => {
       const embed = new EmbedBuilder()
         .setTitle('✅ Règles mises à jour')
         .setColor(0x57F287)
-        .setDescription(`**${rules.length}** règle(s) enregistrée(s) sous **${title}**.\nUtilise \`!rules\` pour les afficher.`)
+        .setDescription(`**${rules.length}** règle(s) enregistrée(s) sous **${title}**.\nUtilise \`!regles\` pour les afficher.`)
         .setFooter({ text: `Défini par ${message.author.tag}` })
         .setTimestamp();
 
@@ -85,7 +85,7 @@ module.exports = (client) => {
       if (!rule) return message.reply('Usage : `!ajouterregle <texte de la règle>`');
 
       let doc = await Rules.findOne();
-      if (!doc) return message.reply('❌ Aucune règle définie. Utilise d\'abord `!setrules` pour créer la liste.');
+      if (!doc) return message.reply('❌ Aucune règle définie. Utilise d\'abord `!definirregles` pour créer la liste.');
 
       doc.rules.push(rule);
       doc.updatedBy = message.author.tag;
@@ -172,7 +172,7 @@ module.exports = (client) => {
       await doc.save();
 
       logStaffAction(client, `🗑️ **Toutes les règles effacées** — ${count} règle(s) | Par : ${message.author.tag}`);
-      return message.reply(`✅ **${count}** règle(s) supprimée(s). Utilise \`!setrules\` pour en redéfinir.`);
+      return message.reply(`✅ **${count}** règle(s) supprimée(s). Utilise \`!definirregles\` pour en redéfinir.`);
     }
     } catch (err) {
       console.error('[rules] Erreur:', err);

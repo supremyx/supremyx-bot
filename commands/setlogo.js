@@ -14,8 +14,7 @@ module.exports = (client) => {
       if (!message.member.permissions.has('Administrator'))
         return message.reply('⛔ Staff uniquement.');
 
-      const _slCmd = content.startsWith('!configlogo') ? '!configlogo' : '!setlogo';
-      const rest = content.slice(_slCmd.length).trim();
+      const rest = content.slice('!configlogo'.length).trim();
       const pipeIdx = rest.indexOf('|');
 
       if (pipeIdx === -1 || !rest.slice(0, pipeIdx).trim() || !rest.slice(pipeIdx + 1).trim()) {

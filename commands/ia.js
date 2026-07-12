@@ -440,8 +440,8 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
-    // ── !ia resume ────────────────────────────────────────────────────────────
-    if (sub === 'resume' || sub === 'résumé') {
+    // ── !ia résumé ────────────────────────────────────────────────────────────
+    if (sub === 'résumé') {
       const thinking = await message.channel.send('🤖 Rédaction du résumé...');
       const [tourn, topTeams, recentMatches] = await Promise.all([
         Tournament.findOne({ active: true }),

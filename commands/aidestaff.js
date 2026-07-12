@@ -422,7 +422,7 @@ const STAFF_CATEGORIES = [
       { label: '!renommerticket <titre>',       description: 'Renommer le salon du ticket (Staff)',                             subs: [] },
       { label: '!configticket rolstaff',        description: 'Configurer le système de tickets (Staff)',                        subs: ['rolstaff @role — Rôle staff', 'transcription #salon — Salon transcriptions', 'categorie <id> — Catégorie Discord'] },
       { label: '!reglement titre <texte>',      description: 'Configurer le règlement avancé par sections (Staff)',             subs: ['titre <texte> — Titre', 'intro <texte> — Introduction', 'section <nom> — Ajouter section', 'ajouter <section> <texte> — Règle', 'modifier <section> <num> <texte> — Modifier', 'supprimer <section> <num> — Supprimer', 'publier — Publier', 'actualiser — Mettre à jour', 'reinitialiser — Réinitialiser'] },
-      { label: '!ajouterregle <texte>',         description: 'Ajouter une règle simple au règlement du serveur (Staff)',        subs: ['ajouterregle <texte> — Ajouter', 'modifierregle <num> <texte> — Modifier', 'supprimerregle <num> — Supprimer', 'deplacerregle <de> <vers> — Déplacer', 'effacerregles — Tout supprimer', 'setregles — Config salon+auteur'] },
+      { label: '!ajouterregle <texte>',         description: 'Ajouter une règle simple au règlement du serveur (Staff)',        subs: ['ajouterregle <texte> — Ajouter', 'modifierregle <num> <texte> — Modifier', 'supprimerregle <num> — Supprimer', 'deplacerregle <de> <vers> — Déplacer', 'effacerregles — Tout supprimer', 'definirregles — Config salon+auteur'] },
     ],
   },
   {
