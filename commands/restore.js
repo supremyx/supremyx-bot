@@ -27,7 +27,7 @@ module.exports = (client) => {
 
     const attachment = message.attachments.first();
     if (!attachment || !attachment.name.endsWith('.json'))
-      return message.reply('Attache un fichier `.json` de backup à ton message.\nExemple : `!restore` + fichier `backup_moseto_XX-XX-XXXX.json`');
+      return message.reply('Attache un fichier `.json` de sauvegarde à ton message.\nExemple : `!restaurer` + fichier `backup_moseto_XX-XX-XXXX.json`');
 
     const waiting = await message.reply('⏳ Restauration en cours...');
 

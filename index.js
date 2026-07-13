@@ -393,9 +393,6 @@ require('./commands/antilink')(client);
 // --- Anti-raid ---
 require('./commands/antiraid')(client);
 
-// --- Sauvegarde/restauration ---
-require('./commands/backup')(client);
-
 require('./commands/elo')(client);
 require('./commands/statsserveur')(client);
 require('./commands/draft')(client);

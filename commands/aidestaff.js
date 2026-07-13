@@ -193,7 +193,7 @@ const STAFF_CATEGORIES = [
       { label: '!infoutilisateur [@membre]',     description: 'Infos Discord d\'un membre : niveau, rôles, sanctions',          subs: [] },
       { label: '!inforole @role',                description: 'Détails d\'un rôle Discord (membres, permissions, couleur)',     subs: [] },
       { label: '!infoserveur',                   description: 'Informations générales sur le serveur (membres, salons, boosts)', subs: [] },
-      { label: '!latence / !ping',                description: 'Latence du bot et de l\'API Discord (temps de réponse en ms)', subs: [] },
+      { label: '!latence',                description: 'Latence du bot et de l\'API Discord (temps de réponse en ms)', subs: [] },
       { label: '!statut',                        description: 'Statut du bot et aperçu des tournois en cours',                  subs: [] },
       { label: '!tempsenligne',                  description: 'Temps de fonctionnement du bot depuis le dernier démarrage',     subs: [] },
       { label: '!commandes',                     description: 'Classement des commandes les plus utilisées sur le serveur',     subs: [] },

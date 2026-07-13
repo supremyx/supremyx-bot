@@ -68,7 +68,7 @@ module.exports = {
   'note.js':           { commands: ['!note <équipe> <texte>', '!notes <équipe>', '!supprimenote <id>'],                                       staff: true },
   'notifequipe.js':    { commands: ['!notifequipe <équipe> | <message>'],                                                                     staff: true },
   'objectif.js':       { commands: ['!objectif voir|progression|definir|supprimer|liste'],                                                   staff: 'mixed' },
-  'ping.js':           { commands: ['!ping'],                                                                                                  staff: false },
+  'ping.js':           { commands: ['!latence'],                                                                                               staff: false },
   'planifier.js':      { commands: ['!planifier creer|liste|voir|modifier|supprimer|pause|dupliquer|tester'],                                staff: true },
   'playerstats.js':    { commands: ['!statsjoueur <nom>', '!classjoueurs', '!matchjoueur <équipe> <joueur> <kills>', '!reinitjoueur <équipe> <nom>'], staff: 'mixed' },
   'poll.js':           { commands: ['!vote <question>', '!sondage <durée> <question> | <opt…>', '!sondage programmer|planifie'],             staff: 'mixed' },

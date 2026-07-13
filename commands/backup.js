@@ -10,7 +10,7 @@ module.exports = (client) => {
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
-    if (!message.content.startsWith('!backup')) return;
+    if (!message.content.startsWith('!sauvegarde')) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('🔒 Réservé aux administrateurs.');
@@ -22,7 +22,7 @@ module.exports = (client) => {
     // List backups
     if (!sub || sub === 'liste') {
       const backups = await listBackups(guildId);
-      if (!backups.length) return message.reply('📂 Aucune sauvegarde pour ce serveur. Utilise `!backup creer` pour en créer une.');
+      if (!backups.length) return message.reply('📂 Aucune sauvegarde pour ce serveur. Utilise `!sauvegarde creer` pour en créer une.');
 
       const embed = new EmbedBuilder()
         .setTitle('💾 Sauvegardes du serveur')
@@ -30,7 +30,7 @@ module.exports = (client) => {
         .setDescription(backups.map((b, i) =>
           `**${i + 1}.** \`${b._id.toString().slice(-6)}\` · **${b.name}** · ${fmtDate(b.createdAt)}${b.restoredAt ? ` *(restauré le ${fmtDate(b.restoredAt)})*` : ''} · par ${b.createdBy}`
         ).join('\n'))
-        .setFooter({ text: '!backup creer [nom] | !backup restaurer <id> | !backup supprimer <id>' });
+        .setFooter({ text: '!sauvegarde creer [nom] | !sauvegarde restaurer <id> | !sauvegarde supprimer <id>' });
       return message.reply({ embeds: [embed] });
     }
 
@@ -48,7 +48,7 @@ module.exports = (client) => {
 
     if (sub === 'restaurer') {
       const idPart = args[1];
-      if (!idPart) return message.reply('Usage : `!backup restaurer <id>` (les 6 derniers caractères de l\'ID)');
+      if (!idPart) return message.reply('Usage : `!sauvegarde restaurer <id>` (les 6 derniers caractères de l\'ID)');
 
       // Find by suffix
       const backups = await listBackups(guildId, 50);
@@ -76,7 +76,7 @@ module.exports = (client) => {
 
     if (sub === 'supprimer') {
       const idPart = args[1];
-      if (!idPart) return message.reply('Usage : `!backup supprimer <id>`');
+      if (!idPart) return message.reply('Usage : `!sauvegarde supprimer <id>`');
       const backups = await listBackups(guildId, 50);
       const backup  = backups.find(b => b._id.toString().endsWith(idPart) || b._id.toString().slice(-6) === idPart);
       if (!backup) return message.reply(`❌ Sauvegarde \`${idPart}\` introuvable.`);
@@ -84,6 +84,6 @@ module.exports = (client) => {
       return message.reply(`🗑️ Sauvegarde **"${backup.name}"** supprimée.`);
     }
 
-    return message.reply('❓ Usage : `!backup` | `!backup creer [nom]` | `!backup restaurer <id>` | `!backup supprimer <id>`');
+    return message.reply('❓ Usage : `!sauvegarde` | `!sauvegarde creer [nom]` | `!sauvegarde restaurer <id>` | `!sauvegarde supprimer <id>`');
   });
 };
