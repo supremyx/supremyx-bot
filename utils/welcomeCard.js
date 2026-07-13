@@ -95,7 +95,7 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
 
   // Diagonales argentées, assombries de 50%
   ctx.save();
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.03;
   ctx.fillStyle = '#ffffff';
   for (let i = -4; i < 14; i++) {
     ctx.beginPath();
