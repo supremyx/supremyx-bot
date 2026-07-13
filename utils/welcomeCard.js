@@ -67,12 +67,29 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   const gold = accentColor || '#F5C518';
   const silver = '#C7CDD4';
 
-  // Fond dégradé noir (façon "SUPREMYX"), légèrement éclairci
-  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, shade(base, 28));
-  bgGrad.addColorStop(0.5, shade(base, 14));
-  bgGrad.addColorStop(1, shade(base, 32));
-  ctx.fillStyle = bgGrad;
+  // Fond en rayures diagonales orange / blanc / vert (même inclinaison que les rayures d'accent)
+  const stripeColors = ['#F7941D', '#FFFFFF', '#009E49'];
+  const stripeW = 90;
+  const slant = -170;
+  ctx.save();
+  for (let i = -4; i < Math.ceil(W / stripeW) + 6; i++) {
+    ctx.fillStyle = stripeColors[((i % stripeColors.length) + stripeColors.length) % stripeColors.length];
+    ctx.beginPath();
+    ctx.moveTo(i * stripeW, 0);
+    ctx.lineTo((i + 1) * stripeW, 0);
+    ctx.lineTo((i + 1) * stripeW + slant, H);
+    ctx.lineTo(i * stripeW + slant, H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Voile sombre dégradé (lisibilité du texte à gauche, rayures bien visibles à droite)
+  const scrim = ctx.createLinearGradient(0, 0, W, 0);
+  scrim.addColorStop(0, 'rgba(8,8,8,0.78)');
+  scrim.addColorStop(0.55, 'rgba(8,8,8,0.38)');
+  scrim.addColorStop(1, 'rgba(8,8,8,0.08)');
+  ctx.fillStyle = scrim;
   ctx.fillRect(0, 0, W, H);
 
   // Rayons dorés en éventail (rappel de l'étoile du logo)
