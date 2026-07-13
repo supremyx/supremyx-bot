@@ -17,3 +17,4 @@
 - [Python for file edits with backticks/dollars](python-file-edits.md) — use Python `str.replace()` for edits involving JS template literals or `$regex`; the Edit tool corrupts these strings silently (inserts instead of replaces).
 - [Note guild isolation](note-guild-isolation.md) — Note model lacked guildId; added field + filter in note.js, scout.js to prevent cross-server staff note leakage.
 - [Phase 2 new features](phase2-features.md) — Anti-Link/Raid/AuditLog/Backup/Monitoring added; VITE_BOT_API_KEY must match BOT_API_KEY for dashboard write endpoints.
+- [Welcome subtitle precedence](welcome-subtitle-precedence.md) — real welcome-card subtitle comes from the Mongoose schema default/DB doc in WelcomeConfig.js, not the dead fallback strings in welcomeCard.js/welcome.js.

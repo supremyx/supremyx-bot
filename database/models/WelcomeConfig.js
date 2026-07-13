@@ -6,7 +6,7 @@ const welcomeConfigSchema = new mongoose.Schema({
   message: { type: String, default: 'Bienvenue {user} sur **{server}** ! 🎉 Tu es notre **{count}e** membre.' },
   enabled: { type: Boolean, default: true },
   cardTitle: { type: String, default: 'BIENVENUE' },
-  cardSubtitle: { type: String, default: 'RALLIER • DOMINER • INSPIRER — BIENVENUE SUR {server}' },
+  cardSubtitle: { type: String, default: 'WELCOME — BIENVENIDO — مرحباً' },
   cardColor: { type: String, default: '#0A0A0A' },
   cardAccentColor: { type: String, default: '#F5C518' }
 }, { timestamps: true });
