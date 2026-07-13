@@ -84,6 +84,10 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   }
   ctx.restore();
 
+  // Assombrissement global des rayures (80%)
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, W, H);
+
   // Voile sombre dégradé (lisibilité du texte à gauche, rayures bien visibles à droite)
   const scrim = ctx.createLinearGradient(0, 0, W, 0);
   scrim.addColorStop(0, 'rgba(8,8,8,0.78)');
