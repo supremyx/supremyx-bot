@@ -178,7 +178,7 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   ctx.fillText(username, 48, 170);
 
   // Bannière du sous-titre (translucide, liseré doré)
-  const subText = (subtitle || 'WELCOME — BIENVENIDO');
+  const subText = (subtitle || 'RALLIER • DOMINER • INSPIRER — BIENVENUE SUR SUPREMYX');
   const bannerX = 48, bannerY = 220, bannerW = 560, bannerH = 100;
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   roundRect(ctx, bannerX, bannerY, bannerW, bannerH, 14);
