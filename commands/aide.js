@@ -124,7 +124,7 @@ const CATEGORIES = [
       { label: '!mvpsaison',                           description: 'MVP All-Time : meilleure équipe toutes saisons confondues', subs: [] },
       { label: '!trophees <équipe>',                   description: 'Voir tous les trophées obtenus par une équipe',          subs: [] },
       { label: '!poule <Lettre>: <Eq1, Eq2, …>',      description: 'Créer/gérer un groupe de tournoi (poule A, B, C…)',      subs: ['creer <Lettre>: <Eq1,Eq2> — Créer', 'classement <Lettre> — Classement du groupe', 'resultat <Lettre> — Résultats du groupe', 'liste — Voir tous les groupes'] },
-      { label: '!recapitulatif [nom_tournoi]',          description: 'Récapitulatif automatique complet d\'un tournoi',        subs: [] },
+      { label: '!recapitulatif [nom_tournoi]',          description: 'Récapitulatif automatique complet d\'un tournoi (alias : !recap)',        subs: [] },
       { label: '!pronostic <T1> vs <T2>',              description: 'Faire un pronostic sur un match à venir',               subs: ['<T1> vs <T2> — Faire un pronostic', 'resultats — Voir ses pronostics', 'classement — Top pronostiqueurs'] },
       { label: '!dispo <oui|non|incertain>',           description: 'Déclarer sa disponibilité pour le prochain match',      subs: ['<oui|non|incertain> [raison] — Déclaration générale', 'match <id> <oui|non|incertain> — Dispo pour un match précis (ID via !calendrier)', 'voir — Voir sa déclaration actuelle'] },
       { label: '!listedattente',                       description: 'Voir la liste d\'attente du tournoi actif (places limitées)', subs: [] },
