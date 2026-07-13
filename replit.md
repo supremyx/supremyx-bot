@@ -43,3 +43,9 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 ## User preferences
 
 - Keep existing project structure — do not restructure or migrate.
+
+## Setup status (2026-07-13)
+
+- Dependencies installed via `npm install` at the repo root and inside `dashboard/`.
+- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`. `GITHUB_TOKEN` was intentionally skipped — the **Auto-push GitHub** workflow fails harmlessly without it.
+- Bot is online (logged in, MongoDB connected) and the dashboard renders correctly on port 5000.
