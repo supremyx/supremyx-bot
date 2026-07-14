@@ -51,7 +51,6 @@ module.exports = {
   'inscription.js':    { commands: ['!inscription ouvrir|fermer|liste|valider|refuser|max|salon|annonces|reinitialiser'],                    staff: true },
   'inscrire.js':       { commands: ['!inscrire <équipe> | <J1,J2,…>'],                                                                       staff: false },
   'level.js':          { commands: ['!niveau [@membre]', '!classniveau', '!classxp', '!salonniveaux #salon'],                                staff: 'mixed' },
-  'lien.js':           { commands: ['!lienbot'],                                                                                              staff: false },
   'lineup.js':         { commands: ['!composition <équipe>', '!composition definir|effacer|liste'],                                          staff: 'mixed' },
   'lockdown.js':       { commands: ['!verrouiller', '!deverrouiller'],                                                                        staff: true },
   'loghistory.js':     { commands: ['!journaux', '!journaux statistiques|aujourdhui|vider'],                                                  staff: true },
