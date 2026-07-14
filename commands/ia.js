@@ -722,33 +722,6 @@ module.exports = (client) => {
       return thinking.edit({ content: '', embeds: [embed] });
     }
 
-    // ── !ia bilan [saison] ────────────────────────────────────────────────────
-    if (sub === 'bilan') {
-      const thinking = await message.channel.send('🤖 Rédaction du bilan en cours...');
-      const [tourn, topTeams, allMatches] = await Promise.all([
-        Tournament.findOne({ active: true }),
-        Team.find().sort({ points: -1 }).limit(10),
-        Match.find().sort({ createdAt: -1 }).limit(50),
-      ]);
-      const teamStats = topTeams.map(t => {
-        const ms = allMatches.filter(m => m.team === t.name);
-        const avgK = ms.length ? (ms.reduce((s, m) => s + m.kills, 0) / ms.length).toFixed(1) : '0';
-        return `${t.name}: ${t.points}pts, ${t.kills}k totaux, moy ${avgK}k/match, ${t.wins}V/${t.losses}D`;
-      }).join('\n');
-      const ctx = `Tournoi : ${tourn?.name ?? 'aucun actif'}\nNombre de matchs analysés : ${allMatches.length}\nClassement :\n${teamStats}`;
-      const answer = await iaCall(
-        'Tu es le journaliste sportif officiel de SUPREMYX CI. Tu rédiges des bilans de saison complets et engageants, comme un vrai journal sportif. Tu analyses les performances, identifies les surprises, les déceptions et les équipes en progression. Tu réponds en français.',
-        `Données de la compétition :\n${ctx}\n\nRédige un bilan complet de la saison/tournoi avec : 1) Faits marquants, 2) Équipes en progression, 3) Surprises et déceptions, 4) Records notables, 5) Pronostic pour la suite.`,
-        thinking
-      );
-      if (!answer) return;
-      const embed = new EmbedBuilder().setColor(0xFEE75C)
-        .setAuthor({ name: `📰 Bilan IA — ${tourn?.name ?? 'Saison courante'}`, iconURL: client.user.displayAvatarURL() })
-        .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Bilan généré par IA · Demandé par ${message.author.username}${fbNote()}` });
-      return thinking.edit({ content: '', embeds: [embed] });
-    }
-
     // ── !ia depistage <joueur> ─────────────────────────────────────────────────
     if (sub === 'depistage') {
       const playerName = args.slice(1).join(' ').trim();

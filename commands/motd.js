@@ -44,8 +44,7 @@ module.exports = (client, sendOnStartup = false) => {
     if (cmd === '!configmdj') {
       if (!isStaff) return message.reply('Staff uniquement');
 
-      const _mdLen = cmd === '!configmdj' ? '!configmdj'.length : '!setmessagejour'.length;
-      const text = content.slice(_mdLen).trim();
+      const text = content.slice('!configmdj'.length).trim();
       if (!text) return message.reply('Usage : `!configmdj <message du jour>`');
 
       const config = await getOrCreateConfig();
