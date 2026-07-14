@@ -87,8 +87,7 @@ const STAFF_CATEGORIES = [
       { label: '!reinitialiser',              description: 'Remettre tous les scores à zéro (Staff)',                          subs: [] },
       { label: '!resultats salon #salon',     description: 'Configurer le salon des résultats automatiques (Staff)',            subs: ['salon #salon — Config salon', 'statut <activer|desactiver> — Toggle', 'depuis <jours> — Résultats des N derniers jours'] },
       { label: '!exporter [json|csv|texte]',  description: 'Exporter toutes les données du bot (Staff)',                       subs: [] },
-      { label: '!sauvegarde',                 description: 'Créer et gérer les sauvegardes JSON complètes (Staff)',             subs: ['creer — Créer une nouvelle sauvegarde', 'liste — Voir toutes les sauvegardes', 'info <id> — Détails d\'une sauvegarde', 'supprimer <id> — Supprimer une sauvegarde', 'automatique activer|desactiver <h> — Activer/désactiver la sauvegarde automatique', 'canal #salon — Salon d\'envoi auto', 'statut — Voir la configuration auto'] },
-      { label: '!restaurer',                  description: 'Restaurer les données depuis une sauvegarde (Staff)',               subs: [] },
+      { label: '!sauvegarde',                 description: 'Créer et gérer les sauvegardes JSON complètes (Staff)',             subs: ['creer [nom] — Créer une nouvelle sauvegarde', 'liste — Voir toutes les sauvegardes', 'restaurer <id> — Restaurer depuis une sauvegarde (confirmation requise)', 'supprimer <id> — Supprimer une sauvegarde'] },
     ],
   },
   {
@@ -353,7 +352,7 @@ const STAFF_CATEGORIES = [
     emoji: '⚙️',
     color: 0x5865F2,
     commands: [
-      { label: '!config',                       description: 'Voir/modifier la configuration générale du bot (Staff)',          subs: [] },
+      { label: '!config',                       description: 'Voir la configuration générale du bot (barème de points, bonus kills)', subs: [] },
       { label: '!voirconfig',                   description: 'Vue d\'ensemble de toute la configuration serveur (Staff)',       subs: [] },
       { label: '!definitpoints <placement>',    description: 'Configurer le barème de points par placement (Staff)',            subs: [] },
       { label: '!bienvenue definir',            description: 'Configurer le message de bienvenue automatique (Staff)',          subs: ['definir <message> — Définir message', 'salon #salon — Salon', 'tester — Tester', 'titre <texte> — Titre de l\'affiche', 'soustitre <texte> — Sous-titre de l\'affiche', 'couleur #RRGGBB [#accent] — Couleurs de l\'affiche', 'activer / desactiver — Toggle'] },
@@ -402,7 +401,7 @@ const STAFF_CATEGORIES = [
       { label: '!escalade',                    description: 'Voir/configurer les règles d\'escalade automatique (Staff)',       subs: ['activer / desactiver — Toggle', 'configurer <warns> <action> [durée] — Configurer règle', 'supprimer <warns> — Supprimer règle', 'reinitialiser — Réinitialiser'] },
       { label: '!listenoiree ajouter <nom>',   description: 'Gérer la blacklist des pseudos interdits (Staff)',                subs: ['ajouter <nom> — Ajouter', 'retirer <nom> — Retirer', 'liste — Voir', 'verifier <nom> — Vérifier'] },
       { label: '!automod activer',             description: 'Activer/désactiver le filtre automatique de mots (Staff)',        subs: ['activer / desactiver — Toggle', 'statut — Voir statut', 'tester <texte> — Tester'] },
-      { label: '!mot ajouter <mot>',           description: 'Gérer les mots interdits dans le filtre (Staff)',                 subs: ['ajouter <mot> — Ajouter', 'retirer <mot> — Retirer', 'defaut — Restaurer défaut', 'vider — Tout supprimer', '(voir !mots pour la liste complète)'] },
+      { label: '!mot ajouter <mot>',           description: 'Gérer les mots interdits dans le filtre (Staff)',                 subs: ['ajouter <mot> — Ajouter un mot interdit', 'retirer <mot> — Retirer un mot', 'defaut — Restaurer la liste par défaut', 'vider — Vider toute la liste', '!mots — Voir la liste complète des mots interdits'] },
       { label: '!antispam activer',            description: 'Configurer l\'anti-spam contre le flood (Staff)',                  subs: ['activer / desactiver — Toggle', 'configurer <msgs> <secondes> — Configurer seuils'] },
       { label: '!antilien',                    description: 'Voir/configurer le filtre anti-liens et anti-invitations (Staff)', subs: ['activer / desactiver — Toggle', 'invitations activer|desactiver — Blocage des invitations Discord', 'liens activer|desactiver — Blocage des liens externes', 'action <delete|delete_warn|delete_timeout> — Action appliquée', 'duree <secondes> — Durée du timeout (10-86400)', 'seuil <nombre> — Seuil de violations avant sanction', 'domaine ajouter|retirer <domaine> — Liste blanche de domaines', 'roleexempte @role — Exempter un rôle', 'salonexempte #salon — Exempter un salon'] },
       { label: '!antiraid',                    description: 'Voir/configurer la protection anti-raid (Staff)',                  subs: ['activer / desactiver — Toggle', 'seuil <nb_arrivées> <secondes> — Seuil de détection', 'âge <jours> — Âge minimum du compte', 'action <alert|kick|ban|lockdown> — Action appliquée', 'debloquage <minutes> — Déverrouillage auto après lockdown', 'debloquer — Déverrouiller manuellement le serveur'] },
