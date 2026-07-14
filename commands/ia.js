@@ -441,7 +441,7 @@ module.exports = (client) => {
     }
 
     // ── !ia résumé ────────────────────────────────────────────────────────────
-    if (sub === 'résumé') {
+    if (sub === 'résumé' || sub === 'resume') {
       const thinking = await message.channel.send('🤖 Rédaction du résumé...');
       const [tourn, topTeams, recentMatches] = await Promise.all([
         Tournament.findOne({ active: true }),
