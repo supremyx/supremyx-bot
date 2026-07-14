@@ -228,7 +228,7 @@ const CATEGORIES = [
       { label: '!avertissements',           description: 'Voir l\'historique complet de ses avertissements',          subs: [] },
       { label: '!regles',                   description: 'Afficher les règles simples du serveur',                    subs: [] },
       { label: '!reglement',               description: 'Afficher le règlement avancé du serveur (sections détaillées)', subs: [] },
-      { label: '!sondage historique',       description: 'Voir l\'historique des sondages terminés sur le serveur',   subs: ['historique — Lister les sondages passés', 'statistiques — Statistiques globales des sondages'] },
+
       { label: '!listenoiree liste',        description: 'Consulter la liste noire des équipes et joueurs bannis',       subs: ['liste — Voir toutes les entrées', 'verifier <nom> — Vérifier si un nom est blacklisté'] },
     ],
   },
