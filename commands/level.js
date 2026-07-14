@@ -36,7 +36,7 @@ module.exports = (client) => {
 
     // --- !levelboard / !xpleaderboard ---
     if (content === '!classniveau' || content === '!classxp') {
-      const cd = checkCooldown(message.author.id, 'levelboard', 15, message.guild?.id);
+      const cd = checkCooldown(message.author.id, 'classniveau', 15, message.guild?.id);
       if (cd) return message.reply(`⏳ Attends encore **${cd}s**.`);
 
       const top = await XpEntry.find({ guildId: message.guild.id }).sort({ xp: -1 }).limit(10);

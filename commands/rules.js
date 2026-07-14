@@ -1,6 +1,7 @@
 const Rules = require('../database/models/Rules');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -25,6 +26,9 @@ module.exports = (client) => {
 
     // ─── !rules — afficher ────────────────────────────────────────
     if (cmd === '!regles') {
+      const cd = checkCooldown(message.author.id, 'regles', 10, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'regles');
+
       const doc = await Rules.findOne();
       if (!doc || !doc.rules.length)
         return message.reply('Aucune règle de tournoi définie. Un staff peut en ajouter avec `!definirregles`.');

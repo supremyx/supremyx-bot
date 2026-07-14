@@ -1,5 +1,6 @@
 const Team = require('../database/models/Team');
 const { EmbedBuilder } = require('discord.js');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 function shuffle(arr) {
   const a = [...arr];
@@ -15,8 +16,11 @@ module.exports = (client) => {
     try {
     const content = message.content.trim();
 
-    // --- !coinflip ---
+    // --- !pileface ---
     if (content === '!pileface') {
+      const cd = checkCooldown(message.author.id, 'pileface', 3, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'pileface');
+
       const result = Math.random() < 0.5 ? '🪙 **Pile !**' : '🪙 **Face !**';
       const embed = new EmbedBuilder()
         .setTitle('Pile ou Face')
@@ -27,8 +31,11 @@ module.exports = (client) => {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // --- !randteam [équipe1,équipe2,...] ---
+    // --- !tirageequipe [équipe1,équipe2,...] ---
     if (content.startsWith('!tirageequipe')) {
+      const cd = checkCooldown(message.author.id, 'tirageequipe', 5, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'tirageequipe');
+
       const raw = content.slice('!tirageequipe'.length).trim();
       let teams = [];
 

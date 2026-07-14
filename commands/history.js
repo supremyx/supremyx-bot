@@ -24,8 +24,8 @@ module.exports = (client) => {
   client.on('messageCreate', async message => {
     if (!message.content.startsWith('!historique')) return;
 
-    const cd = checkCooldown(message.author.id, 'history', 10, message.guild?.id);
-    if (cd) return replyCooldown(message, cd, 'history');
+    const cd = checkCooldown(message.author.id, 'historique', 10, message.guild?.id);
+    if (cd) return replyCooldown(message, cd, 'historique');
 
     const name = message.content.split(' ').slice(1).join(' ').trim();
     if (!name) return message.reply('Usage : `!historique <nom>`');

@@ -2,6 +2,7 @@ const Match = require('../database/models/Match');
 const Config = require('../database/models/Config');
 const { EmbedBuilder } = require('discord.js');
 const { escapeRegex } = require('../utils/lib');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 function stdDev(values) {
   if (!values.length) return 0;
@@ -19,6 +20,9 @@ module.exports = (client) => {
 
     // --- !streak <équipe> ---
     if (cmd === '!serie') {
+      const cd = checkCooldown(message.author.id, 'serie', 5, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'serie');
+
       const name = args.slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!serie <nom équipe>`');
 
@@ -55,6 +59,9 @@ module.exports = (client) => {
 
     // --- !calc <placement> <kills> ---
     if (cmd === '!calculer') {
+      const cdCalc = checkCooldown(message.author.id, 'calculer', 3, message.guild?.id);
+      if (cdCalc) return replyCooldown(message, cdCalc, 'calculer');
+
       const placement = parseInt(args[1]);
       const kills = parseInt(args[2]);
       if (isNaN(placement) || isNaN(kills))
@@ -81,6 +88,9 @@ module.exports = (client) => {
 
     // --- !consistency <équipe> ---
     if (cmd === '!regularite') {
+      const cdReg = checkCooldown(message.author.id, 'regularite', 5, message.guild?.id);
+      if (cdReg) return replyCooldown(message, cdReg, 'regularite');
+
       const name = args.slice(1).join(' ').trim();
       if (!name) return message.reply('Usage : `!regularite <nom équipe>`');
 
@@ -116,6 +126,9 @@ module.exports = (client) => {
 
     // --- !h2h <equipe1> vs <equipe2> ---
     if (cmd === '!faceatface') {
+      const cdF2f = checkCooldown(message.author.id, 'faceatface', 10, message.guild?.id);
+      if (cdF2f) return replyCooldown(message, cdF2f, 'faceatface');
+
       const vsIndex = args.findIndex(a => a.toLowerCase() === 'vs');
       if (vsIndex < 2) return message.reply('Usage : `!faceatface <equipe1> vs <equipe2>`');
 

@@ -5,12 +5,12 @@ const { logStaffAction } = require('../utils/staffLog');
 
 // Known public commands with their default cooldown in seconds
 const DEFAULTS = {
-  latence: 10, ranking: 10, stats: 5, search: 5,
-  compare: 10, top: 10, matchs: 10, mvp: 10,
-  history: 5, tournois: 10, leaderboard: 10,
-  coinflip: 3, randteam: 5, h2h: 10,
-  streak: 5, consistency: 5, calc: 3,
-  rules: 10, saisons: 10, schedule: 5
+  latence: 10, classement: 10, statistiques: 5, recherche: 5,
+  comparer: 5, top: 10, matchs: 15, mvp: 15,
+  historique: 10, tournois: 10, classniveau: 15,
+  pileface: 3, tirageequipe: 5, faceatface: 10,
+  serie: 5, regularite: 5, calculer: 3,
+  regles: 10, saisons: 10, calendrier: 5
 };
 
 module.exports = (client) => {

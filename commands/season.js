@@ -4,6 +4,7 @@ const Team = require('../database/models/Team');
 const Match = require('../database/models/Match');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 module.exports = (client) => {
   client.on('messageCreate', async message => {
@@ -98,6 +99,9 @@ module.exports = (client) => {
 
     // --- !saisons ---
     if (cmd === '!saisons') {
+      const cd = checkCooldown(message.author.id, 'saisons', 10, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'saisons');
+
       const seasons = await Season.find().sort({ createdAt: -1 });
       if (!seasons.length) return message.reply('Aucune saison enregistrée.');
 

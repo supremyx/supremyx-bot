@@ -3,6 +3,7 @@ const ScheduleConfig = require('../database/models/ScheduleConfig');
 const Tournament = require('../database/models/Tournament');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
+const { checkCooldown, replyCooldown } = require('../utils/cooldown');
 
 function parseDateTime(dateStr, timeStr) {
   const [day, month, year] = dateStr.split('/');
@@ -42,6 +43,9 @@ module.exports = (client) => {
 
     // ─── !calendrier / !calendrier liste ─────────────────────────
     if (!sub || sub === 'liste') {
+      const cd = checkCooldown(message.author.id, 'calendrier', 5, message.guild?.id);
+      if (cd) return replyCooldown(message, cd, 'calendrier');
+
       const now      = new Date();
       const upcoming = await Schedule.find({ date: { $gte: now } }).sort({ date: 1 }).limit(10);
 
