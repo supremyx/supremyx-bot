@@ -47,6 +47,6 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 ## Setup status (2026-07-14)
 
 - Dependencies installed via `npm install` at the repo root and inside `dashboard/` (re-installed after import wiped `node_modules`).
-- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`, `VITE_BOT_API_KEY` (must match `BOT_API_KEY`, used by dashboard admin pages: Anti-Raid, AutoMod, Backup). `GITHUB_TOKEN` was intentionally skipped — the **Auto-push GitHub** workflow fails harmlessly without it.
+- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`, `VITE_BOT_API_KEY` (must match `BOT_API_KEY`, used by dashboard admin pages: Anti-Raid, AutoMod, Backup), `GITHUB_TOKEN` (enables the **Auto-push GitHub** workflow).
 - Bot is online (logged in as SUPREMYX#5749, MongoDB connected) and the dashboard renders correctly on port 5000.
 - Note: secrets/dependencies do not persist across a fresh import — re-run `npm install` (root + `dashboard/`) and re-provide secrets if this project is re-imported elsewhere.
