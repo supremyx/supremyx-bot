@@ -1151,11 +1151,11 @@ module.exports = (client) => {
     // ── !ia riposte <mon équipe> vs <adversaire> ──────────────────────────────
     if (sub === 'riposte') {
       const rest = args.slice(1).join(' ');
-      const vsIdx = rest.toLowerCase().indexOf(' vs ');
-      if (vsIdx === -1) return message.reply('Usage : `!ia riposte <mon équipe> vs <adversaire>`');
+      const vsIdx = rest.toLowerCase().indexOf(' contre ');
+      if (vsIdx === -1) return message.reply('Usage : `!ia riposte <mon équipe> contre <adversaire>`');
       const myTeamName  = rest.slice(0, vsIdx).trim();
-      const rivalName   = rest.slice(vsIdx + 4).trim();
-      if (!myTeamName || !rivalName) return message.reply('Usage : `!ia riposte <mon équipe> vs <adversaire>`');
+      const rivalName   = rest.slice(vsIdx + 8).trim();
+      if (!myTeamName || !rivalName) return message.reply('Usage : `!ia riposte <mon équipe> contre <adversaire>`');
       const thinking = await message.channel.send('🤖 Analyse de contre-stratégie en cours...');
       const [myTeam, rival] = await Promise.all([
         Team.findOne({ name: new RegExp(`^${myTeamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }),
@@ -1177,9 +1177,9 @@ module.exports = (client) => {
       );
       if (!answer) return;
       const embed = new EmbedBuilder().setColor(0xFEE75C)
-        .setAuthor({ name: `⚔️ Contre-Stratégie IA — ${myTeam.name} vs ${rival.name}`, iconURL: client.user.displayAvatarURL() })
+        .setAuthor({ name: `⚔️ Contre-Stratégie IA — ${myTeam.name} contre ${rival.name}`, iconURL: client.user.displayAvatarURL() })
         .setDescription(answer).setTimestamp()
-        .setFooter({ text: `Riposte Strategy · Demandé par ${message.author.username}${fbNote()}` });
+        .setFooter({ text: `Stratégie de riposte · Demandé par ${message.author.username}${fbNote()}` });
       return thinking.edit({ content: '', embeds: [embed] });
     }
 

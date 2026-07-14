@@ -29,14 +29,14 @@ module.exports = (client) => {
         .setColor(cfg?.enabled ? 0x34D399 : 0x6B7280)
         .addFields(
           { name: '🔛 Statut',           value: cfg?.enabled ? '✅ Actif' : '❌ Inactif', inline: true },
-          { name: '🔒 Lockdown actif',   value: cfg?.lockdownActive ? '🔴 OUI' : '🟢 NON', inline: true },
+          { name: '🔒 Verrouillage actif', value: cfg?.lockdownActive ? '🔴 OUI' : '🟢 NON', inline: true },
           { name: '📊 Seuil de raid',    value: `${cfg?.joinThreshold ?? 10} arrivées / ${cfg?.joinWindowSeconds ?? 10}s`, inline: true },
           { name: '📅 Âge min. compte', value: `${cfg?.minAccountAgeDays ?? 7} jour(s)`, inline: true },
           { name: '⚡ Action',           value: cfg?.action ?? 'alert', inline: true },
           { name: '⏱️ Déverr. auto',    value: `${cfg?.autoUnlockMinutes ?? 30} min`, inline: true },
           { name: '⏰ Dernier raid',     value: cfg?.lastRaidAt ? new Date(cfg.lastRaidAt).toLocaleString('fr-FR') : 'Jamais', inline: true },
         )
-        .setFooter({ text: 'Usage: !antiraid activer | désactiver | seuil | age | action | debloquage | debloquer' });
+        .setFooter({ text: 'Usage: !antiraid activer | désactiver | seuil | âge | action | debloquage | debloquer' });
       return message.reply({ embeds: [embed] });
     }
 
@@ -55,7 +55,7 @@ module.exports = (client) => {
       return message.reply(`✅ Seuil : **${nb} arrivées en ${sec}s**`);
     }
 
-    if (sub === 'age') {
+    if (sub === 'age' || sub === 'âge') {
       const days = parseInt(args[1], 10);
       if (isNaN(days) || days < 0 || days > 365)
         return message.reply('❌ Âge invalide (0–365 jours).');

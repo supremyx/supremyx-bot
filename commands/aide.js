@@ -173,7 +173,7 @@ const CATEGORIES = [
       { label: '!ia debrief <équipe>',    description: 'Débrief post-match IA : résultat, forces, faiblesses, objectifs', subs: ['debrief <équipe> — Analyse du dernier match', 'debrief statut — Voir le canal auto configuré', 'debrief salon #salon — Configurer le canal de débrief auto *(staff)*', 'debrief desactiver — Désactiver le débrief automatique *(staff)*'] },
       { label: '!ia coach <équipe>',     description: 'Plan tactique IA : positionnement, rotations, stratégie', subs: ['coach <équipe> — Plan tactique complet'] },
       { label: '!ia rotation <équipe>',  description: 'Plan de rotation IA : drop, zones, cercles finals',      subs: ['rotation <équipe> — Stratégie de rotation optimisée'] },
-      { label: '!ia riposte <équipe> vs <adversaire>', description: 'Contre-stratégie IA face à un adversaire spécifique', subs: ['riposte <mon équipe> vs <adversaire> — Plan de riposte'] },
+      { label: '!ia riposte <équipe> contre <adversaire>', description: 'Contre-stratégie IA face à un adversaire spécifique', subs: ['riposte <mon équipe> contre <adversaire> — Plan de riposte'] },
       { label: '!ia historique',         description: 'Historique de la conversation IA',          subs: [] },
       { label: '!ia reinitialiser',      description: 'Réinitialiser la conversation IA',          subs: [] },
       { label: '!ia modeles',            description: 'Liste des modèles IA disponibles',          subs: [] },

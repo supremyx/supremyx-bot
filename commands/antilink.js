@@ -15,7 +15,7 @@ module.exports = (client) => {
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.member) return;
-    if (!message.content.startsWith('!antilink')) return;
+    if (!message.content.startsWith('!antilien')) return;
 
     if (!message.member.permissions.has('Administrator'))
       return message.reply('🔒 Réservé aux administrateurs.');
@@ -34,13 +34,13 @@ module.exports = (client) => {
           { name: '🛡️ Invitations Discord', value: cfg?.blockDiscordInvites ? '✅ Bloquées' : '❌ Autorisées', inline: true },
           { name: '🌐 Liens externes',      value: cfg?.blockExternalLinks  ? '✅ Bloqués'  : '❌ Autorisés', inline: true },
           { name: '⚡ Action',              value: cfg?.action || 'delete_warn', inline: true },
-          { name: '⏱️ Timeout',             value: `${cfg?.timeoutSeconds ?? 300}s`, inline: true },
+          { name: '⏱️ Durée',               value: `${cfg?.timeoutSeconds ?? 300}s`, inline: true },
           { name: '🔢 Seuil violations',    value: `${cfg?.violationThreshold ?? 3}`, inline: true },
           { name: '✅ Domaines autorisés',  value: cfg?.allowedDomains?.join(', ') || '*aucun*', inline: false },
           { name: '🎭 Rôles exempts',       value: cfg?.exemptRoles?.map(id => `<@&${id}>`).join(', ') || '*aucun*', inline: true },
           { name: '📍 Salons exempts',      value: cfg?.exemptChannels?.map(id => `<#${id}>`).join(', ') || '*aucun*', inline: true },
         )
-        .setFooter({ text: 'Usage: !antilink activer | désactiver | invites | liens | domaine | action | timeout | exemptrole | exemptchannel' });
+        .setFooter({ text: 'Usage: !antilien activer | désactiver | invitations | liens | domaine | action | duree | roleexempte | salonexempte' });
       return message.reply({ embeds: [embed] });
     }
 
@@ -51,7 +51,7 @@ module.exports = (client) => {
       return message.reply(`${enabled ? '✅' : '⛔'} Anti-liens **${enabled ? 'activé' : 'désactivé'}**.`);
     }
 
-    if (sub === 'invites') {
+    if (sub === 'invitations') {
       const val = args[1]?.toLowerCase() === 'activer';
       await AntiLinkConfig.findOneAndUpdate({ guildId }, { blockDiscordInvites: val }, { upsert: true });
       invalidateConfigCache(guildId);
@@ -75,7 +75,7 @@ module.exports = (client) => {
       return message.reply(`✅ Action définie : \`${action}\``);
     }
 
-    if (sub === 'timeout') {
+    if (sub === 'duree') {
       const seconds = parseInt(args[1], 10);
       if (isNaN(seconds) || seconds < 10 || seconds > 86400)
         return message.reply('❌ Durée invalide (10–86400 secondes).');
@@ -96,22 +96,22 @@ module.exports = (client) => {
     if (sub === 'domaine') {
       const action = args[1]?.toLowerCase();
       const domain = args[2]?.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
-      if (!domain) return message.reply('Usage : `!antilink domaine ajouter|retirer <domain.com>`');
+      if (!domain) return message.reply('Usage : `!antilien domaine ajouter|retirer <domain.com>`');
       const cfg = await getOrCreate(guildId);
       let domains = cfg.allowedDomains || [];
       if (action === 'ajouter') {
         if (!domains.includes(domain)) domains.push(domain);
       } else if (action === 'retirer') {
         domains = domains.filter(d => d !== domain);
-      } else return message.reply('Usage : `!antilink domaine ajouter|retirer <domain.com>`');
+      } else return message.reply('Usage : `!antilien domaine ajouter|retirer <domain.com>`');
       await AntiLinkConfig.findOneAndUpdate({ guildId }, { allowedDomains: domains });
       invalidateConfigCache(guildId);
       return message.reply(`✅ Domaine \`${domain}\` **${action === 'ajouter' ? 'ajouté' : 'retiré'}** de la liste blanche.`);
     }
 
-    if (sub === 'exemptrole') {
+    if (sub === 'roleexempte') {
       const role = message.mentions.roles.first();
-      if (!role) return message.reply('❌ Mentionne un rôle. Ex: `!antilink exemptrole @Modérateur`');
+      if (!role) return message.reply('❌ Mentionne un rôle. Ex: `!antilien roleexempte @Modérateur`');
       const cfg  = await getOrCreate(guildId);
       let roles  = cfg.exemptRoles || [];
       if (roles.includes(role.id)) {
@@ -125,9 +125,9 @@ module.exports = (client) => {
       }
     }
 
-    if (sub === 'exemptchannel') {
+    if (sub === 'salonexempte') {
       const channel = message.mentions.channels.first();
-      if (!channel) return message.reply('❌ Mentionne un salon. Ex: `!antilink exemptchannel #général`');
+      if (!channel) return message.reply('❌ Mentionne un salon. Ex: `!antilien salonexempte #général`');
       const cfg      = await getOrCreate(guildId);
       let channels   = cfg.exemptChannels || [];
       if (channels.includes(channel.id)) {
@@ -141,6 +141,6 @@ module.exports = (client) => {
       }
     }
 
-    return message.reply('❓ Sous-commande inconnue. Usage : `!antilink` pour voir la config.');
+    return message.reply('❓ Sous-commande inconnue. Usage : `!antilien` pour voir la config.');
   });
 };
