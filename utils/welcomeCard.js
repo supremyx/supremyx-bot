@@ -174,7 +174,7 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   // Pseudo Discord de l'utilisateur (mis en avant, doré, sans "@")
   const username = member.user ? member.user.username : member.username;
   ctx.font = 'bold 30px sans-serif';
-  ctx.fillStyle = '#00BFFF';
+  ctx.fillStyle = '#1ABC9C';
   ctx.fillText(username, 48, 170);
 
   // Bannière du sous-titre (translucide, liseré doré)
