@@ -67,8 +67,8 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   const gold = accentColor || '#F5C518';
   const silver = '#C7CDD4';
 
-  // Fond en rayures diagonales violet abstrait (même inclinaison que les rayures d'accent)
-  const stripeColors = ['#3B0F6F', '#8A2BE2', '#5A1E9C', '#B166F5'];
+  // Fond en rayures diagonales vert abstrait (même inclinaison que les rayures d'accent)
+  const stripeColors = ['#0B3D1A', '#1A7A30', '#145C22', '#34C759'];
   const stripeW = 90;
   const slant = -170;
   ctx.save();
