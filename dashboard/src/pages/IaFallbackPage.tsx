@@ -102,6 +102,8 @@ function timeAgo(iso: string) {
 }
 
 /* ── Composant principal ───────────────────────────────────────────────────── */
+const LS_KEY = "supremyx_api_key";
+
 export default function IaFallbackPage() {
   const [data, setData] = useState<FallbackData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,6 +112,49 @@ export default function IaFallbackPage() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
+
+  // ── Fallback config state ──
+  const [fbGuildId, setFbGuildId]         = useState("");
+  const [fbModels, setFbModels]           = useState<string[]>([]);
+  const [fbIsDefault, setFbIsDefault]     = useState(true);
+  const [fbLoading, setFbLoading]         = useState(false);
+  const [fbNewModel, setFbNewModel]       = useState("");
+  const [fbSaving, setFbSaving]           = useState(false);
+  const [fbMsg, setFbMsg]                 = useState<{ ok: boolean; text: string } | null>(null);
+  const [apiKey]                          = useState<string>(() => localStorage.getItem(LS_KEY) ?? "");
+
+  const loadFallbackConfig = useCallback(async (gId: string) => {
+    if (!gId.trim()) return;
+    setFbLoading(true);
+    try {
+      const res = await fetch(apiUrl(`/api/ia/fallback-models?guildId=${encodeURIComponent(gId.trim())}`));
+      const json = await res.json();
+      setFbModels(json.fallbackModels ?? []);
+      setFbIsDefault(json.isDefault ?? true);
+    } catch { /* silencieux */ } finally { setFbLoading(false); }
+  }, []);
+
+  const saveFallbackModels = useCallback(async (models: string[]) => {
+    if (!fbGuildId.trim() || !apiKey) {
+      setFbMsg({ ok: false, text: "Renseigne l'ID du serveur et la BOT_API_KEY (page Paramètres)." });
+      return;
+    }
+    setFbSaving(true);
+    setFbMsg(null);
+    try {
+      const res = await fetch(apiUrl("/api/ia/fallback-models"), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+        body: JSON.stringify({ guildId: fbGuildId.trim(), fallbackModels: models }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setFbModels(models);
+      setFbIsDefault(models.length === 0);
+      setFbMsg({ ok: true, text: "✅ Modèles de secours sauvegardés." });
+    } catch (e) {
+      setFbMsg({ ok: false, text: `❌ Erreur : ${e instanceof Error ? e.message : "inconnue"}` });
+    } finally { setFbSaving(false); }
+  }, [fbGuildId, apiKey]);
 
   const load = useCallback(async () => {
     try {
@@ -451,6 +496,118 @@ export default function IaFallbackPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* ── Configuration des modèles de secours ── */}
+          <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+              <h2 className="font-bold text-sm flex items-center gap-2">
+                <span>🔄</span> Modèles de secours
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                Modèles utilisés automatiquement si le modèle principal est indisponible · configurable par serveur
+              </p>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Guild ID input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="ID du serveur Discord (ex : 123456789012345678)"
+                  value={fbGuildId}
+                  onChange={e => setFbGuildId(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm"
+                  style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                />
+                <button
+                  onClick={() => loadFallbackConfig(fbGuildId)}
+                  disabled={fbLoading || !fbGuildId.trim()}
+                  className="px-4 py-2 rounded-lg text-xs font-bold cursor-pointer"
+                  style={{ background: "var(--primary)", color: "#000", opacity: fbLoading || !fbGuildId.trim() ? 0.5 : 1 }}
+                >
+                  {fbLoading ? "…" : "Charger"}
+                </button>
+              </div>
+
+              {fbModels.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold" style={{ color: "var(--muted-foreground)" }}>
+                      Liste actuelle {fbIsDefault ? "(défaut global)" : "(personnalisée)"}
+                    </span>
+                    {!fbIsDefault && (
+                      <button
+                        onClick={() => saveFallbackModels([])}
+                        disabled={fbSaving}
+                        className="text-[10px] px-2 py-0.5 rounded-full cursor-pointer"
+                        style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}
+                      >
+                        Réinitialiser aux défauts
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {fbModels.map((m, i) => (
+                      <div key={m} className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold" style={{ color: "var(--muted-foreground)" }}>#{i + 1}</span>
+                          <span className="text-xs font-mono">{m}</span>
+                        </div>
+                        <button
+                          onClick={() => saveFallbackModels(fbModels.filter(x => x !== m))}
+                          disabled={fbSaving}
+                          className="text-[10px] px-2 py-0.5 rounded cursor-pointer"
+                          style={{ color: "#f87171", background: "rgba(239,68,68,0.1)" }}
+                        >
+                          ✕ Retirer
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Ajouter un modèle */}
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      placeholder="ID modèle OpenRouter (ex : openai/gpt-4o-mini)"
+                      value={fbNewModel}
+                      onChange={e => setFbNewModel(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && fbNewModel.trim() && !fbModels.includes(fbNewModel.trim())) {
+                          saveFallbackModels([...fbModels, fbNewModel.trim()]);
+                          setFbNewModel("");
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-mono"
+                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (!fbNewModel.trim() || fbModels.includes(fbNewModel.trim())) return;
+                        saveFallbackModels([...fbModels, fbNewModel.trim()]);
+                        setFbNewModel("");
+                      }}
+                      disabled={fbSaving || !fbNewModel.trim() || fbModels.includes(fbNewModel.trim())}
+                      className="px-4 py-2 rounded-lg text-xs font-bold cursor-pointer"
+                      style={{ background: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)", opacity: fbSaving || !fbNewModel.trim() || fbModels.includes(fbNewModel.trim()) ? 0.5 : 1 }}
+                    >
+                      + Ajouter
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {fbMsg && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: fbMsg.ok ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: fbMsg.ok ? "#22c55e" : "#f87171" }}>
+                  {fbMsg.text}
+                </p>
+              )}
+              {!apiKey && (
+                <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                  ⚠️ Entre ta BOT_API_KEY sur la page <strong>Paramètres</strong> pour modifier les modèles de secours.
+                </p>
+              )}
+            </div>
           </div>
         </>
       )}

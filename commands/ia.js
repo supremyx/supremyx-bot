@@ -947,6 +947,62 @@ module.exports = (client) => {
       return message.reply({ embeds: [embed] });
     }
 
+    // ── !ia secours ────────────────────────────────────────────────────────────
+    if (sub === 'secours') {
+      if (!message.member?.permissions.has('Administrator'))
+        return message.reply('❌ Seuls les administrateurs peuvent gérer les modèles de secours.');
+
+      const { FALLBACK_MODELS, getFallbackModels } = require('../utils/openrouterClient');
+      const guildId = message.guild.id;
+      const action  = args[1]?.toLowerCase();
+
+      // !ia secours liste
+      if (!action || action === 'liste') {
+        const current = await getFallbackModels(guildId);
+        const isDefault = !((await IaConfig.findOne({ guildId }).lean())?.fallbackModels?.length);
+        const lines = current.map((m, i) => `**${i + 1}.** \`${m}\``);
+        const embed = new EmbedBuilder()
+          .setColor(0xFF8C00)
+          .setTitle('🔄 Modèles de secours IA')
+          .setDescription(lines.join('\n') || 'Aucun modèle de secours configuré.')
+          .setFooter({ text: isDefault ? 'Configuration par défaut (globale)' : 'Configuration personnalisée pour ce serveur' })
+          .addFields({ name: '🛠️ Commandes', value: '`!ia secours ajouter <model-id>` · `!ia secours supprimer <model-id>` · `!ia secours reinitialiser`', inline: false })
+          .setTimestamp();
+        return message.reply({ embeds: [embed] });
+      }
+
+      // !ia secours ajouter <model-id>
+      if (action === 'ajouter') {
+        const modelId = args.slice(2).join(' ').trim();
+        if (!modelId) return message.reply('Usage : `!ia secours ajouter <model-id>`\nExemple : `!ia secours ajouter openai/gpt-4o-mini`');
+        const current = await getFallbackModels(guildId);
+        if (current.includes(modelId)) return message.reply(`❌ \`${modelId}\` est déjà dans la liste de secours.`);
+        const updated = [...current, modelId];
+        await IaConfig.findOneAndUpdate({ guildId }, { $set: { fallbackModels: updated } }, { upsert: true, new: true });
+        return message.reply(`✅ Modèle de secours ajouté : \`${modelId}\`\nListe actuelle : ${updated.length} modèle(s).`);
+      }
+
+      // !ia secours supprimer <model-id>
+      if (action === 'supprimer') {
+        const modelId = args.slice(2).join(' ').trim();
+        if (!modelId) return message.reply('Usage : `!ia secours supprimer <model-id>`');
+        const current = await getFallbackModels(guildId);
+        if (!current.includes(modelId)) return message.reply(`❌ \`${modelId}\` n'est pas dans la liste de secours.`);
+        const updated = current.filter(m => m !== modelId);
+        await IaConfig.findOneAndUpdate({ guildId }, { $set: { fallbackModels: updated } }, { upsert: true, new: true });
+        return message.reply(`✅ Modèle de secours supprimé : \`${modelId}\`\nListe actuelle : ${updated.length} modèle(s).`);
+      }
+
+      // !ia secours reinitialiser
+      if (action === 'reinitialiser' || action === 'réinitialiser') {
+        await IaConfig.findOneAndUpdate({ guildId }, { $set: { fallbackModels: [] } }, { upsert: true, new: true });
+        const lines = FALLBACK_MODELS.map((m, i) => `**${i + 1}.** \`${m}\``);
+        return message.reply(`✅ Modèles de secours réinitialisés aux valeurs par défaut :\n${lines.join('\n')}`);
+      }
+
+      return message.reply('Sous-commandes disponibles : `liste`, `ajouter <id>`, `supprimer <id>`, `reinitialiser`');
+    }
+
     // ── !ia basculement ────────────────────────────────────────────────────────
     if (sub === 'basculement') {
       const apiKey = process.env.OPENROUTER_API_KEY;

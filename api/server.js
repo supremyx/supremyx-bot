@@ -22,6 +22,10 @@ const WelcomeConfig = require('../database/models/WelcomeConfig');
 const AutoroleConfig= require('../database/models/AutoroleConfig');
 const XpEntry       = require('../database/models/XpEntry');
 const BotInstance   = require('../database/models/BotInstance');
+const Absence       = require('../database/models/Absence');
+const CooldownConfig= require('../database/models/CooldownConfig');
+const Lineup        = require('../database/models/Lineup');
+const Giveaway      = require('../database/models/Giveaway');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -2649,6 +2653,73 @@ router.get('/command-stats', publicLimiter, async (req, res) => {
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
 app.use('/bot-api', router);
+
+// ── GET /ia/fallback-models?guildId= ─────────────────────────────────────────
+router.get('/ia/fallback-models', publicLimiter, async (req, res) => {
+  try {
+    const { FALLBACK_MODELS } = require('../utils/openrouterClient');
+    const { guildId } = req.query;
+    if (!guildId) return res.json({ fallbackModels: FALLBACK_MODELS, isDefault: true });
+    const cfg = await IaConfig.findOne({ guildId }).lean();
+    const custom = cfg?.fallbackModels?.length ? cfg.fallbackModels : null;
+    res.json({ fallbackModels: custom ?? FALLBACK_MODELS, isDefault: !custom });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── PUT /ia/fallback-models ───────────────────────────────────────────────────
+router.put('/ia/fallback-models', requireApiKey, async (req, res) => {
+  try {
+    const { guildId, fallbackModels } = req.body;
+    if (!guildId) return res.status(400).json({ error: 'guildId requis' });
+    if (!Array.isArray(fallbackModels)) return res.status(400).json({ error: 'fallbackModels doit être un tableau' });
+    await IaConfig.findOneAndUpdate({ guildId }, { $set: { fallbackModels } }, { upsert: true, new: true });
+    res.json({ success: true, fallbackModels });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /absences?guildId= ────────────────────────────────────────────────────
+router.get('/absences', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, equipe } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    if (equipe)  filter.team   = equipe;
+    const absences = await Absence.find(filter).sort({ createdAt: -1 }).limit(200).lean();
+    res.json({ absences });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /cooldowns ────────────────────────────────────────────────────────────
+router.get('/cooldowns', publicLimiter, async (req, res) => {
+  try {
+    const overrides = await CooldownConfig.find().sort({ command: 1 }).lean();
+    res.json({ cooldowns: overrides });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /lineups?guildId= ─────────────────────────────────────────────────────
+router.get('/lineups', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, equipe } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    if (equipe)  filter.team   = equipe;
+    const lineups = await Lineup.find(filter).sort({ createdAt: -1 }).limit(100).lean();
+    res.json({ lineups });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /giveaways?guildId= ───────────────────────────────────────────────────
+router.get('/giveaways', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, ended } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    if (ended !== undefined) filter.ended = ended === 'true';
+    const giveaways = await Giveaway.find(filter).sort({ createdAt: -1 }).limit(50).lean();
+    res.json({ giveaways });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 // ─── Dashboard (production static build) ─────────────────────────────────────
 const DASHBOARD_DIST = path.join(__dirname, '../dashboard/dist/public');

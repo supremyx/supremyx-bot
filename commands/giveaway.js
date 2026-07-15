@@ -1,7 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
-
-const activeGiveaways = new Map();
+const Giveaway = require('../database/models/Giveaway');
 
 function parseDuration(str) {
   const match = str.match(/^(\d+)(s|m|h|j)$/i);
@@ -12,7 +11,73 @@ function parseDuration(str) {
   return val * multipliers[unit];
 }
 
+// Planifie la fin d'un giveaway (utilisé au lancement ET à la restauration)
+function scheduleEnd(client, giveaway) {
+  const remaining = giveaway.endsAt.getTime() - Date.now();
+  if (remaining <= 0) {
+    endGiveaway(client, giveaway).catch(console.error);
+    return;
+  }
+  setTimeout(() => endGiveaway(client, giveaway).catch(console.error), remaining);
+}
+
+async function endGiveaway(client, giveaway) {
+  try {
+    const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+    if (!channel) return;
+    const freshMsg = await channel.messages.fetch(giveaway.messageId).catch(() => null);
+    if (!freshMsg) return;
+
+    const reaction = freshMsg.reactions.cache.get('🎉');
+    const users = reaction ? await reaction.users.fetch() : null;
+    const participants = users ? users.filter(u => !u.bot) : null;
+
+    let winnerId = null, winnerTag = null;
+
+    if (!participants || !participants.size) {
+      const noWinEmbed = new EmbedBuilder()
+        .setTitle('🎉 Concours terminé')
+        .setColor(0x99AAB5)
+        .setDescription(`**${giveaway.prize}**\n\nAucun participant. Pas de gagnant.`)
+        .setTimestamp();
+      await freshMsg.edit({ embeds: [noWinEmbed] });
+    } else {
+      const winner = participants.random();
+      winnerId  = winner.id;
+      winnerTag = winner.tag;
+      const winEmbed = new EmbedBuilder()
+        .setTitle('🎉 Concours terminé !')
+        .setColor(0x57F287)
+        .setDescription(`**${giveaway.prize}**\n\n🏆 Gagnant : **${winner.tag}** ${winner}`)
+        .addFields({ name: '👥 Participants', value: `${participants.size}`, inline: true })
+        .setTimestamp();
+      await freshMsg.edit({ embeds: [winEmbed] });
+      await channel.send(`🎊 Félicitations ${winner} ! Tu as gagné **${giveaway.prize}** !`);
+    }
+
+    await Giveaway.findOneAndUpdate(
+      { messageId: giveaway.messageId },
+      { $set: { ended: true, winnerId, winnerTag, participants: participants?.size ?? 0 } }
+    );
+  } catch (err) {
+    console.error('[Giveaway] Erreur fin de concours:', err);
+  }
+}
+
 module.exports = (client) => {
+  // Restaure les giveaways actifs après redémarrage
+  client.once('ready', async () => {
+    try {
+      const actifs = await Giveaway.find({ ended: false }).lean();
+      if (actifs.length) {
+        console.log(`[Giveaway] Restauration de ${actifs.length} concours actif(s)…`);
+        for (const g of actifs) scheduleEnd(client, g);
+      }
+    } catch (err) {
+      console.error('[Giveaway] Erreur restauration:', err);
+    }
+  });
+
   client.on('messageCreate', async message => {
     const content = message.content.trim();
     const args = content.split(' ');
@@ -22,7 +87,7 @@ module.exports = (client) => {
     if (!message.member) return;
     const isStaff = message.member.permissions.has('Administrator');
 
-    // --- !giveaway <durée> <prix> ---
+    // --- !concours <durée> <prix> ---
     if (cmd === '!concours') {
       if (!isStaff) return message.reply('Staff uniquement');
 
@@ -51,46 +116,22 @@ module.exports = (client) => {
       const msg = await message.channel.send({ embeds: [embed] });
       await msg.react('🎉');
 
-      activeGiveaways.set(msg.id, { prize, channelId: message.channel.id, host: message.author.tag });
+      // Persiste en DB
+      const giveaway = await Giveaway.create({
+        guildId:   message.guild.id,
+        channelId: message.channel.id,
+        messageId: msg.id,
+        prize,
+        host:   message.author.tag,
+        endsAt,
+      });
 
+      scheduleEnd(client, giveaway);
       logStaffAction(client, `🎉 **Giveaway** — "${prize}" (${durationStr}) | Par : ${message.author.tag}`);
-
-      setTimeout(async () => {
-        const freshMsg = await message.channel.messages.fetch(msg.id).catch(() => null);
-        if (!freshMsg) return;
-
-        const reaction = freshMsg.reactions.cache.get('🎉');
-        if (!reaction) return;
-
-        const users = await reaction.users.fetch();
-        const participants = users.filter(u => !u.bot);
-
-        if (!participants.size) {
-          const noWinEmbed = new EmbedBuilder()
-            .setTitle('🎉 Concours terminé')
-            .setColor(0x99AAB5)
-            .setDescription(`**${prize}**\n\nAucun participant. Pas de gagnant.`)
-            .setTimestamp();
-          return freshMsg.edit({ embeds: [noWinEmbed] });
-        }
-
-        const winner = participants.random();
-        const winEmbed = new EmbedBuilder()
-          .setTitle('🎉 Concours terminé !')
-          .setColor(0x57F287)
-          .setDescription(`**${prize}**\n\n🏆 Gagnant : **${winner.tag}** ${winner}`)
-          .addFields({ name: '👥 Participants', value: `${participants.size}`, inline: true })
-          .setTimestamp();
-
-        await freshMsg.edit({ embeds: [winEmbed] });
-        message.channel.send(`🎊 Félicitations ${winner} ! Tu as gagné **${prize}** !`);
-        activeGiveaways.delete(msg.id);
-      }, duration);
-
       return;
     }
 
-    // --- !reroll <messageId> ---
+    // --- !retirer <messageId> --- (nouveau tirage)
     if (cmd === '!retirer') {
       if (!isStaff) return message.reply('Staff uniquement');
       const msgId = args[1];
@@ -108,6 +149,12 @@ module.exports = (client) => {
 
       const winner = participants.random();
       message.channel.send(`🔁 **Nouveau tirage !** Nouveau gagnant : **${winner.tag}** ${winner} 🎉`);
+
+      // Met à jour le gagnant en DB
+      await Giveaway.findOneAndUpdate(
+        { messageId: msgId },
+        { $set: { winnerId: winner.id, winnerTag: winner.tag } }
+      ).catch(() => {});
     }
   });
 };

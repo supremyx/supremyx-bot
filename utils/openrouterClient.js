@@ -6,6 +6,21 @@ const FALLBACK_MODELS = [
   'mistralai/mistral-7b-instruct:free',
 ];
 
+// Charge les modèles de secours depuis la DB pour un guild donné.
+// Si aucun n'est configuré, utilise les défauts hardcodés ci-dessus.
+async function getFallbackModels(guildId) {
+  if (guildId) {
+    try {
+      const IaConfig = require('../database/models/IaConfig');
+      const cfg = await IaConfig.findOne({ guildId }).lean();
+      if (cfg?.fallbackModels?.length) return cfg.fallbackModels;
+    } catch (e) {
+      console.warn('[OpenRouter] Impossible de charger les fallbacks depuis DB:', e.message);
+    }
+  }
+  return FALLBACK_MODELS;
+}
+
 const FALLBACK_ON_STATUS = new Set([429, 500, 502, 503, 504]);
 
 let _client = null;
@@ -84,7 +99,8 @@ function getOpenRouterClient() {
             console.warn(`[OpenRouter] Modèle "${model}" indisponible (${err.status}) — tentative avec fallback gratuit…`);
           }
 
-          for (const fallback of FALLBACK_MODELS) {
+          const fallbackList = await getFallbackModels(guildId);
+          for (const fallback of fallbackList) {
             if (fallback === model) continue;
             try {
               const result = await callOpenRouter(apiKey, fallback, messages, max_tokens, guildId, true);
@@ -97,7 +113,7 @@ function getOpenRouterClient() {
             }
           }
 
-          throw new Error(`[OpenRouter] Tous les modèles ont échoué (principal + ${FALLBACK_MODELS.length} fallbacks)`);
+          throw new Error(`[OpenRouter] Tous les modèles ont échoué (principal + ${fallbackList.length} fallbacks)`);
         },
       },
     },
@@ -106,4 +122,4 @@ function getOpenRouterClient() {
   return _client;
 }
 
-module.exports = { getOpenRouterClient, FALLBACK_MODELS };
+module.exports = { getOpenRouterClient, FALLBACK_MODELS, getFallbackModels };

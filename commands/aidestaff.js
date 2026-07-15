@@ -230,6 +230,7 @@ const STAFF_CATEGORIES = [
       { label: '!ia modele <alias>',              description: 'Changer le modèle IA actif (Staff)',                          subs: ['modele <alias> — Changer de modèle', 'modeles — Voir tous les modèles disponibles'] },
       { label: '!ia quota <valeur>',              description: 'Gérer le quota d\'utilisations IA journalier (Staff)',        subs: ['quota <nombre> — Fixer la limite', 'quota désactiver — Désactiver (illimité)', 'quota réinitialiser — Remettre le compteur à zéro', 'quota salon #salon — Salon d\'alerte'] },
       { label: '!ia alerte [statut]',             description: 'Alertes de performance IA automatiques (Staff)',               subs: ['(sans arg) / statut — Voir la configuration', 'salon #salon — Définir le salon d\'alerte', 'latence <ms> — Seuil de latence (min 500)', 'echec <pct> — Seuil de taux d\'échec (1-100)', 'désactiver — Désactiver les alertes'] },
+      { label: '!ia secours',                      description: 'Gérer les modèles IA de secours (fallbacks) du serveur (Staff)',   subs: ['(sans arg) / liste — Voir les modèles de secours actifs', 'ajouter <model-id> — Ajouter un modèle de secours', 'supprimer <model-id> — Retirer un modèle', 'reinitialiser — Remettre les défauts globaux'] },
       { label: '!ia basculement',                 description: 'Tester tous les modèles en temps réel (latence + disponibilité)', subs: [] },
     ],
   },

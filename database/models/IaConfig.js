@@ -11,6 +11,7 @@ const iaConfigSchema = new mongoose.Schema({
   perfAlertChannelId:   { type: String, default: null },
   latencyThresholdMs:   { type: Number, default: 5000 },
   failureRateThreshold: { type: Number, default: 50 },
+  fallbackModels:       { type: [String], default: [] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('IaConfig', iaConfigSchema);
