@@ -268,7 +268,7 @@ export default function TournamentDetailView({ tournamentId, onBack }: { tournam
                     doc.rect(0, pageH - 10, 210, 10, "F");
                     doc.setFontSize(7);
                     doc.setTextColor(120, 120, 130);
-                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.xyz", 14, pageH - 3.5);
+                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.pro", 14, pageH - 3.5);
 
                     const slug = tournament.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
                     doc.save(`supremyx-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`);

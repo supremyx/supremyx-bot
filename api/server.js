@@ -62,8 +62,8 @@ const detailLimiter = rateLimit({
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
-  'https://supremyx.xyz',
-  'https://www.supremyx.xyz',
+  'https://supremyx.pro',
+  'https://www.supremyx.pro',
   /\.supremyx\.xyz$/,
   /\.replit\.app$/,
   /\.replit\.dev$/,

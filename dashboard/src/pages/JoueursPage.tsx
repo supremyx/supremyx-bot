@@ -235,7 +235,7 @@ export default function JoueursPage({ initialSelected }: { initialSelected?: str
                     doc.rect(0, pageH - 10, 210, 10, "F");
                     doc.setFontSize(7);
                     doc.setTextColor(120, 120, 130);
-                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.xyz", 14, pageH - 3.5);
+                    doc.text("© 2026 SUPREMYX — Côte d'Ivoire · supremyx.pro", 14, pageH - 3.5);
 
                     doc.save(`supremyx-joueurs-${new Date().toISOString().slice(0, 10)}.pdf`);
                   }}

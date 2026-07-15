@@ -93,7 +93,7 @@ const AIDE = [
   '**Exemples :**',
   '`!planifier créer #général | 🌅 Bonne journée à tous ! | quotidien | 07:00`',
   '`!planifier créer #général | Recap >> Voici le résumé de la semaine. | hebdo | lundi | 18:00 | violet`',
-  '`!planifier créer #annonces | 📋 Inscription >> Inscris-toi sur [notre site](https://supremyx.xyz) ! | mensuel | 1 | 20:00 | or`',
+  '`!planifier créer #annonces | 📋 Inscription >> Inscris-toi sur [notre site](https://supremyx.pro) ! | mensuel | 1 | 20:00 | or`',
 ].join('\n');
 
 // ─── Module ────────────────────────────────────────────────────────────────
