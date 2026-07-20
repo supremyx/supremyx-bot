@@ -29,7 +29,18 @@ interface Blacklisted {
   createdAt: string;
 }
 
-type Tab = "warns" | "sanctions" | "blacklist";
+interface StaffNote {
+  _id: string;
+  target: string;
+  content: string;
+  author: string;
+  createdAt?: string;
+}
+
+type Tab = "warns" | "sanctions" | "blacklist" | "notes";
+
+const API_KEY = import.meta.env.VITE_BOT_API_KEY || "";
+const AUTH_HEADERS = { "Content-Type": "application/json", "x-api-key": API_KEY };
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -47,9 +58,12 @@ export default function ModerationPage() {
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [sanctions, setSanctions] = useState<Sanction[]>([]);
   const [blacklist, setBlacklist] = useState<Blacklisted[]>([]);
+  const [notes, setNotes] = useState<StaffNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [noteSearch, setNoteSearch] = useState("");
+  const [notesLoading, setNotesLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -68,6 +82,19 @@ export default function ModerationPage() {
     });
   }, []);
 
+  const loadNotes = (query = "") => {
+    setNotesLoading(true);
+    const url = query.trim() ? apiUrl(`/api/actions/notes?target=${encodeURIComponent(query)}`) : apiUrl("/api/actions/notes");
+    fetch(url, { headers: AUTH_HEADERS })
+      .then(r => r.json())
+      .then(d => { setNotes(d.notes ?? []); setNotesLoading(false); })
+      .catch(() => setNotesLoading(false));
+  };
+
+  useEffect(() => {
+    if (tab === "notes") loadNotes(noteSearch);
+  }, [tab]); // eslint-disable-line
+
   const q = search.trim().toLowerCase();
 
   const filteredWarns = warnings.filter(w =>
@@ -84,6 +111,7 @@ export default function ModerationPage() {
     { key: "warns",     label: "⚠️ Avertissements", count: warnings.length },
     { key: "sanctions", label: "⚖️ Sanctions",       count: sanctions.length },
     { key: "blacklist", label: "🚫 Liste noire",       count: blacklist.length },
+    { key: "notes",     label: "📝 Notes staff",      count: notes.length },
   ];
 
   return (
@@ -91,7 +119,7 @@ export default function ModerationPage() {
       <div className="mb-6">
         <h2 className="font-bold text-lg">🛡️ Modération</h2>
         <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-          Avertissements, sanctions et blacklist du serveur
+          Avertissements, sanctions, blacklist et notes staff
         </p>
       </div>
 
@@ -223,6 +251,65 @@ export default function ModerationPage() {
                 ))}
               </div>
             )
+          )}
+
+          {/* Notes staff */}
+          {tab === "notes" && (
+            <div>
+              {/* Notes search */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Rechercher par cible (pseudo, ID)…"
+                  value={noteSearch}
+                  onChange={e => setNoteSearch(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && loadNotes(noteSearch)}
+                  className="flex-1 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                  style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                />
+                <button
+                  onClick={() => loadNotes(noteSearch)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                  style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                >
+                  🔍 Chercher
+                </button>
+              </div>
+
+              {notesLoading ? (
+                <div className="py-10 text-center animate-pulse" style={{ color: "var(--muted-foreground)" }}>Chargement…</div>
+              ) : !API_KEY ? (
+                <div className="rounded-xl py-10 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
+                  <div className="text-3xl mb-2">🔑</div>
+                  <p className="text-sm">Clé API requise pour accéder aux notes staff.</p>
+                  <p className="text-xs mt-1">Configurez <code className="px-1 py-0.5 rounded text-xs" style={{ background: "var(--muted)" }}>VITE_BOT_API_KEY</code> dans les secrets.</p>
+                </div>
+              ) : notes.length === 0 ? (
+                <div className="rounded-xl py-16 text-center" style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>
+                  <div className="text-3xl mb-2">📝</div>
+                  <p className="text-sm">Aucune note trouvée.</p>
+                  <p className="text-xs mt-1">Utilisez <code className="px-1 py-0.5 rounded text-xs" style={{ background: "var(--muted)" }}>!note &lt;cible&gt; &lt;contenu&gt;</code> sur Discord.</p>
+                </div>
+              ) : (
+                <div className="rounded-xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                  {notes.map((n, i) => (
+                    <div key={n._id} className="px-5 py-3 flex items-start gap-3" style={{ borderBottom: i < notes.length - 1 ? "1px solid var(--border)" : "none" }}>
+                      <span className="text-lg mt-0.5">📝</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm" style={{ color: "var(--primary)" }}>{n.target}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }}>
+                            par {n.author}
+                          </span>
+                        </div>
+                        <p className="text-sm mt-1">{n.content}</p>
+                        {n.createdAt && <p className="text-[11px] mt-1" style={{ color: "oklch(0.45 0 0)" }}>{fmtDate(n.createdAt)}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </>
       )}

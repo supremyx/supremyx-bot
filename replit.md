@@ -44,9 +44,64 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 
 - Keep existing project structure — do not restructure or migrate.
 
-## Setup status (2026-07-14)
+## Dashboard pages
 
-- Dependencies installed via `npm install` at the repo root and inside `dashboard/` (re-installed after import wiped `node_modules`).
-- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`, `VITE_BOT_API_KEY` (must match `BOT_API_KEY`, used by dashboard admin pages: Anti-Raid, AutoMod, Backup), `GITHUB_TOKEN` (enables the **Auto-push GitHub** workflow).
+| Page | Route key | Description |
+|------|-----------|-------------|
+| Classement | `classement` | Classement général des équipes (live, PDF/CSV export) |
+| Tournois | `tournois` | Liste et détail des tournois |
+| Saisons | `saisons` | Historique des saisons |
+| Joueurs | `joueurs` | Stats joueurs individuelles |
+| Effectifs | `rosters` | Rosters des équipes |
+| Calendrier | `calendrier` | Calendrier des matchs |
+| Résultats | `resultats` | Résultats des matchs |
+| Comparer | `comparaison` | Comparaison côte-à-côte joueurs/équipes |
+| Stats | `stats` | Statistiques globales |
+| Modération | `moderation` | Avertissements, sanctions, blacklist, **notes staff** |
+| Stats Bot | `botstats` | Statistiques d'utilisation du bot |
+| Analytiques IA | `ia-analytics` | Usage et métriques de l'IA |
+| Fallback IA | `ia-fallback` | Modèles de repli IA |
+| Bilans hebdo | `bilan` | Bilans hebdomadaires IA |
+| Événements | `events` | Événements du serveur |
+| Tickets | `tickets` | Support tickets |
+| Anniversaires | `birthdays` | Anniversaires membres |
+| Suggestions | `suggestions` | Suggestions de la communauté |
+| Sondages | `sondages` | Historique des sondages |
+| Pronostics | `pronostics` | Pronostics matchs |
+| Poules | `poules` | Gestion des poules |
+| Disponibilités | `disponibilites` | Disponibilités joueurs |
+| Inscriptions | `inscriptions` | Inscriptions tournois |
+| Embeds prog. | `embeds-programmes` | Embeds programmés |
+| Modèles embeds | `embeds-templates` | Templates d'embeds |
+| Classement ELO | `elo` | Classement ELO |
+| Badges | `badges` | Badges membres |
+| Stats Serveur | `statsserveur` | Métriques du serveur Discord |
+| Journaux | `logs` | Journaux du staff |
+| Activité live | `live-activity` | Flux d'activité en temps réel |
+| Commandes | `commandcenter` | Centre de commandes admin |
+| Statut | `status` | Statut du bot et des services |
+| Paramètres | `parametres` | Paramètres du bot |
+| AutoMod | `automod` | AutoMod, Anti-spam, Anti-liens, Mots interdits |
+| Anti-Raid | `antiraid` | Configuration anti-raid |
+| Audit Logs | `audit-logs` | Journaux d'audit |
+| Historique !dire | `say-logs` | Historique des commandes !dire |
+| Sauvegarde | `backup` | Sauvegardes de la base de données |
+| Monitoring | `monitoring` | Monitoring système |
+| Stats Cmds | `cmdstats` | Statistiques des commandes |
+| **Giveaways** | `giveaways` | Tirages au sort (actifs/terminés) |
+| **Niveaux & XP** | `niveaux` | Classement XP des membres |
+| **Absences** | `absences` | Absences déclarées par les joueurs |
+| **MVPs** | `mvps` | Classement MVPs par match/tournoi |
+| **Newsletter** | `newsletter` | Config newsletter + bilans hebdo |
+
+## New API endpoints added (2026-07-20)
+
+- `GET /api/niveaux` — Classement XP/niveaux (XpEntry model, sorted by xp desc)
+- `GET /api/newsletter` — Config newsletter (NewsletterConfig model)
+
+## Setup status (2026-07-20)
+
+- Dependencies installed via `npm install` at the repo root and inside `dashboard/` (re-installed after fresh import).
+- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`, `VITE_BOT_API_KEY` (must match `BOT_API_KEY`, used by dashboard admin pages), `SESSION_SECRET`.
 - Bot is online (logged in as SUPREMYX#5749, MongoDB connected) and the dashboard renders correctly on port 5000.
 - Note: secrets/dependencies do not persist across a fresh import — re-run `npm install` (root + `dashboard/`) and re-provide secrets if this project is re-imported elsewhere.

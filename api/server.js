@@ -25,7 +25,9 @@ const BotInstance   = require('../database/models/BotInstance');
 const Absence       = require('../database/models/Absence');
 const CooldownConfig= require('../database/models/CooldownConfig');
 const Lineup        = require('../database/models/Lineup');
-const Giveaway      = require('../database/models/Giveaway');
+const Giveaway          = require('../database/models/Giveaway');
+const NewsletterConfig  = require('../database/models/NewsletterConfig');
+const MatchMVP          = require('../database/models/MatchMVP');
 
 const mongoose = require('mongoose');
 const { escapeRegex } = require('../utils/lib');
@@ -2718,6 +2720,28 @@ router.get('/giveaways', publicLimiter, async (req, res) => {
     if (ended !== undefined) filter.ended = ended === 'true';
     const giveaways = await Giveaway.find(filter).sort({ createdAt: -1 }).limit(50).lean();
     res.json({ giveaways });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /api/niveaux — Classement XP/niveaux ─────────────────────────────────
+router.get('/niveaux', publicLimiter, async (req, res) => {
+  try {
+    const { guildId, limit = 100 } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    const entries = await XpEntry.find(filter).sort({ xp: -1 }).limit(parseInt(limit)).lean();
+    res.json({ entries });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /api/newsletter — Config newsletter ───────────────────────────────────
+router.get('/newsletter', publicLimiter, async (req, res) => {
+  try {
+    const { guildId } = req.query;
+    const filter = {};
+    if (guildId) filter.guildId = guildId;
+    const config = await NewsletterConfig.findOne(filter).lean();
+    res.json({ config });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

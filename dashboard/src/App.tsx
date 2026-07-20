@@ -43,13 +43,18 @@ import SayLogsPage from "./pages/SayLogsPage";
 import BackupPage from "./pages/BackupPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import CommandStatsPage from "./pages/CommandStatsPage";
+import GiveawayPage from "./pages/GiveawayPage";
+import NiveauxPage from "./pages/NiveauxPage";
+import AbsencesPage from "./pages/AbsencesPage";
+import MvpPage from "./pages/MvpPage";
+import NewsletterPage from "./pages/NewsletterPage";
 import GlobalSearch from "./components/GlobalSearch";
 import NotificationBanner from "./components/NotificationBanner";
 import NotificationHistory from "./components/NotificationHistory";
 import { useMatchNotifications } from "./hooks/useMatchNotifications";
 import { apiUrl } from "./lib/api";
 
-type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status" | "automod" | "antiraid" | "audit-logs" | "backup" | "monitoring" | "cmdstats" | "say-logs";
+type Page = "classement" | "tournois" | "joueurs" | "rosters" | "calendrier" | "stats" | "logs" | "resultats" | "equipe" | "comparaison" | "saisons" | "moderation" | "botstats" | "ia-analytics" | "ia-fallback" | "bilan" | "events" | "tickets" | "birthdays" | "suggestions" | "sondages" | "embeds-programmes" | "embeds-templates" | "parametres" | "live-activity" | "pronostics" | "poules" | "disponibilites" | "inscriptions" | "elo" | "badges" | "statsserveur" | "commandcenter" | "status" | "automod" | "antiraid" | "audit-logs" | "backup" | "monitoring" | "cmdstats" | "say-logs" | "giveaways" | "niveaux" | "absences" | "mvps" | "newsletter";
 
 interface Team {
   rank: number;
@@ -101,6 +106,11 @@ const NAV_ITEMS: { key: Page; label: string; icon: string }[] = [
   { key: "backup",            label: "Sauvegarde",  icon: "💾" },
   { key: "monitoring",        label: "Monitoring",  icon: "📡" },
   { key: "cmdstats",          label: "Stats Cmds",  icon: "📊" },
+  { key: "giveaways",         label: "Giveaways",   icon: "🎁" },
+  { key: "niveaux",           label: "Niveaux & XP", icon: "📈" },
+  { key: "absences",          label: "Absences",    icon: "📋" },
+  { key: "mvps",              label: "MVPs",        icon: "🏅" },
+  { key: "newsletter",        label: "Newsletter",  icon: "📰" },
 ];
 
 function useBotStatus() {
@@ -849,6 +859,11 @@ export default function App() {
       {page === "backup"            && <BackupPage />}
       {page === "monitoring"        && <MonitoringPage />}
       {page === "cmdstats"          && <CommandStatsPage />}
+      {page === "giveaways"         && <GiveawayPage />}
+      {page === "niveaux"           && <NiveauxPage />}
+      {page === "absences"          && <AbsencesPage />}
+      {page === "mvps"              && <MvpPage />}
+      {page === "newsletter"        && <NewsletterPage />}
 
       {/* Classement page */}
       <main className={`mx-auto max-w-5xl px-4 py-10 ${page !== "classement" ? "hidden" : ""}`}>
