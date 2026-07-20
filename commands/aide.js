@@ -191,7 +191,7 @@ const CATEGORIES = [
     commands: [
       { label: '!calendrier',              description: 'Liste les prochains matchs planifiés',        subs: ['prochain — Affiche uniquement le prochain match', 'equipe <nom> — Matchs à venir d\'une équipe spécifique'] },
       { label: '!calendrier equipe <nom>', description: 'Matchs à venir d\'une équipe spécifique',   subs: [] },
-      { label: '!evenement creer',         description: 'Créer un événement RSVP',                    subs: ['creer <titre> | <desc> | <date> — Créer *(staff)*', 'liste — Voir les événements', 'joindre <id> — S\'inscrire', 'quitter <id> — Décliner', 'participants <id> — Voir participants', 'annuler <id> — Annuler *(staff)*'] },
+      { label: '!evenement [sous-commande]', description: 'Gérer les événements RSVP du serveur',         subs: ['liste — Voir les événements en cours', 'joindre <id> — S\'inscrire à un événement', 'quitter <id> — Se désinscrire d\'un événement', 'participants <id> — Voir les participants', 'creer <titre> | <desc> | <date> — Créer un événement *(staff)*', 'annuler <id> — Annuler un événement *(staff)*'] },
       { label: '!rappel <durée> <texte>',  description: 'Se créer un rappel personnel (ex : 1h Match ce soir)', subs: [] },
       { label: '!messagejour',              description: 'Afficher le message du jour configuré par le staff', subs: [] },
     ],
