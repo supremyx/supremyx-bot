@@ -78,3 +78,8 @@ run = ["node", "index.js"]
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 120000
+
+[userenv]
+
+[userenv.shared]
+NODE_ENV = "development"
