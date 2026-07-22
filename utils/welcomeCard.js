@@ -1,5 +1,13 @@
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const path = require('path');
+
+// Police avec support Latin + CJK (chinois, japonais, coréen) + Arabe
+const NOTO_SC_PATH = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansSC.ttf');
+try {
+  GlobalFonts.registerFromPath(NOTO_SC_PATH, 'NotoSansSC');
+} catch (e) {
+  // Silencieux si le fichier est absent — DejaVu en fallback
+}
 
 const LOGO_PATH = path.join(__dirname, '..', 'assets', 'supremyx_logo_no_bg.png');
 let cachedLogo = null;
@@ -189,7 +197,7 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   ctx.stroke();
 
   ctx.fillStyle = '#f2f2f2';
-  ctx.font = '19px sans-serif';
+  ctx.font = '19px NotoSansSC, sans-serif';
   const lines = wrapText(ctx, subText, bannerW - 40);
   lines.slice(0, 3).forEach((line, i) => {
     ctx.fillText(line, bannerX + 24, bannerY + 20 + i * 26);

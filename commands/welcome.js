@@ -74,8 +74,8 @@ module.exports = (client) => {
     if (!message.member) return;
     if (!message.member.permissions.has('Administrator')) return message.reply('Staff uniquement');
 
-    const args = content.split(' ');
-    const sub = args[1]?.toLowerCase();
+    const args = content.split(/\s+/).filter(Boolean);
+    const sub = args[1]?.toLowerCase().normalize('NFC');
 
     // --- !bienvenue definir <message> ---
     if (sub === 'definir') {
