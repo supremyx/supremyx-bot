@@ -1,13 +1,11 @@
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const path = require('path');
 
-// Police avec support Latin + CJK (chinois, japonais, coréen) + Arabe
-const NOTO_SC_PATH = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansSC.ttf');
-try {
-  GlobalFonts.registerFromPath(NOTO_SC_PATH, 'NotoSansSC');
-} catch (e) {
-  // Silencieux si le fichier est absent — DejaVu en fallback
-}
+// Polices avec support Latin + CJK + Arabe (fallback automatique Skia)
+const NOTO_SC_PATH     = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansSC.ttf');
+const NOTO_AR_PATH     = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansArabic.ttf');
+try { GlobalFonts.registerFromPath(NOTO_SC_PATH,  'NotoSansSC');    } catch (_) {}
+try { GlobalFonts.registerFromPath(NOTO_AR_PATH,  'NotoSansArabic'); } catch (_) {}
 
 const LOGO_PATH = path.join(__dirname, '..', 'assets', 'supremyx_logo_no_bg.png');
 let cachedLogo = null;
