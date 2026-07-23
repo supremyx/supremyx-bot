@@ -195,7 +195,7 @@ async function generateWelcomeCard({ member, title, subtitle, color, accentColor
   ctx.stroke();
 
   ctx.fillStyle = '#f2f2f2';
-  ctx.font = '19px NotoSansSC, sans-serif';
+  ctx.font = '19px NotoSansSC, NotoSansArabic, sans-serif';
   const lines = wrapText(ctx, subText, bannerW - 40);
   lines.slice(0, 3).forEach((line, i) => {
     ctx.fillText(line, bannerX + 24, bannerY + 20 + i * 26);
