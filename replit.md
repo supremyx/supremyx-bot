@@ -94,14 +94,50 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 | **MVPs** | `mvps` | Classement MVPs par match/tournoi |
 | **Newsletter** | `newsletter` | Config newsletter + bilans hebdo |
 
+## Déploiement sur Wispbyte
+
+Wispbyte expose **un seul port** (via la variable `PORT`). Le bot, l'API REST et le dashboard tournent tous dans le même processus `node index.js`. Le dashboard doit être **buildé** avant le démarrage.
+
+### Variables d'environnement à configurer sur Wispbyte
+
+| Variable | Valeur |
+|----------|--------|
+| `TOKEN` | Token du bot Discord |
+| `MONGO_URI` | URI MongoDB Atlas |
+| `BOT_API_KEY` | Clé secrète longue (≥ 32 chars) |
+| `OPENROUTER_API_KEY` | Clé OpenRouter (features IA) |
+| `VITE_BOT_API_KEY` | Identique à `BOT_API_KEY` |
+
+> ⚠️ `VITE_BOT_API_KEY` doit être défini **avant** le build du dashboard car Vite l'intègre dans le bundle.
+
+### Commandes Wispbyte
+
+| Étape | Commande |
+|-------|----------|
+| **Build** | `npm run build` |
+| **Démarrage** | `node index.js` |
+| **Tout-en-un** | `npm run start:prod` |
+
+La commande `npm run build` installe les dépendances du dashboard et compile les assets dans `dashboard/dist/public/`. L'API Express les sert automatiquement à la racine.
+
+### Architecture sur Wispbyte
+
+```
+PORT (assigné par Wispbyte)
+  └── Express (api/server.js)
+        ├── /          → routes API
+        ├── /api/*     → routes API (alias pour le dashboard)
+        ├── /bot-api/* → routes API (alias legacy)
+        └── /*         → dashboard React (fichiers statiques buildés)
+```
+
 ## New API endpoints added (2026-07-20)
 
 - `GET /api/niveaux` — Classement XP/niveaux (XpEntry model, sorted by xp desc)
 - `GET /api/newsletter` — Config newsletter (NewsletterConfig model)
 
-## Setup status (2026-07-20)
+## Setup status (2026-07-27)
 
-- Dependencies installed via `npm install` at the repo root and inside `dashboard/` (re-installed after fresh import).
-- Secrets configured: `TOKEN`, `MONGO_URI`, `BOT_API_KEY`, `OPENROUTER_API_KEY`, `VITE_BOT_API_KEY` (must match `BOT_API_KEY`, used by dashboard admin pages), `SESSION_SECRET`.
-- Bot is online (logged in as SUPREMYX#5749, MongoDB connected) and the dashboard renders correctly on port 5000.
-- Note: secrets/dependencies do not persist across a fresh import — re-run `npm install` (root + `dashboard/`) and re-provide secrets if this project is re-imported elsewhere.
+- Adapté pour Wispbyte : router monté à `/api` (+ `/` + `/bot-api`), CORS étendu aux domaines `*.wispbyte.*`, build du dashboard validé, vite.config.ts nettoyé pour les envs hors-Replit.
+- Scripts `npm run build` et `npm run start:prod` ajoutés dans `package.json`.
+- Note : secrets/dépendances ne persistent pas lors d'un re-import — relancer `npm install` (racine + `dashboard/`) et re-fournir les secrets.

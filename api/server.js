@@ -71,6 +71,8 @@ const ALLOWED_ORIGINS = [
   /\.replit\.dev$/,
   /\.github\.io$/,
   /\.up\.railway\.app$/,
+  /\.wispbyte\.com$/,
+  /\.wispbyte\.app$/,
   'http://localhost:3000',
   'http://localhost:5000',
 ];
@@ -2654,6 +2656,7 @@ router.get('/command-stats', publicLimiter, async (req, res) => {
 
 // ─── Mount ───────────────────────────────────────────────────────────────────
 app.use('/', router);
+app.use('/api', router);   // dashboard statique appelle /api/* (sans proxy Vite)
 app.use('/bot-api', router);
 
 // ── GET /ia/fallback-models?guildId= ─────────────────────────────────────────
