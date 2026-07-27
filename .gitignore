@@ -4,3 +4,7 @@ dashboard/node_modules/
 .env
 .autopush-status.json
 *.log
+# Lockfiles générés par Replit contiennent des URLs internes (package-firewall.replit.local)
+# incompatibles avec les hébergements externes. On les exclut du dépôt.
+package-lock.json
+dashboard/package-lock.json
