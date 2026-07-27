@@ -98,36 +98,50 @@ Full-featured Discord bot (Node.js + discord.js v14) with a React/Vite admin das
 
 Wispbyte expose **un seul port** (via la variable `PORT`). Le bot, l'API REST et le dashboard tournent tous dans le même processus `node index.js`. Le dashboard doit être **buildé** avant le démarrage.
 
-### Variables d'environnement à configurer sur Wispbyte
+### Variables d'environnement obligatoires (panel Wispbyte)
 
-| Variable | Valeur |
-|----------|--------|
+| Variable | Description |
+|----------|-------------|
 | `TOKEN` | Token du bot Discord |
 | `MONGO_URI` | URI MongoDB Atlas |
 | `BOT_API_KEY` | Clé secrète longue (≥ 32 chars) |
+| `VITE_BOT_API_KEY` | **Identique** à `BOT_API_KEY` — intégré au build Vite |
 | `OPENROUTER_API_KEY` | Clé OpenRouter (features IA) |
-| `VITE_BOT_API_KEY` | Identique à `BOT_API_KEY` |
+| `DASHBOARD_URL` | URL publique complète (ex: `https://ton-app.wispbyte.com`) |
 
-> ⚠️ `VITE_BOT_API_KEY` doit être défini **avant** le build du dashboard car Vite l'intègre dans le bundle.
+> ⚠️ `VITE_BOT_API_KEY` doit être défini **avant** le build du dashboard car Vite l'intègre dans le bundle.  
+> ⚠️ Sur Wispbyte, **ne pas définir `PORT`** — la plateforme l'injecte automatiquement.
+
+### Variables optionnelles
+
+| Variable | Description |
+|----------|-------------|
+| `LOG_CHANNEL_ID` | Salon Discord pour les erreurs critiques |
+| `ANNOUNCE_CHANNEL_ID` | Salon des annonces automatiques |
+| `BACKUP_CHANNEL_ID` | Salon pour les sauvegardes automatiques |
+| `OWNER_ID` | ID Discord du propriétaire (commandes admin) |
+| `DISCORD_WEBHOOK_URL` | Webhook pour notifications de push GitHub |
+| `GITHUB_TOKEN` | Token GitHub pour `!gitpush`, `!gitstatus`, `!changelog` |
 
 ### Commandes Wispbyte
 
 | Étape | Commande |
 |-------|----------|
-| **Build** | `npm run build` |
-| **Démarrage** | `node index.js` |
-| **Tout-en-un** | `npm run start:prod` |
+| **Tout-en-un (recommandé)** | `bash start.sh` |
+| **Build seul** | `npm run build` |
+| **Démarrage seul** | `node index.js` |
 
-La commande `npm run build` installe les dépendances du dashboard et compile les assets dans `dashboard/dist/public/`. L'API Express les sert automatiquement à la racine.
+Le script `start.sh` installe les dépendances, build le dashboard, puis démarre le bot.  
+La commande de build compile les assets dans `dashboard/dist/public/` — l'API Express les sert automatiquement.
 
 ### Architecture sur Wispbyte
 
 ```
-PORT (assigné par Wispbyte)
+PORT (assigné automatiquement par Wispbyte)
   └── Express (api/server.js)
-        ├── /          → routes API
-        ├── /api/*     → routes API (alias pour le dashboard)
-        ├── /bot-api/* → routes API (alias legacy)
+        ├── /          → routes API (ex: /health, /ranking, /players…)
+        ├── /api/*     → idem — alias utilisé par le dashboard statique
+        ├── /bot-api/* → idem — alias legacy
         └── /*         → dashboard React (fichiers statiques buildés)
 ```
 
@@ -138,6 +152,13 @@ PORT (assigné par Wispbyte)
 
 ## Setup status (2026-07-27)
 
-- Adapté pour Wispbyte : router monté à `/api` (+ `/` + `/bot-api`), CORS étendu aux domaines `*.wispbyte.*`, build du dashboard validé, vite.config.ts nettoyé pour les envs hors-Replit.
-- Scripts `npm run build` et `npm run start:prod` ajoutés dans `package.json`.
-- Note : secrets/dépendances ne persistent pas lors d'un re-import — relancer `npm install` (racine + `dashboard/`) et re-fournir les secrets.
+### Adaptations Wispbyte complètes
+- Router monté à `/api` + `/` + `/bot-api` — dashboard statique fonctionnel
+- CORS étendu aux domaines `*.wispbyte.*`
+- `vite.config.ts` — plugins Replit optionnels, HMR conditionnel
+- `@napi-rs/canvas` — chargement optionnel avec fallback embed texte si binaire absent
+- `commands/changelog.js`, `gitstatus.js`, `gitpush.js` — path dynamique via `process.cwd()` (plus de `/home/runner/workspace` hardcodé)
+- `commands/dashboard.js` — `DASHBOARD_URL` env var (plus de `REPLIT_DOMAINS`)
+- `InscriptionsPage.tsx` — corrigé `VITE_API_KEY` → `VITE_BOT_API_KEY`
+- Scripts `npm run build`, `start:prod`, `install:all` et `start.sh` ajoutés
+- `.env.example` complet avec toutes les variables utilisées dans le code

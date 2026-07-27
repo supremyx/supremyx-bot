@@ -38,7 +38,7 @@ interface InscriptionConfig {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const API_KEY = import.meta.env.VITE_API_KEY ?? "";
+const API_KEY = import.meta.env.VITE_BOT_API_KEY ?? "";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("fr-FR", {

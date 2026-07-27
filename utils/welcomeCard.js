@@ -1,11 +1,23 @@
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const path = require('path');
+
+// @napi-rs/canvas est un module natif — chargement optionnel pour compatibilité
+// avec des hébergements (Wispbyte, Railway, etc.) où le binaire peut être absent.
+let createCanvas, loadImage, GlobalFonts;
+let canvasAvailable = false;
+try {
+  ({ createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas'));
+  canvasAvailable = true;
+} catch (e) {
+  console.warn('[welcomeCard] @napi-rs/canvas non disponible — cartes de bienvenue désactivées (embed texte utilisé).');
+}
 
 // Polices avec support Latin + CJK + Arabe (fallback automatique Skia)
 const NOTO_SC_PATH     = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansSC.ttf');
 const NOTO_AR_PATH     = path.join(__dirname, '..', 'assets', 'fonts', 'NotoSansArabic.ttf');
-try { GlobalFonts.registerFromPath(NOTO_SC_PATH,  'NotoSansSC');    } catch (_) {}
-try { GlobalFonts.registerFromPath(NOTO_AR_PATH,  'NotoSansArabic'); } catch (_) {}
+if (canvasAvailable) {
+  try { GlobalFonts.registerFromPath(NOTO_SC_PATH,  'NotoSansSC');    } catch (_) {}
+  try { GlobalFonts.registerFromPath(NOTO_AR_PATH,  'NotoSansArabic'); } catch (_) {}
+}
 
 const LOGO_PATH = path.join(__dirname, '..', 'assets', 'supremyx_logo_no_bg.png');
 let cachedLogo = null;
@@ -64,6 +76,9 @@ function wrapText(ctx, text, maxWidth) {
 }
 
 async function generateWelcomeCard({ member, title, subtitle, color, accentColor }) {
+  if (!canvasAvailable) {
+    throw new Error('canvas_unavailable');
+  }
   const W = 1000, H = 400;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');

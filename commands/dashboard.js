@@ -147,15 +147,18 @@ module.exports = (client) => {
 
       // --- !tableaudebord web — lien vers le dashboard classement ---
       if (sub === 'lien') {
-        const domain = (process.env.REPLIT_DOMAINS || '').split(',')[0].trim();
-        const url    = domain ? `https://${domain}/dashboard/` : null;
+        // DASHBOARD_URL — à définir dans les variables d'env (ex: https://monbot.wispbyte.com)
+        // Fallback legacy : REPLIT_DOMAINS (Replit uniquement)
+        const rawDomain = (process.env.REPLIT_DOMAINS || '').split(',')[0].trim();
+        const url = process.env.DASHBOARD_URL
+          || (rawDomain ? `https://${rawDomain}` : null);
         const embed  = new EmbedBuilder()
           .setTitle('📊 Dashboard Classement — SUPREMYX')
           .setColor(0x5865F2)
           .setDescription(
             url
               ? `Consulte le classement en direct, l'évolution des points par équipe et l'historique des matchs.\n\n🔗 **[Ouvrir le Dashboard](${url})**\n\n> Actualisation automatique toutes les 30 secondes.`
-              : '⚠️ URL indisponible (variable `REPLIT_DOMAINS` absente).'
+              : '⚠️ URL indisponible — définis la variable `DASHBOARD_URL` dans ton hébergement.'
           );
         if (url) {
           embed.addFields({ name: '🌐 Lien direct', value: url });

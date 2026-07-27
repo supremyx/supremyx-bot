@@ -2,7 +2,7 @@ const { execFile } = require('child_process');
 const { EmbedBuilder } = require('discord.js');
 const { logStaffAction } = require('../utils/staffLog');
 
-const REPO_DIR = '/home/runner/workspace';
+const REPO_DIR = process.env.REPO_DIR || process.cwd();
 
 function getRemote() {
   return `https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/supremyx/supremyx-bot.git`;

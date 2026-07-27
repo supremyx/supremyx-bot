@@ -1,7 +1,7 @@
 const { execFile } = require('child_process');
 const { EmbedBuilder } = require('discord.js');
 
-const REPO_DIR = '/home/runner/workspace';
+const REPO_DIR = process.env.REPO_DIR || process.cwd();
 
 function git(args, cwd = REPO_DIR, timeout = 15000) {
   return new Promise((resolve, reject) => {

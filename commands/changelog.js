@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 const { EmbedBuilder } = require('discord.js');
 const https = require('https');
 
-const REPO_DIR  = '/home/runner/workspace';
+const REPO_DIR  = process.env.REPO_DIR || process.cwd();
 const REPO_SLUG = 'supremyx/supremyx-bot';
 
 // ─── Utilitaires ──────────────────────────────────────────────────────────────
